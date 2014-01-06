@@ -32,6 +32,7 @@ Author URI: http://www.strangerstudios.com
 		- membership_gateway ** (gateway = check, stripe, paypalstandard, paypalexpress, paypal (for website payments pro), payflowpro, authorizenet, braintree)
 		- membership_payment_transaction_id	
 		- membership_affiliate_id
+		- pmpro_stripe_customerid (for Stripe users, will be same as membership_subscription_transaction_id above)
 	4. Go to Users --> Import From CSV. Browse to CSV file and import.
 */
 
