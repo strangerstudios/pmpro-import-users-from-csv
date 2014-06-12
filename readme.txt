@@ -2,8 +2,8 @@
 Contributors: strangerstudios
 Tags: paid memberships pro, import users from csv, import, csv, members
 Requires at least: 3.0
-Tested up to: 3.6
-Stable tag: .1
+Tested up to: 3.9.1
+Stable tag: .1.1
 
 Add-on for the Import Users From CSV plugin to import PMPro and membership-related fields.
  
@@ -34,10 +34,19 @@ Requires both the Import Users From CSV and Paid Memberships Pro Plugins
 	- membership_enddate
 	- membership_subscription_transaction_id ** (subscription transaction id or customer id from the gateway)
 	- membership_gateway ** (gateway = check, stripe, paypalstandard, paypalexpress, paypal (for website payments pro), payflowpro, authorizenet, braintree)
-	- membership_payment_transaction_id	
+	- membership_payment_transaction_id
 	- membership_affiliate_id
 	- pmpro_stripe_customerid (for Stripe users, will be same as membership_subscription_transaction_id above)
-4. Go to Users --> Import From CSV. Browse to CSV file and import.
+4. (Optional) Send a welcome email by setting the global $pmproiufcsv_email. See example below.
+5. Go to Users --> Import From CSV. Browse to CSV file and import.
+
+Copy these lines to your active theme's functions.php or custom plugin and modify as desired to send a welcome email to members after import:
+
+global $pmproiufcsv_email;
+$pmproiufcsv_email = array(
+    'subject'   => sprintf('Welcome to %s', get_bloginfo('sitename')), //email subject, "Welcome to Sitename"
+    'body'      => 'Your welcome email body text will go here.'        //email body
+);
 
 == Frequently Asked Questions ==
 
@@ -50,5 +59,8 @@ Please post it in the GitHub issue tracker here: https://github.com/strangerstud
 Please visit our premium support site at http://www.paidmembershipspro.com for more documentation and our support forums.
 
 == Changelog ==
+= .1.1 =
+* Added ability to send custom emails after import by defining the $pmproiufcsv_email global.
+
 = .1 =
 * Initial version.
