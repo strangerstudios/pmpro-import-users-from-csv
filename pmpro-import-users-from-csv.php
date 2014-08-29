@@ -4,6 +4,7 @@ Plugin Name: PMPro Import Users from CSV
 Plugin URI: http://www.paidmembershipspro.com/pmpro-import-users-from-csv/
 Description: Add-on for the Import Users From CSV plugin to import PMPro and membership-related fields.
 Version: .2
+=======
 Author: Stranger Studios
 Author URI: http://www.strangerstudios.com
 */
@@ -34,6 +35,17 @@ Author URI: http://www.strangerstudios.com
 		- membership_affiliate_id
 		- membership_timestamp
 	4. Go to Users --> Import From CSV. Browse to CSV file and import.
+		- pmpro_stripe_customerid (for Stripe users, will be same as membership_subscription_transaction_id above)
+    5. (Optional) Send a welcome email by setting the global $pmproiufcsv_email. See example below.
+	6. Go to Users --> Import From CSV. Browse to CSV file and import.
+
+    Copy these lines to your active theme's functions.php or custom plugin and modify as desired to send a welcome email to members after import:
+
+    global $pmproiufcsv_email;
+    $pmproiufcsv_email = array(
+        'subject'   => sprintf('Welcome to %s', get_bloginfo('sitename')), //email subject, "Welcome to Sitename"
+        'body'      => 'Your welcome email body text will go here.'        //email body
+    );
 */
 
 /*
@@ -77,6 +89,8 @@ add_filter("is_iu_import_usermeta", "pmproiufcsv_is_iu_import_usermeta", 10, 2);
 //after users are added, let's use the meta data imported to update the user
 function pmproiufcsv_is_iu_post_user_import($user_id)
 {
+    global $pmproiufcsv_email;
+
 	wp_cache_delete($user_id, 'users');
 	$user = get_userdata($user_id);
 	
@@ -131,6 +145,7 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 	{
 		$order = new MemberOrder();
 		$order->user_id = $user_id;
+		$order->membership_id = $membership_id;
 		$order->InitialPayment = $membership_initial_payment;		
 		$order->payment_transaction_id = $membership_payment_transaction_id;
 		$order->subscription_transaction_id = $membership_subscription_transaction_id;
@@ -145,5 +160,16 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 			$order->updateTimeStamp(date("Y", $timestamp), date("m", $timestamp), date("d", $timestamp), date("H:i:s", $timestamp));
 		}
 	}
+
+    //email user if global is set
+    if(!empty($pmproiufcsv_email))
+    {
+        $email = new PMProEmail();
+        $email->recipient = $user->user_email;
+        $email->subject = $pmproiufcsv_email['subject'];
+        $email->body = $pmproiufcsv_email['body'];
+        $email->template = 'pmproiufcsv';
+        $email->sendEmail();
+    }
 }
 add_action("is_iu_post_user_import", "pmproiufcsv_is_iu_post_user_import");
