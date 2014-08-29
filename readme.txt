@@ -3,7 +3,7 @@ Contributors: strangerstudios
 Tags: paid memberships pro, import users from csv, import, csv, members
 Requires at least: 3.0
 Tested up to: 3.6
-Stable tag: .1
+Stable tag: .2
 
 Add-on for the Import Users From CSV plugin to import PMPro and membership-related fields.
  
@@ -36,6 +36,7 @@ Requires both the Import Users From CSV and Paid Memberships Pro Plugins
 	- membership_gateway ** (gateway = check, stripe, paypalstandard, paypalexpress, paypal (for website payments pro), payflowpro, authorizenet, braintree)
 	- membership_payment_transaction_id	
 	- membership_affiliate_id
+	- membership_timestamp
 4. Go to Users --> Import From CSV. Browse to CSV file and import.
 
 == Frequently Asked Questions ==
@@ -49,5 +50,8 @@ Please post it in the GitHub issue tracker here: https://github.com/strangerstud
 Please visit our premium support site at http://www.paidmembershipspro.com for more documentation and our support forums.
 
 == Changelog ==
+= .2 =
+* Added ability to set the timestamp of the dummy order created by setting a membership_timestamp column. Use a date format like 2014-01-01.
+
 = .1 =
 * Initial version.

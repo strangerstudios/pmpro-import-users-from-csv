@@ -3,7 +3,7 @@
 Plugin Name: PMPro Import Users from CSV
 Plugin URI: http://www.paidmembershipspro.com/pmpro-import-users-from-csv/
 Description: Add-on for the Import Users From CSV plugin to import PMPro and membership-related fields.
-Version: .1
+Version: .2
 Author: Stranger Studios
 Author URI: http://www.strangerstudios.com
 */
@@ -32,6 +32,7 @@ Author URI: http://www.strangerstudios.com
 		- membership_gateway ** (gateway = check, stripe, paypalstandard, paypalexpress, paypal (for website payments pro), payflowpro, authorizenet, braintree)
 		- membership_payment_transaction_id	
 		- membership_affiliate_id
+		- membership_timestamp
 	4. Go to Users --> Import From CSV. Browse to CSV file and import.
 */
 
@@ -56,7 +57,8 @@ function pmproiufcsv_is_iu_import_usermeta($usermeta, $userdata)
 		"membership_subscription_transaction_id",
 		"membership_payment_transaction_id",
 		"membership_gateway",
-		"membership_affiliate_id"
+		"membership_affiliate_id",
+		"membership_timestamp"
 	);
 		
 	$newusermeta = array();
@@ -91,7 +93,8 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 	$membership_status = $user->import_membership_status;
 	$membership_startdate = $user->import_membership_startdate;
 	$membership_enddate = $user->import_membership_enddate;
-		
+	$membership_timestamp = $user->import_membership_timestamp;
+	
 	//change membership level
 	if(!empty($membership_id))
 	{
@@ -121,7 +124,10 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 	$membership_gateway = $user->import_membership_gateway;
 		
 	//add order so integration with gateway works
-	if(!empty($membership_subscription_transaction_id) && !empty($membership_gateway))
+	if(
+		!empty($membership_subscription_transaction_id) && !empty($membership_gateway) ||
+		!empty($membership_timestamp)
+	)
 	{
 		$order = new MemberOrder();
 		$order->user_id = $user_id;
@@ -130,7 +136,14 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 		$order->subscription_transaction_id = $membership_subscription_transaction_id;
 		$order->affiliate_id = $membership_affiliate_id;
 		$order->gateway = $membership_gateway;
-		$order->saveOrder();		
+		$order->saveOrder();
+
+		//update timestamp of order?
+		if(!empty($membership_timestamp))
+		{
+			$timestamp = strtotime($membership_timestamp);
+			$order->updateTimeStamp(date("Y", $timestamp), date("m", $timestamp), date("d", $timestamp), date("H:i:s", $timestamp));
+		}
 	}
 }
 add_action("is_iu_post_user_import", "pmproiufcsv_is_iu_post_user_import");
