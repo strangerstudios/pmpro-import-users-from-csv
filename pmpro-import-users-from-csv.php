@@ -1,9 +1,9 @@
 <?php
 /*
-Plugin Name: PMPro Import Users from CSV
+Plugin Name: Paid Memberships Pro - Import Users from CSV Add On
 Plugin URI: http://www.paidmembershipspro.com/pmpro-import-users-from-csv/
 Description: Add-on for the Import Users From CSV plugin to import PMPro and membership-related fields.
-Version: .2
+Version: .3
 =======
 Author: Stranger Studios
 Author URI: http://www.strangerstudios.com
@@ -89,7 +89,7 @@ add_filter("is_iu_import_usermeta", "pmproiufcsv_is_iu_import_usermeta", 10, 2);
 //after users are added, let's use the meta data imported to update the user
 function pmproiufcsv_is_iu_post_user_import($user_id)
 {
-    global $pmproiufcsv_email;
+    global $pmproiufcsv_email, $wpdb;
 
 	wp_cache_delete($user_id, 'users');
 	$user = get_userdata($user_id);
@@ -108,7 +108,12 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 	$membership_startdate = $user->import_membership_startdate;
 	$membership_enddate = $user->import_membership_enddate;
 	$membership_timestamp = $user->import_membership_timestamp;
-	
+		
+	//fix date formats
+	$membership_startdate = date("Y-m-d", strtotime($membership_startdate, current_time('timestamp')));
+	$membership_enddate = date("Y-m-d", strtotime($membership_enddate, current_time('timestamp')));
+	$membership_timestamp = date("Y-m-d", strtotime($membership_timestamp, current_time('timestamp')));
+		
 	//change membership level
 	if(!empty($membership_id))
 	{
@@ -129,6 +134,14 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 		);
 				
 		pmpro_changeMembershipLevel($custom_level, $user_id);
+		
+		//if membership was in the past make it inactive
+		if($membership_status === "inactive" || (!empty($membership_enddate) && strtotime($membership_enddate, current_time('timestamp')) < current_time('timestamp')))
+		{			
+			$sqlQuery = "UPDATE $wpdb->pmpro_memberships_users SET status = 'inactive' WHERE user_id = '" . $user_id . "' AND membership_id = '" . $membership_id . "'";		
+			$wpdb->query($sqlQuery);
+			$membership_in_the_past = true;
+		}
 	}
 	
 	//look for a subscription transaction id and gateway
@@ -151,6 +164,8 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 		$order->subscription_transaction_id = $membership_subscription_transaction_id;
 		$order->affiliate_id = $membership_affiliate_id;
 		$order->gateway = $membership_gateway;
+		if(!empty($membership_in_the_past))
+			$order->status = "cancelled";
 		$order->saveOrder();
 
 		//update timestamp of order?
@@ -173,3 +188,19 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
     }
 }
 add_action("is_iu_post_user_import", "pmproiufcsv_is_iu_post_user_import");
+
+/*
+Function to add links to the plugin row meta
+*/
+function pmproiufcsv_plugin_row_meta($links, $file) {
+	if(strpos($file, 'pmpro-import-users-from-csv.php') !== false)
+	{
+		$new_links = array(
+			'<a href="' . esc_url('http://www.paidmembershipspro.com/add-ons/third-party-integration/pmpro-import-users-csv/')  . '" title="' . esc_attr( __( 'View Documentation', 'pmpro' ) ) . '">' . __( 'Docs', 'pmpro' ) . '</a>',
+			'<a href="' . esc_url('http://paidmembershipspro.com/support/') . '" title="' . esc_attr( __( 'Visit Customer Support Forum', 'pmpro' ) ) . '">' . __( 'Support', 'pmpro' ) . '</a>',
+		);
+		$links = array_merge($links, $new_links);
+	}
+	return $links;
+}
+add_filter('plugin_row_meta', 'pmproiufcsv_plugin_row_meta', 10, 2);

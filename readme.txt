@@ -1,9 +1,9 @@
-=== PMPro Import Users from CSV Add-on ===
+=== Paid Memberships Pro - Import Users from CSV Add On ===
 Contributors: strangerstudios
 Tags: paid memberships pro, import users from csv, import, csv, members
 Requires at least: 3.0
-Tested up to: 3.9.1
-Stable tag: .2
+Tested up to: 4.1
+Stable tag: .3
 
 Add-on for the Import Users From CSV plugin to import PMPro and membership-related fields.
  
@@ -61,6 +61,10 @@ Please post it in the GitHub issue tracker here: https://github.com/strangerstud
 Please visit our premium support site at http://www.paidmembershipspro.com for more documentation and our support forums.
 
 == Changelog ==
+= .3 =
+* If the membership_status column is inactive or the membership_enddate is in the past (from the time of import), the user will be given the specified membership level and then turned inactive. They will show up in the "old members" list of the Members List and will not have a valid membership level. Their gateway subscription if given will be assumed cancelled at the gateway. PMPro will not send a message to cancel the subscription.
+* Adjusting format of startdate, enddate, and timestamp to date("Y-m-d", strtotime($var)).
+
 = .2 =
 * Added ability to set the timestamp of the dummy order created by setting a membership_timestamp column. Use a date format like 2014-01-01.
 * Setting membership_id for dummy orders based on value in import.
