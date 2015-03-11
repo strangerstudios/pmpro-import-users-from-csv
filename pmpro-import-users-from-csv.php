@@ -110,9 +110,12 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 	$membership_timestamp = $user->import_membership_timestamp;
 		
 	//fix date formats
-	$membership_startdate = date("Y-m-d", strtotime($membership_startdate, current_time('timestamp')));
-	$membership_enddate = date("Y-m-d", strtotime($membership_enddate, current_time('timestamp')));
-	$membership_timestamp = date("Y-m-d", strtotime($membership_timestamp, current_time('timestamp')));
+	if(!empty($membership_startdate))
+		$membership_startdate = date("Y-m-d", strtotime($membership_startdate, current_time('timestamp')));
+	if(!empty($membership_enddate))
+		$membership_enddate = date("Y-m-d", strtotime($membership_enddate, current_time('timestamp')));
+	if(!empty($membership_timestamp))	
+		$membership_timestamp = date("Y-m-d", strtotime($membership_timestamp, current_time('timestamp')));
 		
 	//change membership level
 	if(!empty($membership_id))
