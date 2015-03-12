@@ -174,7 +174,7 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 		//update timestamp of order?
 		if(!empty($membership_timestamp))
 		{
-			$timestamp = strtotime($membership_timestamp);
+			$timestamp = strtotime($membership_timestamp, current_time('timestamp'));
 			$order->updateTimeStamp(date("Y", $timestamp), date("m", $timestamp), date("d", $timestamp), date("H:i:s", $timestamp));
 		}
 	}
