@@ -3,7 +3,7 @@
 Plugin Name: Paid Memberships Pro - Import Users from CSV Add On
 Plugin URI: http://www.paidmembershipspro.com/pmpro-import-users-from-csv/
 Description: Add-on for the Import Users From CSV plugin to import PMPro and membership-related fields.
-Version: .3
+Version: .3.1
 =======
 Author: Stranger Studios
 Author URI: http://www.strangerstudios.com
@@ -114,6 +114,8 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 		$membership_startdate = date("Y-m-d", strtotime($membership_startdate, current_time('timestamp')));
 	if(!empty($membership_enddate))
 		$membership_enddate = date("Y-m-d", strtotime($membership_enddate, current_time('timestamp')));
+	else
+		$membership_enddate = "NULL";
 	if(!empty($membership_timestamp))	
 		$membership_timestamp = date("Y-m-d", strtotime($membership_timestamp, current_time('timestamp')));
 		
