@@ -140,6 +140,10 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 				
 		pmpro_changeMembershipLevel($custom_level, $user_id);
 		
+		//required for some server configurations
+		if($membership_enddate === "NULL")
+			$membership_enddate = null;
+		
 		//if membership was in the past make it inactive
 		if($membership_status === "inactive" || (!empty($membership_enddate) && strtotime($membership_enddate, current_time('timestamp')) < current_time('timestamp')))
 		{			
