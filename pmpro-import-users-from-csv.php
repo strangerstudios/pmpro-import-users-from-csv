@@ -3,7 +3,7 @@
 Plugin Name: Paid Memberships Pro - Import Users from CSV Add On
 Plugin URI: http://www.paidmembershipspro.com/pmpro-import-users-from-csv/
 Description: Add-on for the Import Users From CSV plugin to import PMPro and membership-related fields.
-Version: .3.1
+Version: .3.2
 =======
 Author: Stranger Studios
 Author URI: http://www.strangerstudios.com
@@ -141,7 +141,7 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 		pmpro_changeMembershipLevel($custom_level, $user_id);
 		
 		//if membership was in the past make it inactive
-		if($membership_status === "inactive" || (!empty($membership_enddate) && strtotime($membership_enddate, current_time('timestamp')) < current_time('timestamp')))
+		if($membership_status === "inactive" || (!empty($membership_enddate) && $membership_enddate !== "NULL" && strtotime($membership_enddate, current_time('timestamp')) < current_time('timestamp')))
 		{			
 			$sqlQuery = "UPDATE $wpdb->pmpro_memberships_users SET status = 'inactive' WHERE user_id = '" . $user_id . "' AND membership_id = '" . $membership_id . "'";		
 			$wpdb->query($sqlQuery);

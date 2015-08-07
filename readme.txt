@@ -2,8 +2,8 @@
 Contributors: strangerstudios
 Tags: paid memberships pro, import users from csv, import, csv, members
 Requires at least: 3.0
-Tested up to: 4.2.2
-Stable tag: .3.1
+Tested up to: 4.2.4
+Stable tag: .3.2
 
 Add-on for the Import Users From CSV plugin to import PMPro and membership-related fields.
  
@@ -61,6 +61,9 @@ Please post it in the GitHub issue tracker here: https://github.com/strangerstud
 Please visit our premium support site at http://www.paidmembershipspro.com for more documentation and our support forums.
 
 == Changelog ==
+= .3.2 =
+* BUG: Fixed issue where users imported with no enddate (NULL) were being expired immediately after importing.
+
 = .3.1 =
 * Now setting blank membership_enddate values to "NULL" to avoid 0000-00-00 type dates in the database.
 
