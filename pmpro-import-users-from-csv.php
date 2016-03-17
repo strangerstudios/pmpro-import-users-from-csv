@@ -33,6 +33,7 @@ Author URI: http://www.strangerstudios.com
 		- membership_gateway ** (gateway = check, stripe, paypalstandard, paypalexpress, paypal (for website payments pro), payflowpro, authorizenet, braintree)
 		- membership_payment_transaction_id	
 		- membership_affiliate_id
+		- membership_order_status (PayPal order status)
 		- membership_timestamp
 	4. Go to Users --> Import From CSV. Browse to CSV file and import.
 		- pmpro_stripe_customerid (for Stripe users, will be same as membership_subscription_transaction_id above)
@@ -68,6 +69,7 @@ function pmproiufcsv_is_iu_import_usermeta($usermeta, $userdata)
 		"membership_enddate",
 		"membership_subscription_transaction_id",
 		"membership_payment_transaction_id",
+		"membership_order_status",
 		"membership_gateway",
 		"membership_affiliate_id",
 		"membership_timestamp"
@@ -152,6 +154,7 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 	//look for a subscription transaction id and gateway
 	$membership_subscription_transaction_id = $user->import_membership_subscription_transaction_id;
 	$membership_payment_transaction_id = $user->import_membership_payment_transaction_id;
+	$membership_order_status = $user->import_membership_order_status;
 	$membership_affiliate_id = $user->import_membership_affiliate_id;
 	$membership_gateway = $user->import_membership_gateway;
 		
@@ -171,6 +174,8 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 		$order->gateway = $membership_gateway;
 		if(!empty($membership_in_the_past))
 			$order->status = "cancelled";
+		else
+			$order->status = $membership_order_status;
 		$order->saveOrder();
 
 		//update timestamp of order?
