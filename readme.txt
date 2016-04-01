@@ -2,8 +2,8 @@
 Contributors: strangerstudios
 Tags: paid memberships pro, import users from csv, import, csv, members
 Requires at least: 3.0
-Tested up to: 4.2.4
-Stable tag: .3.2
+Tested up to: 4.5
+Stable tag: .3.3
 
 Add-on for the Import Users From CSV plugin to import PMPro and membership-related fields.
  
@@ -61,6 +61,11 @@ Please post it in the GitHub issue tracker here: https://github.com/strangerstud
 Please visit our premium support site at http://www.paidmembershipspro.com for more documentation and our support forums.
 
 == Changelog ==
+= .3.3 =
+* BUG/ENHANCEMENT: Deleting previous import_ user meta before an import. We don't want to process old import data if the same user is imported twice with different columns.
+* BUG/ENHANCEMENT: Setting a membership_code_id column now adds the code_id to the pmpro_memberships_users table and also inserts a row into pmpro_discount_code_uses.
+* ENHANCEMENT: Can now set a column with heading membership_discount_code to set the code used for a certain member. It must be an existing discount code to work.
+
 = .3.2 =
 * BUG: Fixed issue where users imported with no enddate (NULL) were being expired immediately after importing.
 

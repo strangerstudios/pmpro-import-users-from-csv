@@ -3,7 +3,7 @@
 Plugin Name: Paid Memberships Pro - Import Users from CSV Add On
 Plugin URI: http://www.paidmembershipspro.com/pmpro-import-users-from-csv/
 Description: Add-on for the Import Users From CSV plugin to import PMPro and membership-related fields.
-Version: .3.2
+Version: .3.3
 =======
 Author: Stranger Studios
 Author URI: http://www.strangerstudios.com
@@ -18,7 +18,7 @@ Author URI: http://www.strangerstudios.com
 	2. Add the usual columns to your import CSV: user_login, user_email, first_name, last_name, etc.
 	3. Add the following columns to your import CSV. * = required for membership level, ** = required for gateway subscription
 		- membership_id * (id of the membership level)
-		- membership_code_id
+		- membership_code_id (or use membership_discount_code if you know the code string, but not the code id #)
 		- membership_initial_payment
 		- membership_billing_amount
 		- membership_cycle_number
@@ -49,13 +49,13 @@ Author URI: http://www.strangerstudios.com
 */
 
 /*
-	Change some of the imported columns to add "imported_" to the front so we don't confuse the data later.
+	Get list of PMPro-related fields
 */
-function pmproiufcsv_is_iu_import_usermeta($usermeta, $userdata)
-{
+function pmproiufcsv_getFields() {
 	$pmpro_fields = array(
 		"membership_id",
 		"membership_code_id",
+		"membership_discount_code",
 		"membership_initial_payment",
 		"membership_billing_amount",
 		"membership_cycle_number",
@@ -72,6 +72,45 @@ function pmproiufcsv_is_iu_import_usermeta($usermeta, $userdata)
 		"membership_affiliate_id",
 		"membership_timestamp"
 	);
+	
+	return $pmpro_fields;
+}
+
+/*
+	Delete all import_ meta fields before an import in case the user has been imported in the past.
+*/
+function pmproiufcsv_is_iu_pre_user_import($userdata, $usermeta) {
+	//try to get user by ID
+	$user = $user_id = false;	
+	if ( isset( $userdata['ID'] ) )
+		$user = get_user_by( 'ID', $userdata['ID'] );
+
+	//try to find user by login or email
+	if ( ! $user ) {
+		if ( isset( $userdata['user_login'] ) )
+			$user = get_user_by( 'login', $userdata['user_login'] );
+
+		if ( ! $user && isset( $userdata['user_email'] ) )
+			$user = get_user_by( 'email', $userdata['user_email'] );
+	}
+	
+	//if we found someone delete the import_ user meta
+	if(!empty($user)) {
+		$pmpro_fields = pmproiufcsv_getFields();
+		
+		foreach($pmpro_fields as $field) {
+			delete_user_meta($user->ID, "import_" . $field);
+		}
+	}
+}
+add_action('is_iu_pre_user_import', 'pmproiufcsv_is_iu_pre_user_import', 10, 2);
+
+/*
+	Change some of the imported columns to add "imported_" to the front so we don't confuse the data later.
+*/
+function pmproiufcsv_is_iu_import_usermeta($usermeta, $userdata)
+{
+	$pmpro_fields = pmproiufcsv_getFields();
 		
 	$newusermeta = array();
 	foreach($usermeta as $key => $value)
@@ -97,6 +136,7 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 	//look for a membership level and other information
 	$membership_id = $user->import_membership_id;
 	$membership_code_id = $user->import_membership_code_id;
+	$membership_discount_code = $user->import_membership_discount_code;
 	$membership_initial_payment = $user->import_membership_initial_payment;
 	$membership_billing_amount = $user->import_membership_billing_amount;
 	$membership_cycle_number = $user->import_membership_cycle_number;
@@ -118,6 +158,10 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 		$membership_enddate = "NULL";
 	if(!empty($membership_timestamp))	
 		$membership_timestamp = date("Y-m-d", strtotime($membership_timestamp, current_time('timestamp')));
+	
+	//look up discount code
+	if(!empty($membership_discount_code) && empty($membership_code_id))
+		$membership_code_id = $wpdb->get_var("SELECT id FROM $wpdb->pmpro_discount_codes WHERE `code` = '" . esc_sql($membership_discount_code) . "' LIMIT 1");		
 		
 	//change membership level
 	if(!empty($membership_id))
@@ -158,7 +202,7 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 	//add order so integration with gateway works
 	if(
 		!empty($membership_subscription_transaction_id) && !empty($membership_gateway) ||
-		!empty($membership_timestamp)
+		!empty($membership_timestamp) || !empty($membership_code_id)
 	)
 	{
 		$order = new MemberOrder();
@@ -180,8 +224,12 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 			$order->updateTimeStamp(date("Y", $timestamp), date("m", $timestamp), date("d", $timestamp), date("H:i:s", $timestamp));
 		}
 	}
+	
+	//add code use
+	if(!empty($membership_code_id) && !empty($order) && !empty($order->id))
+		$wpdb->query("INSERT INTO $wpdb->pmpro_discount_codes_uses (code_id, user_id, order_id, timestamp) VALUES('" . esc_sql($membership_code_id) . "', '" . esc_sql($user_id) . "', '" . intval($order->id) . "', now())");
 
-    //email user if global is set
+	//email user if global is set
     if(!empty($pmproiufcsv_email))
     {
         $email = new PMProEmail();
