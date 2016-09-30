@@ -191,6 +191,12 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 			$wpdb->query($sqlQuery);
 			$membership_in_the_past = true;
 		}
+		
+		if($membership_status === "active" && (empty($membership_enddate) || $membership_enddate === "NULL" || strtotime($membership_enddate, current_time('timestamp')) >= current_time('timestamp')))
+		{			
+			$sqlQuery = $wpdb->prepare("UPDATE {$wpdb->pmpro_memberships_users} SET status = 'active' WHERE user_id = %d AND membership_id = %d", $user_id, $membership_id);		
+			$wpdb->query($sqlQuery);
+		}
 	}
 	
 	//look for a subscription transaction id and gateway
