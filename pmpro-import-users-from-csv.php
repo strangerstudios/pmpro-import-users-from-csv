@@ -49,6 +49,25 @@ Author URI: http://www.strangerstudios.com
 */
 
 /*
+* Check if import users from CSV exists
+*/
+ function pmproiufcsv_check(){
+ 	if( !defined( 'IS_IU_CSV_DELIMITER' ) ){
+ 	add_action( 'admin_notices', 'pmproiufcsv_admin_notice' );
+ 	}
+ }
+
+add_action( 'admin_init', 'pmproiufcsv_check' );
+
+function pmproiufcsv_admin_notice(){
+	?>
+    <div class="notice notice-warning">
+        <p><?php _e( 'In order for Paid Memberships Pro - Import Users from CSV to function correctly, please install <a href="https://wordpress.org/plugins/import-users-from-csv/" target="_blank"><u>Import Users from CSV</u><a>  ', 'pmproiufcsv' ); ?></p>
+    </div>
+    <?php
+}
+
+/*
 	Get list of PMPro-related fields
 */
 function pmproiufcsv_getFields() {
