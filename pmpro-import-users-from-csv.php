@@ -151,13 +151,13 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 		
 	//fix date formats
 	if(!empty($membership_startdate))
-		$membership_startdate = date("Y-m-d", strtotime($membership_startdate, current_time('timestamp')));
+		$membership_startdate = date_i18n("Y-m-d", strtotime($membership_startdate, current_time('timestamp')));
 	if(!empty($membership_enddate))
-		$membership_enddate = date("Y-m-d", strtotime($membership_enddate, current_time('timestamp')));
+		$membership_enddate = date_i18n("Y-m-d", strtotime($membership_enddate, current_time('timestamp')));
 	else
 		$membership_enddate = "NULL";
 	if(!empty($membership_timestamp))	
-		$membership_timestamp = date("Y-m-d", strtotime($membership_timestamp, current_time('timestamp')));
+		$membership_timestamp = date_i18n("Y-m-d", strtotime($membership_timestamp, current_time('timestamp')));
 	
 	//look up discount code
 	if(!empty($membership_discount_code) && empty($membership_code_id))
@@ -227,7 +227,7 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 		if(!empty($membership_timestamp))
 		{
 			$timestamp = strtotime($membership_timestamp, current_time('timestamp'));
-			$order->updateTimeStamp(date("Y", $timestamp), date("m", $timestamp), date("d", $timestamp), date("H:i:s", $timestamp));
+			$order->updateTimeStamp(date_i18n("Y", $timestamp), date_i18n("m", $timestamp), date_i18n("d", $timestamp), date_i18n("H:i:s", $timestamp));
 		}
 	}
 	
