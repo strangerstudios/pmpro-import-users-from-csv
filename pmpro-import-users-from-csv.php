@@ -239,7 +239,7 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
     if(!empty($pmproiufcsv_email))
     {
         $email = new PMProEmail();
-        $email->recipient = $user->user_email;
+        $email->email = $user->user_email;
         $email->subject = $pmproiufcsv_email['subject'];
         $email->body = $pmproiufcsv_email['body'];
         $email->template = 'pmproiufcsv';
