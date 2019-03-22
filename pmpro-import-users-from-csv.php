@@ -3,7 +3,7 @@
 Plugin Name: Paid Memberships Pro - Import Users from CSV Add On
 Plugin URI: http://www.paidmembershipspro.com/pmpro-import-users-from-csv/
 Description: Add-on for the Import Users From CSV plugin to import PMPro and membership-related fields.
-Version: .3.3
+Version: .3.4
 =======
 Author: Stranger Studios
 Author URI: http://www.strangerstudios.com

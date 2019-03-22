@@ -2,8 +2,8 @@
 Contributors: strangerstudios
 Tags: paid memberships pro, import users from csv, import, csv, members
 Requires at least: 3.0
-Tested up to: 4.5
-Stable tag: .3.3
+Tested up to: 5.1
+Stable tag: .3.4
 
 Add-on for the Import Users From CSV plugin to import PMPro and membership-related fields.
  
