@@ -219,8 +219,7 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 		$order->subscription_transaction_id = $membership_subscription_transaction_id;
 		$order->affiliate_id = $membership_affiliate_id;
 		$order->gateway = $membership_gateway;
-		if(!empty($membership_in_the_past))
-			$order->status = "cancelled";
+		$order->status = ! empty( $membership_in_the_past ) ? 'cancelled' : 'success';
 		$order->saveOrder();
 
 		//update timestamp of order?
