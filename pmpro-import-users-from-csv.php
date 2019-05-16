@@ -4,7 +4,6 @@ Plugin Name: Paid Memberships Pro - Import Users from CSV Add On
 Plugin URI: http://www.paidmembershipspro.com/pmpro-import-users-from-csv/
 Description: Add-on for the Import Users From CSV plugin to import PMPro and membership-related fields.
 Version: .3.4
-=======
 Author: Stranger Studios
 Author URI: http://www.strangerstudios.com
 */
@@ -33,6 +32,7 @@ Author URI: http://www.strangerstudios.com
 		- membership_gateway ** (gateway = check, stripe, paypalstandard, paypalexpress, paypal (for website payments pro), payflowpro, authorizenet, braintree)
 		- membership_payment_transaction_id	
 		- membership_affiliate_id
+		- membership_order_status (PayPal order status)
 		- membership_timestamp
 	4. Go to Users --> Import From CSV. Browse to CSV file and import.
 		- pmpro_stripe_customerid (for Stripe users, will be same as membership_subscription_transaction_id above)
@@ -68,6 +68,7 @@ function pmproiufcsv_getFields() {
 		"membership_enddate",
 		"membership_subscription_transaction_id",
 		"membership_payment_transaction_id",
+		"membership_order_status",
 		"membership_gateway",
 		"membership_affiliate_id",
 		"membership_timestamp"
@@ -202,6 +203,7 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 	//look for a subscription transaction id and gateway
 	$membership_subscription_transaction_id = $user->import_membership_subscription_transaction_id;
 	$membership_payment_transaction_id = $user->import_membership_payment_transaction_id;
+	$membership_order_status = $user->import_membership_order_status;
 	$membership_affiliate_id = $user->import_membership_affiliate_id;
 	$membership_gateway = $user->import_membership_gateway;
 		
@@ -219,7 +221,15 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 		$order->subscription_transaction_id = $membership_subscription_transaction_id;
 		$order->affiliate_id = $membership_affiliate_id;
 		$order->gateway = $membership_gateway;
-		$order->status = ! empty( $membership_in_the_past ) ? 'cancelled' : 'success';
+		
+		if ( ! empty( $membership_order_status ) ) {
+			$order->status = $membership_order_status;
+		} elseif ( ! empty( $membership_in_the_past ) ) {
+			$order->status = 'cancelled';
+		} else {
+			$order->status = 'success';
+		}
+		
 		$order->saveOrder();
 
 		//update timestamp of order?
