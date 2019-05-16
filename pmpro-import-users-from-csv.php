@@ -228,7 +228,8 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 		
 	//add order so integration with gateway works
 	if(
-		!empty($membership_subscription_transaction_id) && !empty($membership_gateway) ||
+// 		!empty($membership_subscription_transaction_id) && 
+		!empty($membership_gateway) ||
 		!empty($membership_timestamp) || !empty($membership_code_id)
 	)
 	{
