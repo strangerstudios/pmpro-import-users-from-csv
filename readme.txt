@@ -63,7 +63,9 @@ Please visit our premium support site at http://www.paidmembershipspro.com for m
 == Changelog ==
 
 = .3.4 =
-* BUG/ENHANCEMENT: Setting order status to "success" by default for gateway integration.
+* BUG FIX: Fixed bug with the welcome email sent if using the $pmproiufcsv_email global.
+* BUG FIX/ENHANCEMENT: Setting order status to "success" by default for gateway integration. You can also now set a specific membership_order_status column for imported rows.
+* ENHANCEMENT: Now showing a notice if the Import Users From CSV plugin is not also installed.
 
 = .3.3 =
 * BUG/ENHANCEMENT: Deleting previous import_ user meta before an import. We don't want to process old import data if the same user is imported twice with different columns.

@@ -60,9 +60,15 @@ Author URI: http://www.strangerstudios.com
 add_action( 'admin_init', 'pmproiufcsv_check' );
 
 function pmproiufcsv_admin_notice(){
+	// Don't want to show this on the plugin install page.
+	$screen = get_current_screen();
+	if ( ! empty( $screen ) && $screen->base == 'plugin-install' ) {
+		return;
+	}
+	
 	?>
     <div class="notice notice-warning">
-        <p><?php _e( 'In order for Paid Memberships Pro - Import Users from CSV to function correctly, please install <a href="https://wordpress.org/plugins/import-users-from-csv/" target="_blank"><u>Import Users from CSV</u><a>  ', 'pmproiufcsv' ); ?></p>
+        <p><?php printf( __( 'In order for <strong>Paid Memberships Pro - Import Users from CSV</strong> to function correctly, you must also install the <a href="%s">Import Users from CSV</a> plugin.', 'pmproiufcsv' ), esc_url( admin_url( 'plugin-install.php?tab=search&s=import+users+from+csv+andrew+lima' ) ) ); ?></p>
     </div>
     <?php
 }
