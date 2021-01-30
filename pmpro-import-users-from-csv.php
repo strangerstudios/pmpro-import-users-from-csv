@@ -6,6 +6,8 @@ Description: Add-on for the Import Users From CSV plugin to import PMPro and mem
 Version: .3.4
 Author: Stranger Studios
 Author URI: http://www.strangerstudios.com
+Text Domain: pmpro-import-users-from-csv
+Domain Path: /languages
 */
 /*
 	Copyright 2011	Stranger Studios	(email : jason@strangerstudios.com)
