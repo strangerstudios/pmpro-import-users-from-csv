@@ -6,6 +6,8 @@ Description: Add-on for the Import Users From CSV plugin to import PMPro and mem
 Version: .3.4
 Author: Stranger Studios
 Author URI: http://www.strangerstudios.com
+Text Domain: pmpro-import-users-from-csv
+Domain Path: /languages
 */
 /*
 	Copyright 2011	Stranger Studios	(email : jason@strangerstudios.com)
@@ -49,6 +51,14 @@ Author URI: http://www.strangerstudios.com
 */
 
 /*
+	Load plugin textdomain.
+*/
+function pmproiufcsv_load_textdomain() {
+	load_plugin_textdomain( 'pmpro-import-users-from-csv', false, plugin_basename( dirname( __FILE__ ) ) . '/languages' );
+}
+add_action( 'init', 'pmproiufcsv_load_textdomain' );
+
+/*
 * Check if import users from CSV exists
 */
  function pmproiufcsv_check(){
@@ -68,7 +78,9 @@ function pmproiufcsv_admin_notice(){
 	
 	?>
     <div class="notice notice-warning">
-        <p><?php printf( __( 'In order for <strong>Paid Memberships Pro - Import Users from CSV</strong> to function correctly, you must also install the <a href="%s">Import Users from CSV</a> plugin.', 'pmproiufcsv' ), esc_url( admin_url( 'plugin-install.php?tab=search&s=import+users+from+csv+andrew+lima' ) ) ); ?></p>
+		<p><?php 
+		/* translators: The placeholder links to a URL */
+		printf( __( 'In order for <strong>Paid Memberships Pro - Import Users from CSV</strong> to function correctly, you must also install the <a href="%s">Import Users from CSV</a> plugin.', 'pmpro-import-users-from-csv' ), esc_url( admin_url( 'plugin-install.php?tab=search&s=import+users+from+csv+andrew+lima' ) ) ); ?></p>
     </div>
     <?php
 }
@@ -290,8 +302,8 @@ function pmproiufcsv_plugin_row_meta($links, $file) {
 	if(strpos($file, 'pmpro-import-users-from-csv.php') !== false)
 	{
 		$new_links = array(
-			'<a href="' . esc_url('http://www.paidmembershipspro.com/add-ons/third-party-integration/pmpro-import-users-csv/')  . '" title="' . esc_attr( __( 'View Documentation', 'pmpro' ) ) . '">' . __( 'Docs', 'pmpro' ) . '</a>',
-			'<a href="' . esc_url('http://paidmembershipspro.com/support/') . '" title="' . esc_attr( __( 'Visit Customer Support Forum', 'pmpro' ) ) . '">' . __( 'Support', 'pmpro' ) . '</a>',
+			'<a href="' . esc_url('http://www.paidmembershipspro.com/add-ons/third-party-integration/pmpro-import-users-csv/')  . '" title="' . esc_attr( __( 'View Documentation', 'pmpro-import-users-from-csv' ) ) . '">' . __( 'Docs', 'pmpro-import-users-from-csv' ) . '</a>',
+			'<a href="' . esc_url('http://paidmembershipspro.com/support/') . '" title="' . esc_attr( __( 'Visit Customer Support Forum', 'pmpro-import-users-from-csv' ) ) . '">' . __( 'Support', 'pmpro-import-users-from-csv' ) . '</a>',
 		);
 		$links = array_merge($links, $new_links);
 	}
