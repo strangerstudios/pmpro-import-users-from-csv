@@ -51,6 +51,14 @@ Domain Path: /languages
 */
 
 /*
+	Load plugin textdomain.
+*/
+function pmproiufcsv_load_textdomain() {
+	load_plugin_textdomain( 'pmpro-import-users-from-csv', false, plugin_basename( dirname( __FILE__ ) ) . '/languages' );
+}
+add_action( 'init', 'pmproiufcsv_load_textdomain' );
+
+/*
 * Check if import users from CSV exists
 */
  function pmproiufcsv_check(){
