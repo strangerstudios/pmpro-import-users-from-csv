@@ -78,7 +78,9 @@ function pmproiufcsv_admin_notice(){
 	
 	?>
     <div class="notice notice-warning">
-        <p><?php printf( __( 'In order for <strong>Paid Memberships Pro - Import Users from CSV</strong> to function correctly, you must also install the <a href="%s">Import Users from CSV</a> plugin.', 'pmpro-import-users-from-csv' ), esc_url( admin_url( 'plugin-install.php?tab=search&s=import+users+from+csv+andrew+lima' ) ) ); ?></p>
+		<p><?php 
+		/* translators: The placeholder links to a URL */
+		printf( __( 'In order for <strong>Paid Memberships Pro - Import Users from CSV</strong> to function correctly, you must also install the <a href="%s">Import Users from CSV</a> plugin.', 'pmpro-import-users-from-csv' ), esc_url( admin_url( 'plugin-install.php?tab=search&s=import+users+from+csv+andrew+lima' ) ) ); ?></p>
     </div>
     <?php
 }
