@@ -73,6 +73,92 @@ function pmproiufcsv_admin_notice(){
     <?php
 }
 
+function pmproiufcsv_plugin_activation() {
+	
+	if( pmproiufcsv_is_plugin_installed( 'import-users-from-csv/import-users-from-csv.php' ) ){
+
+		
+
+	}
+
+}
+register_activation_hook( __FILE__, 'pmproiufcsv_plugin_activation' );
+
+
+function pmproiufcsv_auto_activate_importer() {
+
+	if( !empty( $_REQUEST['pmproiudcsv'] ) ){
+
+		$plugin_slug = 'import-users-from-csv/import-users-from-csv.php';
+
+		$plugin_zip = 'https://downloads.wordpress.org/plugin/import-users-from-csv.zip';
+
+		if ( pmproiufcsv_is_plugin_installed( $plugin_slug ) ) {
+
+			pmproiufcsv_upgrade_plugin( $plugin_slug );
+
+			$installed = true;
+		
+		} else {
+
+			$installed = pmproiufcsv_install_plugin( $plugin_zip );
+
+		}
+
+		if ( !is_wp_error( $installed ) && $installed ) {
+
+			$activate = activate_plugin( $plugin_slug );
+		 
+		} else {
+
+			//Failure to launch
+
+		}
+
+	}
+
+}
+add_action( 'admin_init', 'pmproiufcsv_auto_activate_importer' );
+
+function pmproiufcsv_is_plugin_installed( $slug ) {
+	
+	if ( ! function_exists( 'get_plugins' ) ) {
+		require_once ABSPATH . 'wp-admin/includes/plugin.php';
+	}
+	
+	$all_plugins = get_plugins();
+
+	if ( !empty( $all_plugins[$slug] ) ) {
+		return true;
+	} else {
+		return false;
+	}
+}
+ 
+function pmproiufcsv_install_plugin( $plugin_zip ) {
+	
+	include_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
+	
+	wp_cache_flush();
+
+	$upgrader = new Plugin_Upgrader();
+	$installed = $upgrader->install( $plugin_zip );
+
+	return $installed;
+}
+ 
+function pmproiufcsv_upgrade_plugin( $plugin_slug ) {
+	
+	include_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
+	wp_cache_flush();
+
+	$upgrader = new Plugin_Upgrader();
+	$upgraded = $upgrader->upgrade( $plugin_slug );
+
+	return $upgraded;
+}
+
+
 /*
 	Get list of PMPro-related fields
 */
