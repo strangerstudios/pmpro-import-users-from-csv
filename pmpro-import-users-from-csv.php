@@ -68,57 +68,50 @@ function pmproiufcsv_admin_notice(){
 	
 	?>
     <div class="notice notice-warning">
-        <p><?php printf( __( 'In order for <strong>Paid Memberships Pro - Import Users from CSV</strong> to function correctly, you must also install the <a href="%s">Import Users from CSV</a> plugin.', 'pmproiufcsv' ), esc_url( admin_url( 'plugin-install.php?tab=search&s=import+users+from+csv+andrew+lima' ) ) ); ?></p>
+        <p><?php printf( __( 'In order for <strong>Paid Memberships Pro - Import Users from CSV</strong> to function correctly, you must also install the <a href="%s">Import Users from CSV</a> plugin.', 'pmproiufcsv' ), esc_url( admin_url( 'tools.php?page=pmproiufcsv-install-plugin' ) ) ); ?></p>
     </div>
     <?php
 }
 
-function pmproiufcsv_plugin_activation() {
-	
-	if( pmproiufcsv_is_plugin_installed( 'import-users-from-csv/import-users-from-csv.php' ) ){
+function pmproiufcsv_installation_page(){
 
-		
-
-	}
+	add_submenu_page( '', __( 'Install Import Users from CSV Plugin', 'pmpro-import-users-from-csv' ), 'Install Import Users from CSV Plugin', 'manage_options', 'pmproiufcsv-install-plugin', 'pmproiufcsv_auto_activate_importer', null );
 
 }
-register_activation_hook( __FILE__, 'pmproiufcsv_plugin_activation' );
-
+add_action( 'admin_menu', 'pmproiufcsv_installation_page' );
 
 function pmproiufcsv_auto_activate_importer() {
 
-	if( !empty( $_REQUEST['pmproiudcsv'] ) ){
+	echo "<h3>".__( 'Paid Memberships Pro - Import Users from CSV Auto Installer', 'pmpro-import-users-from-csv' )."</h3>";
 
-		$plugin_slug = 'import-users-from-csv/import-users-from-csv.php';
+	$plugin_slug = 'import-users-from-csv/import-users-from-csv.php';
 
-		$plugin_zip = 'https://downloads.wordpress.org/plugin/import-users-from-csv.zip';
+	$plugin_zip = 'https://downloads.wordpress.org/plugin/import-users-from-csv.zip';
 
-		if ( pmproiufcsv_is_plugin_installed( $plugin_slug ) ) {
+	if ( pmproiufcsv_is_plugin_installed( $plugin_slug ) ) {
 
-			pmproiufcsv_upgrade_plugin( $plugin_slug );
+		pmproiufcsv_upgrade_plugin( $plugin_slug );
 
-			$installed = true;
-		
-		} else {
+		$installed = true;
+	
+	} else {
 
-			$installed = pmproiufcsv_install_plugin( $plugin_zip );
-
-		}
-
-		if ( !is_wp_error( $installed ) && $installed ) {
-
-			$activate = activate_plugin( $plugin_slug );
-		 
-		} else {
-
-			//Failure to launch
-
-		}
+		$installed = pmproiufcsv_install_plugin( $plugin_zip );
 
 	}
 
+	if ( !is_wp_error( $installed ) && $installed ) {
+
+		$activate = activate_plugin( $plugin_slug );
+	 
+	} else {
+
+		//Failure to launch
+
+	}
+
+
 }
-add_action( 'admin_init', 'pmproiufcsv_auto_activate_importer' );
 
 function pmproiufcsv_is_plugin_installed( $slug ) {
 	
