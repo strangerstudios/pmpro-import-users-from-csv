@@ -188,7 +188,12 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 	//look up discount code
 	if(!empty($membership_discount_code) && empty($membership_code_id))
 		$membership_code_id = $wpdb->get_var("SELECT id FROM $wpdb->pmpro_discount_codes WHERE `code` = '" . esc_sql($membership_discount_code) . "' LIMIT 1");		
-		
+	
+	if( pmpro_hasMembershipLevel( $membership_id, $user_id ) && ( !empty( $_REQUEST['supress_change_membership_hooks'] ) && $_REQUEST['supress_change_membership_hooks'] == '1' ) ){
+		//We're assuming they've already been imported with this level, so don't do it again
+		return;
+	} 
+	
 	//change membership level
 	if(!empty($membership_id))
 	{
@@ -298,3 +303,27 @@ function pmproiufcsv_plugin_row_meta($links, $file) {
 	return $links;
 }
 add_filter('plugin_row_meta', 'pmproiufcsv_plugin_row_meta', 10, 2);
+
+
+function pmproiufcsv_add_import_options(){
+
+	?>
+
+	<tr valign="top">
+		<td scope="row"><strong><?php _e( 'Supress Change Membership Level Hooks' , 'pmpro-import-users-from-csv'); ?></strong></td>
+		<td>
+			<fieldset>
+				<legend class="screen-reader-text"><span><?php _e( 'Supress Change Membership Level Hooks' , 'pmpro-import-users-from-csv' ); ?></span></legend>
+
+				<label for="supress_change_membership_hooks">
+					<input id="supress_change_membership_hooks" name="supress_change_membership_hooks" type="checkbox" value="1" />
+					<?php _e( 'Supress change membership level hooks during import?', 'pmpro-import-users-from-csv' ) ;?>
+				</label>
+			</fieldset>
+		</td>
+	</tr>
+
+	<?php
+
+}
+add_action( 'is_iu_import_page_inside_table_bottom', 'pmproiufcsv_add_import_options' );
