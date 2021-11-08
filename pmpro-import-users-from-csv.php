@@ -188,7 +188,23 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 	//look up discount code
 	if(!empty($membership_discount_code) && empty($membership_code_id))
 		$membership_code_id = $wpdb->get_var("SELECT id FROM $wpdb->pmpro_discount_codes WHERE `code` = '" . esc_sql($membership_discount_code) . "' LIMIT 1");		
-		
+	
+	//look for a subscription transaction id and gateway
+	$membership_subscription_transaction_id = $user->import_membership_subscription_transaction_id;
+	$membership_payment_transaction_id = $user->import_membership_payment_transaction_id;
+	$membership_order_status = $user->import_membership_order_status;
+	$membership_affiliate_id = $user->import_membership_affiliate_id;
+	$membership_gateway = $user->import_membership_gateway;
+
+	if( !empty( $membership_subscription_transaction_id ) && ( $membership_status == 'active' || empty( $membership_status ) ) && !empty( $membership_enddate ) ){
+		/**
+		 * If there is a membership_subscription_transaction_id column with a value AND membership_status column with value active (or assume active if missing) AND the membership_enddate column is not empty, then (1) set the membership_enddate to ''
+		 */
+		$membership_enddate = '';
+
+		add_filter( 'is_iu_errors_filter', 'pmproiufcsv_report_sub_error', 10, 2 );
+	}
+
 	//change membership level
 	if(!empty($membership_id))
 	{
@@ -223,14 +239,7 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 			$sqlQuery = $wpdb->prepare("UPDATE {$wpdb->pmpro_memberships_users} SET status = 'active' WHERE user_id = %d AND membership_id = %d ORDER BY id DESC LIMIT 1", $user_id, $membership_id);		
 			$wpdb->query($sqlQuery);
 		}
-	}
-	
-	//look for a subscription transaction id and gateway
-	$membership_subscription_transaction_id = $user->import_membership_subscription_transaction_id;
-	$membership_payment_transaction_id = $user->import_membership_payment_transaction_id;
-	$membership_order_status = $user->import_membership_order_status;
-	$membership_affiliate_id = $user->import_membership_affiliate_id;
-	$membership_gateway = $user->import_membership_gateway;
+	}	
 		
 	//add order so integration with gateway works
 	if(
@@ -282,6 +291,14 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
     }
 }
 add_action("is_iu_post_user_import", "pmproiufcsv_is_iu_post_user_import");
+
+function pmproiufcsv_report_sub_error ( $errors, $user_ids ){
+
+	$errors[] = new WP_Error( 'subscriptions_expiration', 'User imported with both an active subscription and a membership enddate. This configuration is not recommended with PMPro (https://www.paidmembershipspro.com/important-notes-on-recurring-billing-and-expiration-dates-for-membership-levels/). This user has been imported with no enddate.' );
+
+	return $errors;
+
+}
 
 /*
 Function to add links to the plugin row meta
