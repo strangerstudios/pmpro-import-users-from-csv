@@ -188,9 +188,26 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 	//look up discount code
 	if(!empty($membership_discount_code) && empty($membership_code_id))
 		$membership_code_id = $wpdb->get_var("SELECT id FROM $wpdb->pmpro_discount_codes WHERE `code` = '" . esc_sql($membership_discount_code) . "' LIMIT 1");		
-		
+	
+	$morder = new MemberOrder();
+	$last_order = $morder->getLastMemberOrder( $user_id );
+
+	$can_change_level = true;
+
+	if( !empty( $last_order ) ) {
+
+		if ( strpos( $last_order->notes, 'Imported On' ) !== false ) {
+			//Don't change, they already had an order imported.
+			$can_change_level = false;
+		} else if( $membership_status == 'active' && $membership_id == $last_order->membership_id && !empty( $membership_subscription_transaction_id ) ){
+			//Active, a subscription and the same level, don't import
+			$can_change_level = false;
+		}
+
+	}
+
 	//change membership level
-	if(!empty($membership_id))
+	if( ( !empty( $membership_id ) || !$last_order ) && $can_change_level )
 	{
 		$custom_level = array(
 			'user_id' => $user_id,
@@ -236,7 +253,8 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 	if(
 // 		!empty($membership_subscription_transaction_id) && 
 		!empty($membership_gateway) ||
-		!empty($membership_timestamp) || !empty($membership_code_id)
+		!empty($membership_timestamp) || !empty($membership_code_id) ||
+		!$can_change_level //Duplicate import, so don't create another o
 	)
 	{
 		$order = new MemberOrder();
@@ -255,6 +273,8 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 		} else {
 			$order->status = 'success';
 		}
+
+		$order->notes = ' Imported On '.current_time('mysql');
 		
 		$order->saveOrder();
 
