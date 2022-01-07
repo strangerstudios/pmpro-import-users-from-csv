@@ -73,6 +73,10 @@ function pmproiufcsv_admin_notice(){
     <?php
 }
 
+/**
+ * Sets up a hidden page to handle the installer
+ * @since TBA
+ */
 function pmproiufcsv_installation_page(){
 
 	add_submenu_page( '', __( 'Install Import Users from CSV Plugin', 'pmpro-import-users-from-csv' ), 'Install Import Users from CSV Plugin', 'manage_options', 'pmproiufcsv-install-plugin', 'pmproiufcsv_auto_activate_importer', null );
@@ -80,6 +84,10 @@ function pmproiufcsv_installation_page(){
 }
 add_action( 'admin_menu', 'pmproiufcsv_installation_page' );
 
+/**
+ * Installs the dependent plugin directly from WordPress.org
+ * @since TBA
+ */
 function pmproiufcsv_auto_activate_importer() {
 
 	echo "<h3>".__( 'Paid Memberships Pro - Import Users from CSV Auto Installer', 'pmpro-import-users-from-csv' )."</h3>";
@@ -106,13 +114,17 @@ function pmproiufcsv_auto_activate_importer() {
 	 
 	} else {
 
-		//Failure to launch
+		//Die quietly - the activate plugin function will handle errors, this is just an 'in case'
 
 	}
 
 
 }
 
+/**
+ * Check if a plugin is installed
+ * @since TBA
+ */
 function pmproiufcsv_is_plugin_installed( $slug ) {
 	
 	if ( ! function_exists( 'get_plugins' ) ) {
@@ -128,6 +140,10 @@ function pmproiufcsv_is_plugin_installed( $slug ) {
 	}
 }
  
+/**
+ * Install the plugin using core WP functionality
+ * @since TBA
+ */
 function pmproiufcsv_install_plugin( $plugin_zip ) {
 	
 	include_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
@@ -139,7 +155,11 @@ function pmproiufcsv_install_plugin( $plugin_zip ) {
 
 	return $installed;
 }
- 
+
+/**
+ * Upgrade/update a plugin if it is already installed on a site
+ * @since TBA
+ */
 function pmproiufcsv_upgrade_plugin( $plugin_slug ) {
 	
 	include_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
