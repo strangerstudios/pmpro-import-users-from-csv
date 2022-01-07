@@ -198,9 +198,8 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 
 	if( !empty( $membership_subscription_transaction_id ) && ( $membership_status == 'active' || empty( $membership_status ) ) && !empty( $membership_enddate ) ){
 		/**
-		 * If there is a membership_subscription_transaction_id column with a value AND membership_status column with value active (or assume active if missing) AND the membership_enddate column is not empty, then (1) set the membership_enddate to ''
+		 * If there is a membership_subscription_transaction_id column with a value AND membership_status column with value active (or assume active if missing) AND the membership_enddate column is not empty, then (1) throw an warning but continue to import
 		 */
-		$membership_enddate = '';
 
 		add_filter( 'is_iu_errors_filter', 'pmproiufcsv_report_sub_error', 10, 2 );
 	}
@@ -294,7 +293,9 @@ add_action("is_iu_post_user_import", "pmproiufcsv_is_iu_post_user_import");
 
 function pmproiufcsv_report_sub_error ( $errors, $user_ids ){
 
-	$errors[] = new WP_Error( 'subscriptions_expiration', 'User imported with both an active subscription and a membership enddate. This configuration is not recommended with PMPro (https://www.paidmembershipspro.com/important-notes-on-recurring-billing-and-expiration-dates-for-membership-levels/). This user has been imported with no enddate.' );
+	$error_message = sprintf( __('User imported with both an active subscription and a membership enddate. This configuration is not recommended with PMPro ($1$s). This user has been imported with no enddate.', 'pmpro-import-users-from-csv' ), 'https://www.paidmembershipspro.com/important-notes-on-recurring-billing-and-expiration-dates-for-membership-levels/' );
+	
+	$errors[] = new WP_Error( 'subscriptions_expiration', $error_message );
 
 	return $errors;
 
