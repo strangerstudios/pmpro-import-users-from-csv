@@ -186,20 +186,28 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 	$membership_startdate = $user->import_membership_startdate;
 	$membership_enddate = $user->import_membership_enddate;
 	$membership_timestamp = $user->import_membership_timestamp;
-		
+	
 	//fix date formats
-	if(!empty($membership_startdate))
-		$membership_startdate = date("Y-m-d", strtotime($membership_startdate, current_time('timestamp')));
-	if(!empty($membership_enddate))
-		$membership_enddate = date("Y-m-d", strtotime($membership_enddate, current_time('timestamp')));
-	else
-		$membership_enddate = "NULL";
-	if(!empty($membership_timestamp))	
-		$membership_timestamp = date("Y-m-d", strtotime($membership_timestamp, current_time('timestamp')));
+	if ( ! empty( $membership_startdate ) ) {
+		$membership_startdate = date( 'Y-m-d', strtotime( $membership_startdate, current_time( 'timestamp' ) ) );
+	} else {
+		$membership_startdate = current_time( 'mysql' );
+	}
+		
+	if ( ! empty( $membership_enddate ) ) {
+		$membership_enddate = date( 'Y-m-d', strtotime( $membership_enddate, current_time( 'timestamp' ) ) );
+	} else {	
+		$membership_enddate = 'NULL';
+	}
+
+	if ( ! empty( $membership_timestamp ) ) {
+		$membership_timestamp = date( 'Y-m-d', strtotime($membership_timestamp, current_time( 'timestamp' ) ) );
+	}	
 	
 	//look up discount code
-	if(!empty($membership_discount_code) && empty($membership_code_id))
-		$membership_code_id = $wpdb->get_var("SELECT id FROM $wpdb->pmpro_discount_codes WHERE `code` = '" . esc_sql($membership_discount_code) . "' LIMIT 1");		
+	if ( ! empty( $membership_discount_code ) && empty( $membership_code_id ) ) {
+		$membership_code_id = $wpdb->get_var( "SELECT id FROM $wpdb->pmpro_discount_codes WHERE `code` = '" . esc_sql( $membership_discount_code ) . "' LIMIT 1" );		
+	}
 	
 	//look for a subscription transaction id and gateway
 	$membership_subscription_transaction_id = $user->import_membership_subscription_transaction_id;
@@ -303,9 +311,18 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 }
 add_action("is_iu_post_user_import", "pmproiufcsv_is_iu_post_user_import");
 
+/**
+ * Add error/warning message if user's were imported with both a subscription and expiration date.
+ * 
+ * @since TBD
+ *
+ * @param array $errors An array of various error messages.
+ * @param [type] $user_ids
+ * @return array $error The error message that is set when an import fails.
+ */
 function pmproiufcsv_report_sub_error ( $errors, $user_ids ){
 
-	$error_message = sprintf( __('User imported with both an active subscription and a membership enddate. This configuration is not recommended with PMPro ($1$s). This user has been imported with no enddate.', 'pmpro-import-users-from-csv' ), 'https://www.paidmembershipspro.com/important-notes-on-recurring-billing-and-expiration-dates-for-membership-levels/' );
+	$error_message = sprintf( __( 'User imported with both an active subscription and a membership enddate. This configuration is not recommended with PMPro ($1$s). This user has been imported with no enddate.', 'pmpro-import-users-from-csv' ), 'https://www.paidmembershipspro.com/important-notes-on-recurring-billing-and-expiration-dates-for-membership-levels/' );
 	
 	$errors[] = new WP_Error( 'subscriptions_expiration', $error_message );
 
