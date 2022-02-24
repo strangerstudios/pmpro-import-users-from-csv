@@ -2,8 +2,8 @@
 Contributors: strangerstudios
 Tags: paid memberships pro, import users from csv, import, csv, members
 Requires at least: 3.0
-Tested up to: 4.5
-Stable tag: .3.3
+Tested up to: 5.1
+Stable tag: .3.4
 
 Add-on for the Import Users From CSV plugin to import PMPro and membership-related fields.
  
@@ -61,6 +61,12 @@ Please post it in the GitHub issue tracker here: https://github.com/strangerstud
 Please visit our premium support site at http://www.paidmembershipspro.com for more documentation and our support forums.
 
 == Changelog ==
+
+= .3.4 =
+* BUG FIX: Fixed bug with the welcome email sent if using the $pmproiufcsv_email global.
+* BUG FIX/ENHANCEMENT: Setting order status to "success" by default for gateway integration. You can also now set a specific membership_order_status column for imported rows.
+* ENHANCEMENT: Now showing a notice if the Import Users From CSV plugin is not also installed.
+
 = .3.3 =
 * BUG/ENHANCEMENT: Deleting previous import_ user meta before an import. We don't want to process old import data if the same user is imported twice with different columns.
 * BUG/ENHANCEMENT: Setting a membership_code_id column now adds the code_id to the pmpro_memberships_users table and also inserts a row into pmpro_discount_code_uses.

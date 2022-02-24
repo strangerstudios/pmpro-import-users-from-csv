@@ -3,8 +3,7 @@
 Plugin Name: Paid Memberships Pro - Import Users from CSV Add On
 Plugin URI: http://www.paidmembershipspro.com/pmpro-import-users-from-csv/
 Description: Add-on for the Import Users From CSV plugin to import PMPro and membership-related fields.
-Version: .3.3
-=======
+Version: .3.4
 Author: Stranger Studios
 Author URI: http://www.strangerstudios.com
 */
@@ -33,6 +32,7 @@ Author URI: http://www.strangerstudios.com
 		- membership_gateway ** (gateway = check, stripe, paypalstandard, paypalexpress, paypal (for website payments pro), payflowpro, authorizenet, braintree)
 		- membership_payment_transaction_id	
 		- membership_affiliate_id
+		- membership_order_status (PayPal order status)
 		- membership_timestamp
 	4. Go to Users --> Import From CSV. Browse to CSV file and import.
 		- pmpro_stripe_customerid (for Stripe users, will be same as membership_subscription_transaction_id above)
@@ -47,6 +47,31 @@ Author URI: http://www.strangerstudios.com
         'body'      => 'Your welcome email body text will go here.'        //email body
     );
 */
+
+/*
+* Check if import users from CSV exists
+*/
+ function pmproiufcsv_check(){
+ 	if( !defined( 'IS_IU_CSV_DELIMITER' ) ){
+ 	add_action( 'admin_notices', 'pmproiufcsv_admin_notice' );
+ 	}
+ }
+
+add_action( 'admin_init', 'pmproiufcsv_check' );
+
+function pmproiufcsv_admin_notice(){
+	// Don't want to show this on the plugin install page.
+	$screen = get_current_screen();
+	if ( ! empty( $screen ) && $screen->base == 'plugin-install' ) {
+		return;
+	}
+	
+	?>
+    <div class="notice notice-warning">
+        <p><?php printf( __( 'In order for <strong>Paid Memberships Pro - Import Users from CSV</strong> to function correctly, you must also install the <a href="%s">Import Users from CSV</a> plugin.', 'pmproiufcsv' ), esc_url( admin_url( 'plugin-install.php?tab=search&s=import+users+from+csv+andrew+lima' ) ) ); ?></p>
+    </div>
+    <?php
+}
 
 /*
 	Get list of PMPro-related fields
@@ -68,6 +93,7 @@ function pmproiufcsv_getFields() {
 		"membership_enddate",
 		"membership_subscription_transaction_id",
 		"membership_payment_transaction_id",
+		"membership_order_status",
 		"membership_gateway",
 		"membership_affiliate_id",
 		"membership_timestamp"
@@ -202,12 +228,14 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 	//look for a subscription transaction id and gateway
 	$membership_subscription_transaction_id = $user->import_membership_subscription_transaction_id;
 	$membership_payment_transaction_id = $user->import_membership_payment_transaction_id;
+	$membership_order_status = $user->import_membership_order_status;
 	$membership_affiliate_id = $user->import_membership_affiliate_id;
 	$membership_gateway = $user->import_membership_gateway;
 		
 	//add order so integration with gateway works
 	if(
-		!empty($membership_subscription_transaction_id) && !empty($membership_gateway) ||
+// 		!empty($membership_subscription_transaction_id) && 
+		!empty($membership_gateway) ||
 		!empty($membership_timestamp) || !empty($membership_code_id)
 	)
 	{
@@ -219,8 +247,15 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 		$order->subscription_transaction_id = $membership_subscription_transaction_id;
 		$order->affiliate_id = $membership_affiliate_id;
 		$order->gateway = $membership_gateway;
-		if(!empty($membership_in_the_past))
-			$order->status = "cancelled";
+		
+		if ( ! empty( $membership_order_status ) ) {
+			$order->status = $membership_order_status;
+		} elseif ( ! empty( $membership_in_the_past ) ) {
+			$order->status = 'cancelled';
+		} else {
+			$order->status = 'success';
+		}
+		
 		$order->saveOrder();
 
 		//update timestamp of order?
@@ -239,7 +274,7 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
     if(!empty($pmproiufcsv_email))
     {
         $email = new PMProEmail();
-        $email->recipient = $user->user_email;
+        $email->email = $user->user_email;
         $email->subject = $pmproiufcsv_email['subject'];
         $email->body = $pmproiufcsv_email['body'];
         $email->template = 'pmproiufcsv';
