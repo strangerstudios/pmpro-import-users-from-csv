@@ -140,6 +140,17 @@ function pmproiufcsv_is_iu_pre_user_import($userdata, $usermeta) {
 			delete_user_meta($user->ID, "import_" . $field);
 		}
 	}
+
+	/**
+	 * Filter to allow cancellation of subscriptions during import.
+	 * 
+	 * @since TBD
+	 * @param boolean $allow_sub_cancellations Set this option to true if you want to let subscriptions cancel on the gateway level during import.
+	 */
+	if ( ! apply_filters( 'pmproiufcsv_cancel_prev_sub_on_import', false ) ) {
+		add_filter( 'pmpro_cancel_previous_subscriptions', '__return_false' );
+	}
+	
 }
 add_action('is_iu_pre_user_import', 'pmproiufcsv_is_iu_pre_user_import', 10, 2);
 
