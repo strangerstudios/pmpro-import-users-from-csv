@@ -227,6 +227,34 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 	//change membership level
 	if(!empty($membership_id))
 	{
+
+		/**
+		 * Try to bring over previous subscription information if it's missing from CSV file but found in the member's most recent order before changing their level.
+		 * This will help prevent multiple re-imports from cancelling the member's subscription at the gateway level.
+		 * 
+		 * @since TBD
+		 * @param boolean $fallback_prev_sub If no subscription_transaction_id is passed through, should we try to retrieve their last order sub_id_xxx as a fallback.
+		 */
+		if ( apply_filters( 'pmproiufcsv_subscription_transaction_id_fallback', true ) && empty( $membership_subscription_transaction_id ) ) {
+			$last_order = new MemberOrder();
+			$last_order->getLastMemberOrder( $user_id );
+
+			// If an order is found, let's try fallback to previous subscription values.
+			if ( isset( $last_order->id ) && ! empty( $last_order->id ) ) {
+				if ( empty( $membership_payment_transaction_id ) ) {
+					$membership_payment_transaction_id = $last_order->payment_transaction_id;
+				}
+			
+				if ( empty( $membership_subscription_transaction_id ) ) {
+					$membership_subscription_transaction_id = $last_order->subscription_transaction_id;
+				}
+
+				if ( empty( $membership_gateway ) ) {
+					$membership_gateway = $last_order->payment_gateway;
+				}
+			}
+		}
+
 		$custom_level = array(
 			'user_id' => $user_id,
 			'membership_id' => $membership_id,
@@ -242,7 +270,6 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 			'startdate' => $membership_startdate,
 			'enddate' => $membership_enddate
 		);
-				
 		pmpro_changeMembershipLevel($custom_level, $user_id);
 		
 		//if membership was in the past make it inactive
@@ -258,8 +285,8 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 			$sqlQuery = $wpdb->prepare("UPDATE {$wpdb->pmpro_memberships_users} SET status = 'active' WHERE user_id = %d AND membership_id = %d ORDER BY id DESC LIMIT 1", $user_id, $membership_id);		
 			$wpdb->query($sqlQuery);
 		}
-	}	
-		
+	}
+	
 	//add order so integration with gateway works
 	if(
 // 		!empty($membership_subscription_transaction_id) && 
