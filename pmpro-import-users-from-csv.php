@@ -75,112 +75,64 @@ function pmproiufcsv_admin_notice(){
 	if ( ! empty( $screen ) && $screen->base == 'plugin-install' ) {
 		return;
 	}
-	
+
+	$action_url = wp_nonce_url(
+		add_query_arg(
+			[
+				'action' => 'install-plugin',
+				'plugin' => 'import-users-from-csv',
+			],
+			admin_url( 'update.php' )
+		),
+		'install-plugin_import-users-from-csv'
+	);
+
+	// Maybe use the activate link if the plugin is installed but not activated.
+	if ( pmproiufcsv_is_plugin_installed( 'import-users-from-csv/import-users-from-csv.php' ) ) {
+		$action_url = wp_nonce_url(
+			add_query_arg(
+				[
+					'action' => 'activate',
+					'plugin' => 'import-users-from-csv',
+				],
+				admin_url( 'plugins.php' )
+			),
+			'activate-plugin_import-users-from-csv'
+		);
+	}
+
 	?>
     <div class="notice notice-warning">
-        <p><?php printf( __( 'In order for <strong>Paid Memberships Pro - Import Users from CSV</strong> to function correctly, you must also install the <a href="%s">Import Users from CSV</a> plugin.', 'pmpro-import-users-from-csv' ), esc_url( admin_url( 'tools.php?page=pmproiufcsv-install-plugin' ) ) ); ?></p>
+        <p>
+			<?php
+			printf(
+				__( 'In order for <strong>Paid Memberships Pro - Import Users from CSV</strong> to function correctly, you must also install the <a href="%s">Import Users from CSV</a> plugin.', 'pmpro-import-users-from-csv' ),
+				esc_url( $action_url )
+			);
+			?>
+		</p>
     </div>
     <?php
 }
 
 /**
- * Sets up a hidden page to handle the installer
+ * Determine whether a plugin is installed.
+ *
  * @since TBA
+ *
+ * @param string $plugin The plugin to check if installed.
+ *
+ * @return bool Whether a plugin is installed.
  */
-function pmproiufcsv_installation_page(){
-
-	add_submenu_page( '', __( 'Install Import Users from CSV Plugin', 'pmpro-import-users-from-csv' ), 'Install Import Users from CSV Plugin', 'manage_options', 'pmproiufcsv-install-plugin', 'pmproiufcsv_auto_activate_importer', null );
-
-}
-add_action( 'admin_menu', 'pmproiufcsv_installation_page' );
-
-/**
- * Installs the dependent plugin directly from WordPress.org
- * @since TBA
- */
-function pmproiufcsv_auto_activate_importer() {
-
-	echo "<h3>".__( 'Paid Memberships Pro - Import Users from CSV Auto Installer', 'pmpro-import-users-from-csv' )."</h3>";
-
-	$plugin_slug = 'import-users-from-csv/import-users-from-csv.php';
-
-	$plugin_zip = 'https://downloads.wordpress.org/plugin/import-users-from-csv.zip';
-
-	if ( pmproiufcsv_is_plugin_installed( $plugin_slug ) ) {
-
-		pmproiufcsv_upgrade_plugin( $plugin_slug );
-
-		$installed = true;
-	
-	} else {
-
-		$installed = pmproiufcsv_install_plugin( $plugin_zip );
-
-	}
-
-	if ( !is_wp_error( $installed ) && $installed ) {
-
-		$activate = activate_plugin( $plugin_slug );
-	 
-	} else {
-
-		//Die quietly - the activate plugin function will handle errors, this is just an 'in case'
-
-	}
-
-
-}
-
-/**
- * Check if a plugin is installed
- * @since TBA
- */
-function pmproiufcsv_is_plugin_installed( $slug ) {
-	
+function pmproiufcsv_is_plugin_installed( $plugin ) {
 	if ( ! function_exists( 'get_plugins' ) ) {
 		require_once ABSPATH . 'wp-admin/includes/plugin.php';
 	}
-	
+
 	$all_plugins = get_plugins();
 
-	if ( !empty( $all_plugins[$slug] ) ) {
-		return true;
-	} else {
-		return false;
-	}
+	return ! empty( $all_plugins[ $plugin ] );
 }
- 
-/**
- * Install the plugin using core WP functionality
- * @since TBA
- */
-function pmproiufcsv_install_plugin( $plugin_zip ) {
-	
-	include_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
-	
-	wp_cache_flush();
-
-	$upgrader = new Plugin_Upgrader();
-	$installed = $upgrader->install( $plugin_zip );
-
-	return $installed;
-}
-
-/**
- * Upgrade/update a plugin if it is already installed on a site
- * @since TBA
- */
-function pmproiufcsv_upgrade_plugin( $plugin_slug ) {
-	
-	include_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
-	wp_cache_flush();
-
-	$upgrader = new Plugin_Upgrader();
-	$upgraded = $upgrader->upgrade( $plugin_slug );
-
-	return $upgraded;
-}
-
 
 /*
 	Get list of PMPro-related fields
