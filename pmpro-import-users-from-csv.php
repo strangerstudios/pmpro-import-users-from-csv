@@ -205,7 +205,13 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 	}	
 
 	if ( ! empty( $membership_discount_code ) && empty( $membership_code_id ) )
-		$membership_code_id = $wpdb->get_var("SELECT id FROM $wpdb->pmpro_discount_codes WHERE `code` = '" . esc_sql($membership_discount_code) . "' LIMIT 1");		
+		$membership_code_id = $wpdb->get_var(
+			$wpdb->prepare( "
+				SELECT id
+				FROM $wpdb->pmpro_discount_codes
+				WHERE `code` = %s
+				LIMIT 1
+			", $membership_discount_code );
 	
 	if( pmpro_hasMembershipLevel( $membership_id, $user_id ) && ! empty( $_REQUEST['supress_change_membership_hooks'] ) ){
 		//We're assuming they've already been imported with this level, so don't do it again
