@@ -364,7 +364,8 @@ function pmproiufcsv_add_import_options(){
 		<td scope="row"><strong><?php _e( 'Supress Change Membership Level Hooks' , 'pmpro-import-users-from-csv'); ?></strong></td>
 		<td>
 			<fieldset>
-				<legend class="screen-reader-text"><span><?php _e( 'Supress Change Membership Level Hooks' , 'pmpro-import-users-from-csv' ); ?></span></legend>
+				<legend class="screen-reader-text"><span><?php esc_html_e( 'Supress Change Membership Level Hooks' , 'pmpro-import-users-from-csv' ); ?></span></legend>
+
 
 				<label for="supress_change_membership_hooks">
 					<input id="supress_change_membership_hooks" name="supress_change_membership_hooks" type="checkbox" value="1" />
