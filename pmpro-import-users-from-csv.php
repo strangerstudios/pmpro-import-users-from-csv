@@ -370,7 +370,8 @@ function pmproiufcsv_add_import_options(){
 
 				<label for="supress_change_membership_hooks">
 					<input id="supress_change_membership_hooks" name="supress_change_membership_hooks" type="checkbox" value="1" />
-					<?php _e( 'Supress change membership level hooks during import?', 'pmpro-import-users-from-csv' ) ;?>
+					<?php esc_html_e( 'Supress change membership level hooks during import?', 'pmpro-import-users-from-csv' ) ;?>
+
 				</label>
 			</fieldset>
 		</td>
