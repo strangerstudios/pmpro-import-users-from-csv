@@ -358,8 +358,12 @@ function pmproiufcsv_plugin_row_meta($links, $file) {
 }
 add_filter('plugin_row_meta', 'pmproiufcsv_plugin_row_meta', 10, 2);
 
-
-function pmproiufcsv_add_import_options(){
+/**
+ * Render the additional options for the Import Users from CSV plugin settings page.
+ *
+ * @since TBD
+ */
+function pmproiufcsv_add_import_options() {
 
 	?>
 
