@@ -202,25 +202,22 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 
 	if ( ! empty( $membership_timestamp ) ) {
 		$membership_timestamp = date( 'Y-m-d', strtotime($membership_timestamp, current_time( 'timestamp' ) ) );
-	}	
+	}
 
-	if ( ! empty( $membership_discount_code ) && empty( $membership_code_id ) )
+	if ( ! empty( $membership_discount_code ) && empty( $membership_code_id ) ) {
 		$membership_code_id = $wpdb->get_var(
 			$wpdb->prepare( "
 				SELECT id
 				FROM $wpdb->pmpro_discount_codes
 				WHERE `code` = %s
 				LIMIT 1
-			", $membership_discount_code );
-	
-	if( pmpro_hasMembershipLevel( $membership_id, $user_id ) && ! empty( $_REQUEST['supress_change_membership_hooks'] ) ){
-		//We're assuming they've already been imported with this level, so don't do it again
+			", $membership_discount_code )
+		);
+	}
+
+	// Check whether the member may already have been imported.
+	if( pmpro_hasMembershipLevel( $membership_id, $user_id ) && ! empty( $_REQUEST['suppress_change_membership_hooks'] ) ){
 		return;
-	} 
-	
-	//look up discount code
-	if ( ! empty( $membership_discount_code ) && empty( $membership_code_id ) ) {
-		$membership_code_id = $wpdb->get_var( "SELECT id FROM $wpdb->pmpro_discount_codes WHERE `code` = '" . esc_sql( $membership_discount_code ) . "' LIMIT 1" );		
 	}
 	
 	//look for a subscription transaction id and gateway
@@ -367,16 +364,16 @@ function pmproiufcsv_add_import_options(){
 	?>
 
 	<tr valign="top">
-		<td scope="row"><strong><?php esc_html_e( 'Supress Change Membership Level Hooks' , 'pmpro-import-users-from-csv'); ?></strong></td>
+		<td scope="row"><strong><?php esc_html_e( 'Suppress Change Membership Level Hooks' , 'pmpro-import-users-from-csv'); ?></strong></td>
 
 		<td>
 			<fieldset>
-				<legend class="screen-reader-text"><span><?php esc_html_e( 'Supress Change Membership Level Hooks' , 'pmpro-import-users-from-csv' ); ?></span></legend>
+				<legend class="screen-reader-text"><span><?php esc_html_e( 'Suppress Change Membership Level Hooks' , 'pmpro-import-users-from-csv' ); ?></span></legend>
 
 
-				<label for="supress_change_membership_hooks">
-					<input id="supress_change_membership_hooks" name="supress_change_membership_hooks" type="checkbox" value="1" />
-					<?php esc_html_e( 'Supress change membership level hooks during import?', 'pmpro-import-users-from-csv' ) ;?>
+				<label for="suppress_change_membership_hooks">
+					<input id="suppress_change_membership_hooks" name="suppress_change_membership_hooks" type="checkbox" value="1" />
+					<?php esc_html_e( 'Suppress change membership level hooks during import?', 'pmpro-import-users-from-csv' ) ;?>
 
 				</label>
 			</fieldset>
