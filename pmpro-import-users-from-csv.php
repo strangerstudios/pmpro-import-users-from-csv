@@ -216,7 +216,7 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 	}
 
 	// Check whether the member may already have been imported.
-	if( pmpro_hasMembershipLevel( $membership_id, $user_id ) && ! empty( $_REQUEST['suppress_change_membership_hooks'] ) ){
+	if( pmpro_hasMembershipLevel( $membership_id, $user_id ) && ! empty( $_REQUEST['skip_existing_members_same_level'] ) ){
 		return;
 	}
 	
@@ -361,23 +361,23 @@ add_filter('plugin_row_meta', 'pmproiufcsv_plugin_row_meta', 10, 2);
 /**
  * Render the additional options for the Import Users from CSV plugin settings page.
  *
- * @since TBD
+ * @since 0.4
  */
 function pmproiufcsv_add_import_options() {
 
 	?>
 
 	<tr valign="top">
-		<td scope="row"><strong><?php esc_html_e( 'Suppress Change Membership Level Hooks' , 'pmpro-import-users-from-csv'); ?></strong></td>
+		<td scope="row"><strong><?php esc_html_e( 'Skip importing users that already have the same level?' , 'pmpro-import-users-from-csv'); ?></strong></td>
 
 		<td>
 			<fieldset>
-				<legend class="screen-reader-text"><span><?php esc_html_e( 'Suppress Change Membership Level Hooks' , 'pmpro-import-users-from-csv' ); ?></span></legend>
+				<legend class="screen-reader-text"><span><?php esc_html_e( 'Skip importing users that already have the same level?' , 'pmpro-import-users-from-csv' ); ?></span></legend>
 
 
-				<label for="suppress_change_membership_hooks">
-					<input id="suppress_change_membership_hooks" name="suppress_change_membership_hooks" type="checkbox" value="1" />
-					<?php esc_html_e( 'Suppress change membership level hooks during import?', 'pmpro-import-users-from-csv' ) ;?>
+				<label for="skip_existing_members_same_level">
+					<input id="skip_existing_members_same_level" name="skip_existing_members_same_level" type="checkbox" value="1" />
+					<?php esc_html_e( 'Skip importing users if they already have the same membership level as the membership_id in the CSV?', 'pmpro-import-users-from-csv' ) ;?>
 
 				</label>
 			</fieldset>
