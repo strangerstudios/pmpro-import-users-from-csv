@@ -12,9 +12,9 @@ Domain Path: /languages
 /*
 	Copyright 2011	Stranger Studios	(email : jason@strangerstudios.com)
 	GPLv2 Full license details in license.txt
-	
+
 	You should have both the Import Users From CSV and Paid Memberships Pro plugins installed and activated before using this plugin.
-	
+
 	1. Activate Plugin
 	2. Add the usual columns to your import CSV: user_login, user_email, first_name, last_name, etc.
 	3. Add the following columns to your import CSV. * = required for membership level, ** = required for gateway subscription
@@ -32,7 +32,7 @@ Domain Path: /languages
 		- membership_enddate
 		- membership_subscription_transaction_id ** (subscription transaction id or customer id from the gateway)
 		- membership_gateway ** (gateway = check, stripe, paypalstandard, paypalexpress, paypal (for website payments pro), payflowpro, authorizenet, braintree)
-		- membership_payment_transaction_id	
+		- membership_payment_transaction_id
 		- membership_affiliate_id
 		- membership_order_status (PayPal order status)
 		- membership_timestamp
@@ -75,14 +75,63 @@ function pmproiufcsv_admin_notice(){
 	if ( ! empty( $screen ) && $screen->base == 'plugin-install' ) {
 		return;
 	}
-	
+
+	$action_url = wp_nonce_url(
+		add_query_arg(
+			[
+				'action' => 'install-plugin',
+				'plugin' => 'import-users-from-csv',
+			],
+			admin_url( 'update.php' )
+		),
+		'install-plugin_import-users-from-csv'
+	);
+
+	// Maybe use the activate link if the plugin is installed but not activated.
+	if ( pmproiufcsv_is_plugin_installed( 'import-users-from-csv/import-users-from-csv.php' ) ) {
+		$action_url = wp_nonce_url(
+			add_query_arg(
+				[
+					'action' => 'activate',
+					'plugin' => 'import-users-from-csv/import-users-from-csv.php',
+				],
+				admin_url( 'plugins.php' )
+			),
+			'activate-plugin_import-users-from-csv/import-users-from-csv.php'
+		);
+	}
+
 	?>
     <div class="notice notice-warning">
-		<p><?php 
-		/* translators: The placeholder links to a URL */
-		printf( __( 'In order for <strong>Paid Memberships Pro - Import Users from CSV</strong> to function correctly, you must also install the <a href="%s">Import Users from CSV</a> plugin.', 'pmpro-import-users-from-csv' ), esc_url( admin_url( 'plugin-install.php?tab=search&s=import+users+from+csv+andrew+lima' ) ) ); ?></p>
+        <p>
+			<?php
+			printf(
+				__( 'In order for <strong>Paid Memberships Pro - Import Users from CSV</strong> to function correctly, you must also install the <a href="%s">Import Users from CSV</a> plugin.', 'pmpro-import-users-from-csv' ),
+				esc_url( $action_url )
+			);
+			?>
+		</p>
     </div>
     <?php
+}
+
+/**
+ * Determine whether a plugin is installed.
+ *
+ * @since TBA
+ *
+ * @param string $plugin The plugin to check if installed.
+ *
+ * @return bool Whether a plugin is installed.
+ */
+function pmproiufcsv_is_plugin_installed( $plugin ) {
+	if ( ! function_exists( 'get_plugins' ) ) {
+		require_once ABSPATH . 'wp-admin/includes/plugin.php';
+	}
+
+	$all_plugins = get_plugins();
+
+	return ! empty( $all_plugins[ $plugin ] );
 }
 
 /*
@@ -110,7 +159,7 @@ function pmproiufcsv_getFields() {
 		"membership_affiliate_id",
 		"membership_timestamp"
 	);
-	
+
 	return $pmpro_fields;
 }
 
@@ -119,7 +168,7 @@ function pmproiufcsv_getFields() {
 */
 function pmproiufcsv_is_iu_pre_user_import($userdata, $usermeta) {
 	//try to get user by ID
-	$user = $user_id = false;	
+	$user = $user_id = false;
 	if ( isset( $userdata['ID'] ) )
 		$user = get_user_by( 'ID', $userdata['ID'] );
 
@@ -131,15 +180,26 @@ function pmproiufcsv_is_iu_pre_user_import($userdata, $usermeta) {
 		if ( ! $user && isset( $userdata['user_email'] ) )
 			$user = get_user_by( 'email', $userdata['user_email'] );
 	}
-	
+
 	//if we found someone delete the import_ user meta
 	if(!empty($user)) {
 		$pmpro_fields = pmproiufcsv_getFields();
-		
+
 		foreach($pmpro_fields as $field) {
 			delete_user_meta($user->ID, "import_" . $field);
 		}
 	}
+
+	/**
+	 * Filter to allow cancellation of subscriptions during import.
+	 * 
+	 * @since TBD
+	 * @param boolean $allow_sub_cancellations Set this option to true if you want to let subscriptions cancel on the gateway level during import.
+	 */
+	if ( ! apply_filters( 'pmproiufcsv_cancel_prev_sub_on_import', false ) ) {
+		add_filter( 'pmpro_cancel_previous_subscriptions', '__return_false' );
+	}
+	
 }
 add_action('is_iu_pre_user_import', 'pmproiufcsv_is_iu_pre_user_import', 10, 2);
 
@@ -149,16 +209,16 @@ add_action('is_iu_pre_user_import', 'pmproiufcsv_is_iu_pre_user_import', 10, 2);
 function pmproiufcsv_is_iu_import_usermeta($usermeta, $userdata)
 {
 	$pmpro_fields = pmproiufcsv_getFields();
-		
+
 	$newusermeta = array();
 	foreach($usermeta as $key => $value)
-	{		
+	{
 		if(in_array($key, $pmpro_fields))
 			$key = "import_" . $key;
-				
+
 		$newusermeta[$key] = $value;
 	}
-	
+
 	return $newusermeta;
 }
 add_filter("is_iu_import_usermeta", "pmproiufcsv_is_iu_import_usermeta", 10, 2);
@@ -170,7 +230,7 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 
 	wp_cache_delete($user_id, 'users');
 	$user = get_userdata($user_id);
-	
+
 	//look for a membership level and other information
 	$membership_id = $user->import_membership_id;
 	$membership_code_id = $user->import_membership_code_id;
@@ -186,17 +246,17 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 	$membership_startdate = $user->import_membership_startdate;
 	$membership_enddate = $user->import_membership_enddate;
 	$membership_timestamp = $user->import_membership_timestamp;
-	
+
 	//fix date formats
 	if ( ! empty( $membership_startdate ) ) {
 		$membership_startdate = date( 'Y-m-d', strtotime( $membership_startdate, current_time( 'timestamp' ) ) );
 	} else {
 		$membership_startdate = current_time( 'mysql' );
 	}
-		
+
 	if ( ! empty( $membership_enddate ) ) {
 		$membership_enddate = date( 'Y-m-d', strtotime( $membership_enddate, current_time( 'timestamp' ) ) );
-	} else {	
+	} else {
 		$membership_enddate = 'NULL';
 	}
 
@@ -218,8 +278,13 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 	// Check whether the member may already have been imported.
 	if( pmpro_hasMembershipLevel( $membership_id, $user_id ) && ! empty( $_REQUEST['skip_existing_members_same_level'] ) ){
 		return;
+  }
+
+	//look up discount code
+	if ( ! empty( $membership_discount_code ) && empty( $membership_code_id ) ) {
+		$membership_code_id = $wpdb->get_var( "SELECT id FROM $wpdb->pmpro_discount_codes WHERE `code` = '" . esc_sql( $membership_discount_code ) . "' LIMIT 1" );
 	}
-	
+
 	//look for a subscription transaction id and gateway
 	$membership_subscription_transaction_id = $user->import_membership_subscription_transaction_id;
 	$membership_payment_transaction_id = $user->import_membership_payment_transaction_id;
@@ -254,27 +319,27 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 			'startdate' => $membership_startdate,
 			'enddate' => $membership_enddate
 		);
-				
+
 		pmpro_changeMembershipLevel($custom_level, $user_id);
-		
+
 		//if membership was in the past make it inactive
 		if($membership_status === "inactive" || (!empty($membership_enddate) && $membership_enddate !== "NULL" && strtotime($membership_enddate, current_time('timestamp')) < current_time('timestamp')))
-		{			
-			$sqlQuery = "UPDATE $wpdb->pmpro_memberships_users SET status = 'inactive' WHERE user_id = '" . $user_id . "' AND membership_id = '" . $membership_id . "'";		
+		{
+			$sqlQuery = "UPDATE $wpdb->pmpro_memberships_users SET status = 'inactive' WHERE user_id = '" . $user_id . "' AND membership_id = '" . $membership_id . "'";
 			$wpdb->query($sqlQuery);
 			$membership_in_the_past = true;
 		}
-		
+
 		if($membership_status === "active" && (empty($membership_enddate) || $membership_enddate === "NULL" || strtotime($membership_enddate, current_time('timestamp')) >= current_time('timestamp')))
-		{			
-			$sqlQuery = $wpdb->prepare("UPDATE {$wpdb->pmpro_memberships_users} SET status = 'active' WHERE user_id = %d AND membership_id = %d ORDER BY id DESC LIMIT 1", $user_id, $membership_id);		
+		{
+			$sqlQuery = $wpdb->prepare("UPDATE {$wpdb->pmpro_memberships_users} SET status = 'active' WHERE user_id = %d AND membership_id = %d ORDER BY id DESC LIMIT 1", $user_id, $membership_id);
 			$wpdb->query($sqlQuery);
 		}
-	}	
-		
+	}
+
 	//add order so integration with gateway works
 	if(
-// 		!empty($membership_subscription_transaction_id) && 
+// 		!empty($membership_subscription_transaction_id) &&
 		!empty($membership_gateway) ||
 		!empty($membership_timestamp) || !empty($membership_code_id)
 	)
@@ -282,12 +347,12 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 		$order = new MemberOrder();
 		$order->user_id = $user_id;
 		$order->membership_id = $membership_id;
-		$order->InitialPayment = $membership_initial_payment;		
+		$order->InitialPayment = $membership_initial_payment;
 		$order->payment_transaction_id = $membership_payment_transaction_id;
 		$order->subscription_transaction_id = $membership_subscription_transaction_id;
 		$order->affiliate_id = $membership_affiliate_id;
 		$order->gateway = $membership_gateway;
-		
+
 		if ( ! empty( $membership_order_status ) ) {
 			$order->status = $membership_order_status;
 		} elseif ( ! empty( $membership_in_the_past ) ) {
@@ -295,7 +360,7 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 		} else {
 			$order->status = 'success';
 		}
-		
+
 		$order->saveOrder();
 
 		//update timestamp of order?
@@ -305,7 +370,7 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 			$order->updateTimeStamp(date("Y", $timestamp), date("m", $timestamp), date("d", $timestamp), date("H:i:s", $timestamp));
 		}
 	}
-	
+
 	//add code use
 	if(!empty($membership_code_id) && !empty($order) && !empty($order->id))
 		$wpdb->query("INSERT INTO $wpdb->pmpro_discount_codes_uses (code_id, user_id, order_id, timestamp) VALUES('" . esc_sql($membership_code_id) . "', '" . esc_sql($user_id) . "', '" . intval($order->id) . "', now())");
@@ -325,7 +390,7 @@ add_action("is_iu_post_user_import", "pmproiufcsv_is_iu_post_user_import");
 
 /**
  * Add error/warning message if user's were imported with both a subscription and expiration date.
- * 
+ *
  * @since TBD
  *
  * @param array $errors An array of various error messages.
@@ -335,7 +400,7 @@ add_action("is_iu_post_user_import", "pmproiufcsv_is_iu_post_user_import");
 function pmproiufcsv_report_sub_error ( $errors, $user_ids ){
 
 	$error_message = sprintf( __( 'User imported with both an active subscription and a membership enddate. This configuration is not recommended with PMPro ($1$s). This user has been imported with no enddate.', 'pmpro-import-users-from-csv' ), 'https://www.paidmembershipspro.com/important-notes-on-recurring-billing-and-expiration-dates-for-membership-levels/' );
-	
+
 	$errors[] = new WP_Error( 'subscriptions_expiration', $error_message );
 
 	return $errors;
