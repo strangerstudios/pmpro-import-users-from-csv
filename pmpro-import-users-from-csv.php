@@ -264,6 +264,22 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 		$membership_timestamp = date( 'Y-m-d', strtotime($membership_timestamp, current_time( 'timestamp' ) ) );
 	}
 
+	if ( ! empty( $membership_discount_code ) && empty( $membership_code_id ) ) {
+		$membership_code_id = $wpdb->get_var(
+			$wpdb->prepare( "
+				SELECT id
+				FROM $wpdb->pmpro_discount_codes
+				WHERE `code` = %s
+				LIMIT 1
+			", $membership_discount_code )
+		);
+	}
+
+	// Check whether the member may already have been imported.
+	if( pmpro_hasMembershipLevel( $membership_id, $user_id ) && ! empty( $_REQUEST['skip_existing_members_same_level'] ) ){
+		return;
+  }
+
 	//look up discount code
 	if ( ! empty( $membership_discount_code ) && empty( $membership_code_id ) ) {
 		$membership_code_id = $wpdb->get_var( "SELECT id FROM $wpdb->pmpro_discount_codes WHERE `code` = '" . esc_sql( $membership_discount_code ) . "' LIMIT 1" );
@@ -283,6 +299,7 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 
 		add_filter( 'is_iu_errors_filter', 'pmproiufcsv_report_sub_error', 10, 2 );
 	}
+
 
 	//change membership level
 	if(!empty($membership_id))
@@ -405,3 +422,34 @@ function pmproiufcsv_plugin_row_meta($links, $file) {
 	return $links;
 }
 add_filter('plugin_row_meta', 'pmproiufcsv_plugin_row_meta', 10, 2);
+
+/**
+ * Render the additional options for the Import Users from CSV plugin settings page.
+ *
+ * @since 0.4
+ */
+function pmproiufcsv_add_import_options() {
+
+	?>
+
+	<tr valign="top">
+		<td scope="row"><strong><?php esc_html_e( 'Skip existing members' , 'pmpro-import-users-from-csv'); ?></strong></td>
+
+		<td>
+			<fieldset>
+				<legend class="screen-reader-text"><span><?php esc_html_e( 'Skip existing members' , 'pmpro-import-users-from-csv' ); ?></span></legend>
+
+
+				<label for="skip_existing_members_same_level">
+					<input id="skip_existing_members_same_level" name="skip_existing_members_same_level" type="checkbox" value="1" />
+					<?php esc_html_e( 'Do not change membership level of user if they already have the same membership_id level during import', 'pmpro-import-users-from-csv' ) ;?>
+
+				</label>
+			</fieldset>
+		</td>
+	</tr>
+
+	<?php
+
+}
+add_action( 'is_iu_import_page_inside_table_bottom', 'pmproiufcsv_add_import_options' );
