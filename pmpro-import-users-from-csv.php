@@ -93,11 +93,11 @@ function pmproiufcsv_admin_notice(){
 			add_query_arg(
 				[
 					'action' => 'activate',
-					'plugin' => 'import-users-from-csv',
+					'plugin' => 'import-users-from-csv/import-users-from-csv.php',
 				],
 				admin_url( 'plugins.php' )
 			),
-			'activate-plugin_import-users-from-csv'
+			'activate-plugin_import-users-from-csv/import-users-from-csv.php'
 		);
 	}
 
