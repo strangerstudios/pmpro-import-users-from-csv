@@ -1,9 +1,9 @@
 === Paid Memberships Pro - Import Users from CSV Add On ===
 Contributors: strangerstudios
 Tags: paid memberships pro, import users from csv, import, csv, members
-Requires at least: 3.0
-Tested up to: 5.1
-Stable tag: .3.4
+Requires at least: 5.0
+Tested up to: 5.9
+Stable tag: 0.4
 
 Add-on for the Import Users From CSV plugin to import PMPro and membership-related fields.
  
@@ -61,6 +61,14 @@ Please post it in the GitHub issue tracker here: https://github.com/strangerstud
 Please visit our premium support site at http://www.paidmembershipspro.com for more documentation and our support forums.
 
 == Changelog ==
+
+= 0.4 - 2022-03-14 =
+* ENHANCEMENT: Added in an option to skip over members if trying to import members with their current membership level. This is helpful for large CSV files that may have duplicate records.
+* ENHANCEMENT: Prevent subscriptions from being cancelled by incorrect imports. Keep these subscriptions in tact, but can disable this logic by using the `pmproiufcsv_cancel_prev_sub_on_import` filter.
+* ENHANCEMENT: Show a notice if the Import Users From CSV (base) plugin isn't installed or activated which is required for this Add On to work.
+* ENHANCEMENT: Improved general SQL scripts where possible by using prepare method from WPDB class.
+* ENHANCEMENT: General improvements to localization of plugin, now translatable.
+* BUG FIX: Fixed issue where expiration date (membership_enddate) was being set to import's date when importing pre-existing members. This now removes the expiration date for existing members if the membership_enddate column is blank or missing.
 
 = .3.4 =
 * BUG FIX: Fixed bug with the welcome email sent if using the $pmproiufcsv_email global.

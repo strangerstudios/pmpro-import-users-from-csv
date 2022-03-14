@@ -1,0 +1,68 @@
+# Copyright (C) 2022 Stranger Studios
+# This file is distributed under the same license as the Paid Memberships Pro - Import Users from CSV Add On plugin.
+msgid ""
+msgstr ""
+"Project-Id-Version: Paid Memberships Pro - Import Users from CSV Add On .3.4\n"
+"Report-Msgid-Bugs-To: info@paidmembershipspro.com\n"
+"Last-Translator: Paid Memberships Pro <info@paidmembershipspro.com>\n"
+"Language-Team: Paid Memberships Pro <info@paidmembershipspro.com>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2022-03-14T09:10:40+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.6.0\n"
+"X-Domain: pmpro-import-users-from-csv\n"
+
+#. Plugin Name of the plugin
+msgid "Paid Memberships Pro - Import Users from CSV Add On"
+msgstr ""
+
+#. Plugin URI of the plugin
+msgid "http://www.paidmembershipspro.com/pmpro-import-users-from-csv/"
+msgstr ""
+
+#. Description of the plugin
+msgid "Add-on for the Import Users From CSV plugin to import PMPro and membership-related fields."
+msgstr ""
+
+#. Author of the plugin
+msgid "Stranger Studios"
+msgstr ""
+
+#. Author URI of the plugin
+msgid "http://www.strangerstudios.com"
+msgstr ""
+
+#: pmpro-import-users-from-csv.php:109
+msgid "In order for <strong>Paid Memberships Pro - Import Users from CSV</strong> to function correctly, you must also install the <a href=\"%s\">Import Users from CSV</a> plugin."
+msgstr ""
+
+#: pmpro-import-users-from-csv.php:402
+msgid "User imported with both an active subscription and a membership enddate. This configuration is not recommended with PMPro ($1$s). This user has been imported with no enddate."
+msgstr ""
+
+#: pmpro-import-users-from-csv.php:417
+msgid "View Documentation"
+msgstr ""
+
+#: pmpro-import-users-from-csv.php:417
+msgid "Docs"
+msgstr ""
+
+#: pmpro-import-users-from-csv.php:418
+msgid "Visit Customer Support Forum"
+msgstr ""
+
+#: pmpro-import-users-from-csv.php:418
+msgid "Support"
+msgstr ""
+
+#: pmpro-import-users-from-csv.php:436
+#: pmpro-import-users-from-csv.php:440
+msgid "Skip existing members"
+msgstr ""
+
+#: pmpro-import-users-from-csv.php:445
+msgid "Do not change membership level of user if they already have the same membership_id level during import"
+msgstr ""

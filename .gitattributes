@@ -1,0 +1,4 @@
+.gitattributes export-ignore
+.github export-ignore
+readme.md export-ignore
+pmpro-import-users-from-csv-add-on-banner.jpg export-ignore
