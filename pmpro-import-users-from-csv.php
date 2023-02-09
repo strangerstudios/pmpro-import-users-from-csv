@@ -407,6 +407,15 @@ function pmproiufcsv_report_sub_error ( $errors, $user_ids ){
 
 }
 
+/**
+ * Mark the plugin as MMPU-incompatible.
+ */
+function pmproiufcsv_mmpu_incompatible_add_ons( $incompatible ) {
+    $incompatible[] = 'PMPro Import Users from CSV Add On';
+    return $incompatible;
+}
+add_filter( 'pmpro_mmpu_incompatible_add_ons', 'pmproiufcsv_mmpu_incompatible_add_ons' );
+
 /*
 Function to add links to the plugin row meta
 */
