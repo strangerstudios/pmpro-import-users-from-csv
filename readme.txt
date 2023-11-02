@@ -5,7 +5,7 @@ Requires at least: 5.0
 Tested up to: 5.9
 Stable tag: 0.4
 
-Add-on for the Import Users From CSV plugin to import PMPro and membership-related fields.
+Automatically assign memberships and update subscriptions with the Import Users from CSV plugin.
  
 == Description ==
 
