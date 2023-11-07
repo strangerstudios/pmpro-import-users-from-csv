@@ -48,6 +48,11 @@ class PMPro_Import_Users_From_CSV {
 			require_once __DIR__ . '/includes/pmpro-membership-data.php';
 		}
 
+		// Include the class here.
+		if ( ! class_exists( 'ReadCSV' ) ) {
+			include plugin_dir_path( __FILE__ ) . 'class-readcsv.php';
+		}
+
 		do_action( 'pmproiucsv_after_init' );
 	}
 
@@ -95,9 +100,12 @@ class PMPro_Import_Users_From_CSV {
 			if ( isset( $_FILES['users_csv']['tmp_name'] ) ) {
 				// Setup settings variables
 				$filename              = $_FILES['users_csv']['tmp_name'];
-				$password_nag          = isset( $_POST['password_nag'] ) ? $_POST['password_nag'] : false;
 				$users_update          = isset( $_POST['users_update'] ) ? $_POST['users_update'] : false;
 				$new_user_notification = isset( $_POST['new_user_notification'] ) ? $_POST['new_user_notification'] : false;
+
+				/// Check this at a later stage.
+				// Before continuing, let's make sure the CSV file is valid.
+				// $is_csv_valid = self::is_csv_valid( $filename );			
 
 				// use AJAX?
 				if ( ! empty( $_POST['ajaximport'] ) ) {
@@ -206,7 +214,7 @@ class PMPro_Import_Users_From_CSV {
 			}
 		}
 
-		// Adds a query arg in the 
+		// Adds a query arg in the
 		if ( isset( $_GET['import'] ) ) {
 			$error_log_msg = '';
 			if ( file_exists( $error_log_file ) ) {
@@ -380,120 +388,131 @@ class PMPro_Import_Users_From_CSV {
 		$errors = $user_ids = array();
 
 		$defaults = array(
-			'password_nag' => false,
 			'new_user_notification' => false,
-			'users_update' => false,
-			'partial' => false,
-			'per_partial' => 20
+			'users_update'          => false,
+			'partial'               => false,
+			'per_partial'           => apply_filters( 'pmprocsv_ajax_import_batch', 20 ),
 		);
 		extract( wp_parse_args( $args, $defaults ) );
 
 		// User data fields list used to differentiate with user meta
-		$userdata_fields       = array(
-			'ID', 'user_login', 'user_pass',
-			'user_email', 'user_url', 'user_nicename',
-			'display_name', 'user_registered', 'first_name',
-			'last_name', 'nickname', 'description',
-			'rich_editing', 'comment_shortcuts', 'admin_color',
-			'use_ssl', 'show_admin_bar_front', 'show_admin_bar_admin',
-			'role'
+		$userdata_fields = array(
+			'ID',
+			'user_login',
+			'user_pass',
+			'user_email',
+			'user_url',
+			'user_nicename',
+			'display_name',
+			'user_registered',
+			'first_name',
+			'last_name',
+			'nickname',
+			'description',
+			'rich_editing',
+			'comment_shortcuts',
+			'admin_color',
+			'use_ssl',
+			'show_admin_bar_front',
+			'show_admin_bar_admin',
+			'role',
 		);
-
-		include( plugin_dir_path( __FILE__ ) . 'class-readcsv.php' );
 
 		// Loop through the file lines
 		$file_handle = fopen( $filename, 'r' );
-		$csv_reader = new ReadCSV( $file_handle, PMPROIUCSV_CSV_DELIMITER, "\xEF\xBB\xBF" ); // Skip any UTF-8 byte order mark.
+		$csv_reader  = new ReadCSV( $file_handle, PMPROIUCSV_CSV_DELIMITER, "\xEF\xBB\xBF" ); // Skip any UTF-8 byte order mark.
 
 		$first = true;
-		$rkey = 0;
-		while ( ( $line = $csv_reader->get_row() ) !== NULL ) {
+		$rkey  = 0;
+		while ( ( $line = $csv_reader->get_row() ) !== null ) {
 
 			// If the first line is empty, abort
 			// If another line is empty, just skip it
 			if ( empty( $line ) ) {
-				if ( $first )
+				if ( $first ) {
 					break;
-				else
+				} else {
 					continue;
+				}
 			}
 
 			// If we are on the first line, the columns are the headers
 			if ( $first ) {
 				$headers = $line;
-				$first = false;
+				$first   = false;
 
-				//skip ahead for partial imports
-				if(!empty($partial))
-				{
-					$position = get_transient('iufcsv_' . basename($filename));
-					if(!empty($position))
-					{					
-						$csv_reader->seek($position);
+				// skip ahead for partial imports
+				if ( ! empty( $partial ) ) {
+					$position = get_transient( 'pmproiucsv_' . basename( $filename ) );
+					if ( ! empty( $position ) ) {
+						$csv_reader->seek( $position );
 					}
 				}
 
 				continue;
 			}
 
-			// if($position == 1122)
-			// 	var_dump($line);
-
 			// Separate user data from meta
 			$userdata = $usermeta = array();
 			foreach ( $line as $ckey => $column ) {
-				$column_name = $headers[$ckey];
-				$column = trim( $column );
+				$column_name = $headers[ $ckey ];
+				$column      = trim( $column );
 
 				if ( in_array( $column_name, $userdata_fields ) ) {
-					$userdata[$column_name] = $column;
+					$userdata[ $column_name ] = $column;
 				} else {
-					$usermeta[$column_name] = $column;
+					$usermeta[ $column_name ] = $column;
 				}
 			}
 
 			// A plugin may need to filter the data and meta
-			$userdata = apply_filters( 'is_iu_import_userdata', $userdata, $usermeta );
-			$usermeta = apply_filters( 'is_iu_import_usermeta', $usermeta, $userdata );
+			$userdata = apply_filters( 'pmproiucsv_import_userdata', $userdata, $usermeta );
+			$usermeta = apply_filters( 'pmproiucsv_import_usermeta', $usermeta, $userdata );
 
 			// If no user data, bailout!
-			if ( empty( $userdata ) )
+			if ( empty( $userdata ) ) {
 				continue;
+			}
 
 			// Something to be done before importing one user?
-			do_action( 'is_iu_pre_user_import', $userdata, $usermeta );
+			do_action( 'pmproiucsv_pre_user_import', $userdata, $usermeta );
 
 			$user = $user_id = false;
 
-			if ( isset( $userdata['ID'] ) )
+			if ( isset( $userdata['ID'] ) ) {
 				$user = get_user_by( 'ID', $userdata['ID'] );
+			}
 
 			if ( ! $user && $users_update ) {
-				if ( isset( $userdata['user_login'] ) )
+				if ( isset( $userdata['user_login'] ) ) {
 					$user = get_user_by( 'login', $userdata['user_login'] );
+				}
 
-				if ( ! $user && isset( $userdata['user_email'] ) )
+				if ( ! $user && isset( $userdata['user_email'] ) ) {
 					$user = get_user_by( 'email', $userdata['user_email'] );
+				}
 			}
 
 			$update = false;
 			if ( $user ) {
 				$userdata['ID'] = $user->ID;
-				$update = true;
+				$update         = true;
 			}
 
 			// If creating a new user and no password was set, let auto-generate one!
-			if ( ! $update && empty( $userdata['user_pass'] ) )
+			if ( ! $update && empty( $userdata['user_pass'] ) ) {
 				$userdata['user_pass'] = wp_generate_password( 12, false );
+			}
 
-			if ( $update )
+			if ( $update ) {
 				$user_id = wp_update_user( $userdata );
-			else
+			} else {
 				$user_id = wp_insert_user( $userdata );
+			}
 
 			// Is there an error o_O?
 			if ( is_wp_error( $user_id ) ) {
-				$errors[$rkey] = $user_id;
+				$errors[ $rkey ] = $user_id;
 			} else {
 				// If no error, let's update the user meta too!
 				if ( $usermeta ) {
@@ -505,45 +524,74 @@ class PMPro_Import_Users_From_CSV {
 
 				// If we created a new user, maybe set password nag and send new user notification?
 				if ( ! $update ) {
-					if ( $password_nag )
-						update_user_option( $user_id, 'default_password_nag', true, true );
-
-					if ( $new_user_notification )
+					if ( $new_user_notification ) {
 						wp_new_user_notification( $user_id, $userdata['user_pass'] );
+					}
 				}
 
 				// Some plugins may need to do things after one user has been imported. Who know?
-				do_action( 'is_iu_post_user_import', $user_id );
+				do_action( 'pmproiucsv_post_user_import', $user_id );
 
 				$user_ids[] = $user_id;
-			}						
+			}
 
 			$rkey++;
 
-			//if doing a partial import, save our spot and break
-			if(!empty($partial) && $rkey)
-			{
+			// if doing a partial import, save our spot and break
+			if ( ! empty( $partial ) && $rkey ) {
 				$position = $csv_reader->get_position();
-				set_transient('iufcsv_' . basename($filename), $position, 60*60*24*2);
+				set_transient( 'pmproiucsv_' . basename( $filename ), $position, 60 * 60 * 24 * 2 );
 
-				if($rkey > $per_partial-1)
+				if ( $rkey > $per_partial - 1 ) {
 					break;
+				}
 			}
 		}
 		fclose( $file_handle );
 
 		// One more thing to do after all imports?
-		do_action( 'is_iu_post_users_import', $user_ids, $errors );
+		do_action( 'pmproiucsv_post_users_import', $user_ids, $errors );
 
 		// Let's log the errors
 		self::log_errors( $errors );
 
 		return array(
 			'user_ids' => $user_ids,
-			'errors'   => $errors
+			'errors'   => $errors,
 		);
 	}
 
+	/**
+	 * Check the first line of the CSV is valid and contains the required headers.
+	 *
+	 * @param file $file The CSV file to check for specific headers.
+	 * @return boolean|array $is_csv_valid True if everything is okay, otherwise it will return an array of a list of headers that are invalid or missing?
+	 */
+	public static function is_csv_valid( $filename ) {
+		$is_csv_valid = true;
+
+		// Return an empty array if empty.
+		if ( empty( $filename ) ) {
+			return array();
+		}
+		// Let's get the first line of the CSV file and make sure the headers are listed here.
+		$file_handle = fopen( $filename, 'r' );
+		$csv_reader  = new ReadCSV( $file_handle, PMPROIUCSV_CSV_DELIMITER, "\xEF\xBB\xBF" ); // Skip any UTF-8 byte order mark.
+		$headers = $csv_reader->get_row(); // Gets the first row.
+
+		// Valid headers we need for import.
+		$valid_headers = apply_filters( 'pmproiucsv_required_csv_headers_array', array( 'user_login', 'user_email' ) );
+		$missing_required_headers = array_diff( $valid_headers, $headers );
+		
+		// If there are missing required headers, lets show a warning.
+		if ( ! empty( $missing_required_headers ) ) {
+			$is_csv_valid = $missing_required_headers;
+		}
+
+		// Close the file now that we're done with it.
+		fclose($file_handle);
+		return $is_csv_valid;
+	}
 	/**
 	 * Log errors to a file
 	 *
