@@ -32,6 +32,7 @@ class PMPro_Import_Users_From_CSV {
 		add_action( 'admin_menu', array( get_called_class(), 'add_admin_pages' ) );
 		add_action( 'init', array( get_called_class(), 'process_csv' ) );
 		add_action( 'init', array( get_called_class(), 'pmproiufcsv_load_textdomain' ) );
+		add_action( 'admin_init', array( get_called_class(), 'deactivate_old_plugin' ) );
 		add_action( 'admin_enqueue_scripts', array( get_called_class(), 'admin_enqueue_scripts' ) );
 		add_action( 'wp_ajax_pmpro_import_users_from_csv', array( get_called_class(), 'wp_ajax_pmpro_import_users_from_csv' ) );
 
@@ -71,14 +72,13 @@ class PMPro_Import_Users_From_CSV {
 	 * @since 0.1
 	 **/
 	public static function add_admin_pages() {
-		$location = defined( 'PMPRO_VERSION' ) ? 'options-general.php' : 'users.php';
-		add_submenu_page( $location, 'Import From CSV', 'Import From CSV', 'manage_options', 'pmpro-import-users-from-csv', array( get_called_class(), 'users_page' ) );
+		add_submenu_page( 'users.php', 'Import From CSV', 'Import From CSV', 'manage_options', 'pmpro-import-users-from-csv', array( get_called_class(), 'users_page' ) );
 	}
 
 	/**
 	 * Add admin JS
 	 *
-	 * @since ?
+	 * @since TBD
 	 **/
 	public static function admin_enqueue_scripts( $hook ) {
 		if ( empty( $_GET['page'] ) || $_GET['page'] != 'pmpro-import-users-from-csv' ) {
@@ -102,10 +102,6 @@ class PMPro_Import_Users_From_CSV {
 				$filename              = $_FILES['users_csv']['tmp_name'];
 				$users_update          = isset( $_POST['users_update'] ) ? $_POST['users_update'] : false;
 				$new_user_notification = isset( $_POST['new_user_notification'] ) ? $_POST['new_user_notification'] : false;
-
-				/// Check this at a later stage.
-				// Before continuing, let's make sure the CSV file is valid.
-				// $is_csv_valid = self::is_csv_valid( $filename );			
 
 				// use AJAX?
 				if ( ! empty( $_POST['ajaximport'] ) ) {
@@ -311,7 +307,11 @@ class PMPro_Import_Users_From_CSV {
 						</label>
 					</fieldset></td>
 				</tr>
+
+					<?php do_action( 'pmproiucsv_import_page_inside_table_bottom' ); ?>
 			</table>
+
+					<?php do_action( 'pmproiucsv_import_page_after_table' ); ?>
 			<p class="submit">
 				<input type="submit" class="button-primary" name="pmproiucsv_import" value="<?php esc_html_e( 'Import', 'pmpro-import-users-from-csv' ); ?>" />
 			</p>
@@ -418,6 +418,11 @@ class PMPro_Import_Users_From_CSV {
 			'role',
 		);
 
+		// We need this for AJAX calls.
+		if ( ! class_exists( 'ReadCSV' ) ) {
+			include plugin_dir_path( __FILE__ ) . 'class-readcsv.php';
+		}
+
 		// Loop through the file lines
 		$file_handle = fopen( $filename, 'r' );
 		$csv_reader  = new ReadCSV( $file_handle, PMPROIUCSV_CSV_DELIMITER, "\xEF\xBB\xBF" ); // Skip any UTF-8 byte order mark.
@@ -474,14 +479,14 @@ class PMPro_Import_Users_From_CSV {
 				continue;
 			}
 
-			// Something to be done before importing one user?
-			do_action( 'pmproiucsv_pre_user_import', $userdata, $usermeta );
-
 			$user = $user_id = false;
 
 			if ( isset( $userdata['ID'] ) ) {
 				$user = get_user_by( 'ID', $userdata['ID'] );
 			}
+
+			// Something to be done before importing one user?
+			do_action( 'pmproiucsv_pre_user_import', $userdata, $usermeta, $user );
 
 			if ( ! $user && $users_update ) {
 				if ( isset( $userdata['user_login'] ) ) {
@@ -561,6 +566,7 @@ class PMPro_Import_Users_From_CSV {
 		);
 	}
 
+
 	/**
 	 * Check the first line of the CSV is valid and contains the required headers.
 	 *
@@ -577,20 +583,45 @@ class PMPro_Import_Users_From_CSV {
 		// Let's get the first line of the CSV file and make sure the headers are listed here.
 		$file_handle = fopen( $filename, 'r' );
 		$csv_reader  = new ReadCSV( $file_handle, PMPROIUCSV_CSV_DELIMITER, "\xEF\xBB\xBF" ); // Skip any UTF-8 byte order mark.
-		$headers = $csv_reader->get_row(); // Gets the first row.
+		$headers     = $csv_reader->get_row(); // Gets the first row.
 
 		// Valid headers we need for import.
-		$valid_headers = apply_filters( 'pmproiucsv_required_csv_headers_array', array( 'user_login', 'user_email' ) );
+		$valid_headers            = apply_filters( 'pmproiucsv_required_csv_headers_array', array( 'user_login', 'user_email' ) );
 		$missing_required_headers = array_diff( $valid_headers, $headers );
-		
+
 		// If there are missing required headers, lets show a warning.
 		if ( ! empty( $missing_required_headers ) ) {
 			$is_csv_valid = $missing_required_headers;
 		}
 
 		// Close the file now that we're done with it.
-		fclose($file_handle);
+		fclose( $file_handle );
 		return $is_csv_valid;
+	}
+
+	/**
+	 * Deactivate Import Users From CSV if our plugin is activated.
+	 */
+	public static function deactivate_old_plugin() {
+		// See if the old Import Users From CSV is activated, if so deactivate it.
+		if ( is_plugin_active( 'import-users-from-csv/import-users-from-csv.php' ) ) {
+			deactivate_plugins( 'import-users-from-csv/import-users-from-csv.php' );
+			// Show an admin notice that it was deactivated and not needed for the PMPro Import?
+			add_action( 'admin_notices', array( get_called_class(), 'admin_notice_deactivate_old_plugin' ) );
+		}
+
+	}
+
+	/**
+	 * Show an admin notice that the old plugin was deactivated.
+	 */
+	public static function admin_notice_deactivate_old_plugin() {
+		// Show admin notice that the old plugin was deactivated.
+		?>
+		<div class="notice notice-warning is-dismissible">
+			<p><?php esc_html_e( 'The Import Users From CSV plugin is no longer required to import members or non-members with Paid Memberships Pro, and has been deactivated to ensure no conflicts occur.', 'pmpro-import-users-from-csv' ); ?></p>
+		</div>
+		<?php
 	}
 	/**
 	 * Log errors to a file
