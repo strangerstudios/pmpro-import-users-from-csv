@@ -40,24 +40,28 @@ jQuery(document).ready(function () {
                 data: 'action=pmpro_import_users_from_csv&filename=' + ai_filename + '&users_update=' + ai_users_update + '&new_user_notification=' + ai_new_user_notification,
                 error: function (xml) {
                     alert('Error with import. Try refreshing.');
+                    jQuery('#pmproiucsv_return_home').show();
                 },
                 success: function (responseHTML) {
                     if (responseHTML == 'error') {
                         alert('Error with import. Try refreshing.');
                         document.title = $title;
+                        jQuery('#pmproiucsv_return_home').show();
                     }
                     else if (responseHTML == 'nofile') {
                         $status.html($status.html() + '\nCould not find the file ' + ai_filename + '. Maybe it has already been imported.');
                         document.title = $title;
+                        jQuery('#pmproiucsv_return_home').show();
                     }
                     else if (responseHTML == 'done') {
                         $status.html($status.html() + '\nDone!');
                         document.title = '! ' + $title;
+                        jQuery('#pmproiucsv_return_home').show();
                     }
                     else {
                         $status.html($status.html() + responseHTML);
                         document.title = $cycles[$count % 4] + ' ' + $title;
-
+                        jQuery('#pmproiucsv_return_home').show();
                         if (!$pauseimport)
                             var $import_timer = setTimeout(function () { ai_importPartial(); }, 2000);
                     }

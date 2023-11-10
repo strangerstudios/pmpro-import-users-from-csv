@@ -247,15 +247,16 @@ class PMPro_Import_Users_From_CSV {
 					delete_transient( 'pmproiucsv_' . $filename );
 				}
 				?>
-			<h3>Importing file over AJAX</h3>
+			<h3><?php esc_html_e( 'Importing file over AJAX', 'pmpro-import-users-from-csv' ); ?></h3>
 			<p><strong>IMPORTANT:</strong> Your import is not finished. Closing this page will stop it. If the import stops or you have to close your browser, you can navigate to <a href="<?php echo admin_url( $_SERVER['QUERY_STRING'] ); ?>">this URL</a> to resume the import later.</p>
 
 			<p>
-				<a id="pauseimport" href="#">Click here to pause.</a>
-				<a id="resumeimport" href="#" style="display:none;">Paused. Click here to resume.</a>
+				<a id="pauseimport" href="#"><?php esc_html_e( 'Click here to pause.', 'pmpro-import-users-from-csv' ); ?></a>
+				<a id="resumeimport" href="#" style="display:none;"><?php esc_html_e( 'Paused. Click here to resume.', 'pmpro-import-users-from-csv' ); ?></a>
 			</p>
 
-			<textarea id="importstatus" rows="10" cols="60">Loading...</textarea>
+			<textarea id="importstatus" rows="10" cols="60"><?php esc_html_e( 'Loading...', 'pmpro-import-users-from-csv' ); ?></textarea>
+			<p id="pmproiucsv_return_home" style="display:none;"><a href='users.php?page=pmpro-import-users-from-csv'><?php esc_html_e( 'Return to Import From CSV home page.', 'pmpro-import-users-from-csv' ); ?></a></p>
 			<script>
 				var ai_filename = <?php echo json_encode( $filename ); ?>;
 				var ai_users_update = <?php echo json_encode( $users_update ); ?>;
@@ -271,39 +272,39 @@ class PMPro_Import_Users_From_CSV {
 			<?php wp_nonce_field( 'pmproiucsv_page_import', '_wpnonce_pmproiucsv_process_csv' ); ?>
 			<table class="form-table">
 				<tr valign="top">
-					<th scope="row"><label for="users_csv"><?php _e( 'CSV file', 'pmpro-import-users-from-csv' ); ?></label></th>
+					<th scope="row"><label for="users_csv"><?php esc_html_e( 'CSV file', 'pmpro-import-users-from-csv' ); ?></label></th>
 					<td>
 						<input type="file" id="users_csv" name="users_csv" value="" class="all-options" /><br />
 						<span class="description"><?php echo sprintf( __( 'You may want to see <a href="%s">the example of the CSV file</a>.', 'pmpro-import-users-from-csv' ), plugin_dir_url( __FILE__ ) . 'examples/import.csv' ); ?></span>
 					</td>
 				</tr>
 				<tr valign="top">
-					<th scope="row"><?php _e( 'Notification', 'pmpro-import-users-from-csv' ); ?></th>
+					<th scope="row"><?php esc_html_e( 'Notification', 'pmpro-import-users-from-csv' ); ?></th>
 					<td><fieldset>
-						<legend class="screen-reader-text"><span><?php _e( 'Notification', 'pmpro-import-users-from-csv' ); ?></span></legend>
+						<legend class="screen-reader-text"><span><?php esc_html_e( 'Notification', 'pmpro-import-users-from-csv' ); ?></span></legend>
 						<label for="new_user_notification">
 							<input id="new_user_notification" name="new_user_notification" type="checkbox" value="1" />
-							<?php _e( 'Send to new users', 'pmpro-import-users-from-csv' ); ?>
+							<?php esc_html_e( 'Send to new users', 'pmpro-import-users-from-csv' ); ?>
 						</label>
 					</fieldset></td>
 				</tr>
 				<tr valign="top">
-					<th scope="row"><?php _e( 'Users update', 'pmpro-import-users-from-csv' ); ?></th>
+					<th scope="row"><?php esc_html_e( 'Users update', 'pmpro-import-users-from-csv' ); ?></th>
 					<td><fieldset>
-						<legend class="screen-reader-text"><span><?php _e( 'Users update', 'pmpro-import-users-from-csv' ); ?></span></legend>
+						<legend class="screen-reader-text"><span><?php esc_html_e( 'Users update', 'pmpro-import-users-from-csv' ); ?></span></legend>
 						<label for="users_update">
 							<input id="users_update" name="users_update" type="checkbox" value="1" />
-							<?php _e( 'Update user when a username or email exists', 'pmpro-import-users-from-csv' ); ?>
+							<?php esc_html_e( 'Update user when a username or email exists', 'pmpro-import-users-from-csv' ); ?>
 						</label>
 					</fieldset></td>
 				</tr>
 				<tr valign="top">
-					<th scope="row"><?php _e( 'AJAX', 'pmpro-import-users-from-csv' ); ?></th>
+					<th scope="row"><?php esc_html_e( 'AJAX', 'pmpro-import-users-from-csv' ); ?></th>
 					<td><fieldset>
-						<legend class="screen-reader-text"><span><?php _e( 'AJAX', 'pmpro-import-users-from-csv' ); ?></span></legend>
+						<legend class="screen-reader-text"><span><?php esc_html_e( 'AJAX', 'pmpro-import-users-from-csv' ); ?></span></legend>
 						<label for="ajaximport">
 							<input id="ajaximport" name="ajaximport" type="checkbox" value="1" />
-							<?php _e( 'Use AJAX to process the import gradually over time.', 'pmpro-import-users-from-csv' ); ?>
+							<?php esc_html_e( 'Use AJAX to process the import gradually over time.', 'pmpro-import-users-from-csv' ); ?>
 						</label>
 					</fieldset></td>
 				</tr>
@@ -457,6 +458,9 @@ class PMPro_Import_Users_From_CSV {
 				continue;
 			}
 
+			//Support multiple roles during import.
+			$user_roles = array();
+
 			// Separate user data from meta
 			$userdata = $usermeta = array();
 			foreach ( $line as $ckey => $column ) {
@@ -509,6 +513,21 @@ class PMPro_Import_Users_From_CSV {
 				$userdata['user_pass'] = wp_generate_password( 12, false );
 			}
 
+			if ( ! empty( $userdata['role'] ) ) {
+				$userdata['role'] = strtolower( $userdata['role'] );
+				$user_roles = explode( ',', $userdata['role'] );
+
+				// Let's trim and sanitize the roles array items.
+				$user_roles = array_map( function( $role ){
+					return trim( sanitize_text_field( $role ) );
+				}, $user_roles );
+
+				// Reset the array to the beginning and get the first one, for initial import - we'll add any other ones later.
+				if ( count( $user_roles ) > 1 ) {
+					$userdata['role'] = reset( $user_roles );
+				}
+			}
+
 			if ( $update ) {
 				$user_id = wp_update_user( $userdata );
 			} else {
@@ -526,6 +545,15 @@ class PMPro_Import_Users_From_CSV {
 						update_user_meta( $user_id, $metakey, $metavalue );
 					}
 				}
+
+				// Let's add the additional roles.
+				if ( is_array( $user_roles ) && count( $user_roles ) > 1 ) {
+					foreach( $user_roles as $user_role ) {
+						$user = new WP_User( $user_id );
+						$user->add_role( $user_role );
+					}
+				}
+	
 
 				// If we created a new user, maybe set password nag and send new user notification?
 				if ( ! $update ) {

@@ -327,8 +327,7 @@ function pmproiufcsv_add_import_options() {
 	?>
 
 	<tr valign="top">
-		<td scope="row"><strong><?php esc_html_e( 'Skip existing members' , 'pmpro-import-users-from-csv'); ?></strong></td>
-
+		<th scope="row"><?php esc_html_e( 'Skip existing members' , 'pmpro-import-users-from-csv'); ?></th>
 		<td>
 			<fieldset>
 				<legend class="screen-reader-text"><span><?php esc_html_e( 'Skip existing members' , 'pmpro-import-users-from-csv' ); ?></span></legend>
