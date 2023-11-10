@@ -204,8 +204,8 @@ class PMPro_Import_Users_From_CSV {
 	<div class="wrap">
 		<h2><?php _e( 'Import users from a CSV file', 'pmpro-import-users-from-csv' ); ?></h2>
 		<?php
-		$error_log_file = self::$log_dir_path . 'pmproiucsv_errors.log';
-		$error_log_url  = self::$log_dir_url . 'pmproiucsv_errors.log';
+		$error_log_file = self::$log_dir_path . 'pmproiucsv_error.log';
+		$error_log_url  = self::$log_dir_url . 'pmproiucsv_error.log';
 
 		if ( ! file_exists( $error_log_file ) ) {
 			if ( ! @fopen( $error_log_file, 'x' ) ) {
