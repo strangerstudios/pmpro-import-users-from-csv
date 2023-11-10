@@ -84,7 +84,7 @@ class PMPro_Import_Users_From_CSV {
 	 * @since TBD
 	 **/
 	public static function admin_enqueue_scripts( $hook ) {
-		if ( empty( $_GET['page'] ) || $_GET['page'] != 'pmpro-import-users-from-csv' ) {
+		if ( empty( $_REQUEST['page'] ) || $_REQUEST['page'] != 'pmpro-import-users-from-csv' ) {
 			return;
 		}
 
@@ -214,13 +214,13 @@ class PMPro_Import_Users_From_CSV {
 		}
 
 		// Adds a query arg in the
-		if ( isset( $_GET['import'] ) ) {
+		if ( isset( $_REQUEST['import'] ) ) {
 			$error_log_msg = '';
 			if ( file_exists( $error_log_file ) ) {
 				$error_log_msg = sprintf( __( ', please <a href="%s">check the error log</a>', 'pmpro-import-users-from-csv' ), $error_log_url );
 			}
 
-			switch ( $_GET['import'] ) {
+			switch ( $_REQUEST['import'] ) {
 				case 'file':
 					echo '<div class="error"><p><strong>' . __( 'Error during file upload.', 'pmpro-import-users-from-csv' ) . '</strong></p></div>';
 					break;
@@ -240,13 +240,13 @@ class PMPro_Import_Users_From_CSV {
 					break;
 			}
 
-			if ( $_GET['import'] == 'resume' && ! empty( $_GET['filename'] ) ) {
-				$filename              = sanitize_file_name( $_GET['filename'] );
-				$users_update          = isset( $_GET['users_update'] ) ? $_GET['users_update'] : false;
-				$new_user_notification = isset( $_GET['new_user_notification'] ) ? $_GET['new_user_notification'] : false;
+			if ( $_REQUEST['import'] == 'resume' && ! empty( $_REQUEST['filename'] ) ) {
+				$filename              = sanitize_file_name( $_REQUEST['filename'] );
+				$users_update          = isset( $_REQUEST['users_update'] ) ? $_REQUEST['users_update'] : false;
+				$new_user_notification = isset( $_REQUEST['new_user_notification'] ) ? $_REQUEST['new_user_notification'] : false;
 
 				// resetting position transients?
-				if ( ! empty( $_GET['reset'] ) ) {
+				if ( ! empty( $_REQUEST['reset'] ) ) {
 					delete_transient( 'pmproiucsv_' . $filename );
 				}
 				?>
@@ -270,7 +270,7 @@ class PMPro_Import_Users_From_CSV {
 			}
 		}
 
-		if ( empty( $_GET['filename'] ) ) {
+		if ( empty( $_REQUEST['filename'] ) ) {
 			?>
 		<form method="post" action="" enctype="multipart/form-data">
 			<?php wp_nonce_field( 'pmproiucsv_page_import', '_wpnonce_pmproiucsv_process_csv' ); ?>
@@ -334,10 +334,10 @@ class PMPro_Import_Users_From_CSV {
 	 */
 	public static function wp_ajax_pmpro_import_users_from_csv() {
 		// check for filename
-		if ( empty( $_GET['filename'] ) ) {
+		if ( empty( $_REQUEST['filename'] ) ) {
 			die( 'No file name given.' );
 		} else {
-			$filename = sanitize_file_name( $_GET['filename'] );
+			$filename = sanitize_file_name( $_REQUEST['filename'] );
 		}
 
 		// figure out upload dir
@@ -350,8 +350,8 @@ class PMPro_Import_Users_From_CSV {
 		}
 
 		// get settings
-		$users_update          = isset( $_GET['users_update'] ) ? $_GET['users_update'] : false;
-		$new_user_notification = isset( $_GET['new_user_notification'] ) ? $_GET['new_user_notification'] : false;
+		$users_update          = isset( $_REQUEST['users_update'] ) ? $_REQUEST['users_update'] : false;
+		$new_user_notification = isset( $_REQUEST['new_user_notification'] ) ? $_REQUEST['new_user_notification'] : false;
 
 		// import next few lines of file
 		$args = array(
