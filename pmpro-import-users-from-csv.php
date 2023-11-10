@@ -103,11 +103,11 @@ class PMPro_Import_Users_From_CSV {
 			if ( isset( $_FILES['users_csv']['tmp_name'] ) ) {
 				// Setup settings variables
 				$filename              = $_FILES['users_csv']['tmp_name'];
-				$users_update          = isset( $_POST['users_update'] ) ? $_POST['users_update'] : false;
-				$new_user_notification = isset( $_POST['new_user_notification'] ) ? $_POST['new_user_notification'] : false;
+				$users_update          = isset( $_REQUEST['users_update'] ) ? $_REQUEST['users_update'] : false;
+				$new_user_notification = isset( $_REQUEST['new_user_notification'] ) ? $_REQUEST['new_user_notification'] : false;
 
 				// use AJAX?
-				if ( ! empty( $_POST['ajaximport'] ) ) {
+				if ( ! empty( $_REQUEST['ajaximport'] ) ) {
 					// check for a imports directory in wp-content
 					$upload_dir = wp_upload_dir();
 					$import_dir = $upload_dir['basedir'] . '/imports/';
@@ -400,6 +400,13 @@ class PMPro_Import_Users_From_CSV {
 		);
 		extract( wp_parse_args( $args, $defaults ) );
 
+		// Cast to boolean, for some reason it's cast to a string for the AJAX.
+		if ( $users_update === 'false' ) {
+			$users_update = false;
+		} else {
+			$users_update = true;
+		}
+
 		// User data fields list used to differentiate with user meta
 		$userdata_fields = array(
 			'ID',
@@ -489,13 +496,14 @@ class PMPro_Import_Users_From_CSV {
 
 			$user = $user_id = false;
 
-			if ( isset( $userdata['ID'] ) ) {
+			if ( ! empty( $userdata['ID'] ) ) {
 				$user = get_user_by( 'ID', $userdata['ID'] );
 			}
 
 			// Something to be done before importing one user?
 			do_action( 'pmproiucsv_pre_user_import', $userdata, $usermeta, $user );
 
+			// If the user doesn't exist and we're updating, get them via email.
 			if ( ! $user && $users_update ) {
 				if ( isset( $userdata['user_login'] ) ) {
 					$user = get_user_by( 'login', $userdata['user_login'] );
@@ -511,6 +519,8 @@ class PMPro_Import_Users_From_CSV {
 				$userdata['ID'] = $user->ID;
 				$update         = true;
 			}
+			
+
 
 			// If creating a new user and no password was set, let auto-generate one!
 			if ( ! $update && empty( $userdata['user_pass'] ) ) {
@@ -532,7 +542,7 @@ class PMPro_Import_Users_From_CSV {
 				}
 			}
 
-			if ( $update ) {
+			if ( $update && $users_update ) {
 				$user_id = wp_update_user( $userdata );
 			} else {
 				$user_id = wp_insert_user( $userdata );
@@ -557,15 +567,12 @@ class PMPro_Import_Users_From_CSV {
 						$user->add_role( $user_role );
 					}
 				}
-	
 
-				// If we created a new user, maybe set password nag and send new user notification?
-				if ( ! $update ) {
-					if ( $new_user_notification ) {
-						wp_new_user_notification( $user_id, $userdata['user_pass'] );
-					}
+				// If we need to show the new password notification, let's send it.
+				if ( $new_user_notification ) {
+					wp_new_user_notification( $user_id, $userdata['user_pass'], 'user' );
 				}
-
+				
 				// Some plugins may need to do things after one user has been imported. Who know?
 				do_action( 'pmproiucsv_post_user_import', $user_id );
 
