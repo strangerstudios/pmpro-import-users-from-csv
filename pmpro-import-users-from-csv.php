@@ -36,6 +36,9 @@ class PMPro_Import_Users_From_CSV {
 		add_action( 'admin_enqueue_scripts', array( get_called_class(), 'admin_enqueue_scripts' ) );
 		add_action( 'wp_ajax_pmpro_import_users_from_csv', array( get_called_class(), 'wp_ajax_pmpro_import_users_from_csv' ) );
 
+		add_filter( 'plugin_row_meta', array( get_called_class(), 'plugin_row_meta' ), 10, 2);
+
+
 		$upload_dir         = wp_upload_dir();
 		self::$log_dir_path = trailingslashit( $upload_dir['basedir'] );
 		self::$log_dir_url  = trailingslashit( $upload_dir['baseurl'] );
@@ -672,6 +675,21 @@ class PMPro_Import_Users_From_CSV {
 
 		@fclose( $log );
 	}
+
+		/*
+	Function to add links to the plugin row meta
+	*/
+	public static function plugin_row_meta( $links, $file ) {
+		if ( strpos( $file, 'pmpro-import-users-from-csv.php') !== false ) {
+			$new_links = array(
+				'<a href="' . esc_url('http://www.paidmembershipspro.com/add-ons/third-party-integration/pmpro-import-users-csv/')  . '" title="' . esc_attr( __( 'View Documentation', 'pmpro-import-users-from-csv' ) ) . '">' . __( 'Docs', 'pmpro-import-users-from-csv' ) . '</a>',
+				'<a href="' . esc_url('http://paidmembershipspro.com/support/') . '" title="' . esc_attr( __( 'Visit Customer Support Forum', 'pmpro-import-users-from-csv' ) ) . '">' . __( 'Support', 'pmpro-import-users-from-csv' ) . '</a>',
+			);
+			$links = array_merge( $links, $new_links );
+		}
+		return $links;
+	}
+
 }
 
 PMPro_Import_Users_From_CSV::init();

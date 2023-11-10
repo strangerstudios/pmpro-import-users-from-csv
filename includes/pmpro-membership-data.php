@@ -301,22 +301,6 @@ function pmproiufcsv_report_sub_error ( $errors, $user_ids ){
 
 }
 
-/*
-Function to add links to the plugin row meta
-*/
-function pmproiufcsv_plugin_row_meta($links, $file) {
-	if(strpos($file, 'pmpro-import-users-from-csv.php') !== false)
-	{
-		$new_links = array(
-			'<a href="' . esc_url('http://www.paidmembershipspro.com/add-ons/third-party-integration/pmpro-import-users-csv/')  . '" title="' . esc_attr( __( 'View Documentation', 'pmpro-import-users-from-csv' ) ) . '">' . __( 'Docs', 'pmpro-import-users-from-csv' ) . '</a>',
-			'<a href="' . esc_url('http://paidmembershipspro.com/support/') . '" title="' . esc_attr( __( 'Visit Customer Support Forum', 'pmpro-import-users-from-csv' ) ) . '">' . __( 'Support', 'pmpro-import-users-from-csv' ) . '</a>',
-		);
-		$links = array_merge($links, $new_links);
-	}
-	return $links;
-}
-add_filter('plugin_row_meta', 'pmproiufcsv_plugin_row_meta', 10, 2);
-
 /**
  * Render the additional options for the Import Users from CSV plugin settings page.
  *
