@@ -115,7 +115,7 @@ function pmproiufcsv_is_iu_import_usermeta($usermeta, $userdata)
 
 	return $newusermeta;
 }
-add_filter("is_iu_import_usermeta", "pmproiufcsv_is_iu_import_usermeta", 10, 2);
+add_filter("pmproiucsv_import_usermeta", "pmproiufcsv_is_iu_import_usermeta", 10, 2);
 
 //after users are added, let's use the meta data imported to update the user
 function pmproiufcsv_is_iu_post_user_import($user_id)
@@ -280,7 +280,7 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
         $email->sendEmail();
     }
 }
-add_action("is_iu_post_user_import", "pmproiufcsv_is_iu_post_user_import");
+add_action("pmproiucsv_post_user_import", "pmproiufcsv_is_iu_post_user_import");
 
 /**
  * Add error/warning message if user's were imported with both a subscription and expiration date.
