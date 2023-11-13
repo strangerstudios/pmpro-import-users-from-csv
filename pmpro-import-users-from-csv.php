@@ -288,7 +288,7 @@ class PMPro_Import_Users_From_CSV {
 						<legend class="screen-reader-text"><span><?php esc_html_e( 'Notification', 'pmpro-import-users-from-csv' ); ?></span></legend>
 						<label for="new_user_notification">
 							<input id="new_user_notification" name="new_user_notification" type="checkbox" value="1" />
-							<?php esc_html_e( 'Send to new users', 'pmpro-import-users-from-csv' ); ?>
+							<?php esc_html_e( 'Send email notifications to new users and when existing users passwords are updated.', 'pmpro-import-users-from-csv' ); ?>
 						</label>
 					</fieldset></td>
 				</tr>
@@ -403,8 +403,10 @@ class PMPro_Import_Users_From_CSV {
 		// Cast to boolean, for some reason it's cast to a string for the AJAX.
 		if ( $users_update === 'false' ) {
 			$users_update = false;
-		} else {
-			$users_update = true;
+		}
+
+		if ( $new_user_notification === 'false' ) {
+			$new_user_notification = false;
 		}
 
 		// User data fields list used to differentiate with user meta
