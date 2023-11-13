@@ -545,6 +545,10 @@ class PMPro_Import_Users_From_CSV {
 			}
 
 			if ( $update && $users_update ) {
+				/**
+				 * This sends a password changed email to the user when user_pass is added to the CSV.
+				 * To stop this from sending emails, see https://developer.wordpress.org/reference/hooks/send_password_change_email/
+				 */ 
 				$user_id = wp_update_user( $userdata );
 			} else {
 				$user_id = wp_insert_user( $userdata );
