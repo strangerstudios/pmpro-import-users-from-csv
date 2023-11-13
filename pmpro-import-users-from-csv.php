@@ -31,7 +31,7 @@ class PMPro_Import_Users_From_CSV {
 	public static function init() {
 		add_action( 'admin_menu', array( get_called_class(), 'add_admin_pages' ) );
 		add_action( 'init', array( get_called_class(), 'process_csv' ) );
-		add_action( 'init', array( get_called_class(), 'pmproiufcsv_load_textdomain' ) );
+		add_action( 'init', array( get_called_class(), 'pmproiucsv_load_textdomain' ) );
 		add_action( 'admin_init', array( get_called_class(), 'deactivate_old_plugin' ) );
 		add_action( 'admin_enqueue_scripts', array( get_called_class(), 'admin_enqueue_scripts' ) );
 		add_action( 'wp_ajax_pmpro_import_users_from_csv', array( get_called_class(), 'wp_ajax_pmpro_import_users_from_csv' ) );
@@ -65,7 +65,7 @@ class PMPro_Import_Users_From_CSV {
 	 *
 	 * @since 0.1
 	 */
-	public static function pmproiufcsv_load_textdomain() {
+	public static function pmproiucsv_load_textdomain() {
 		load_plugin_textdomain( 'pmpro-import-users-from-csv', false, plugin_basename( dirname( __FILE__ ) ) . '/languages' );
 	}
 
@@ -110,7 +110,7 @@ class PMPro_Import_Users_From_CSV {
 				if ( ! empty( $_REQUEST['ajaximport'] ) ) {
 					// check for a imports directory in wp-content
 					$upload_dir = wp_upload_dir();
-					$import_dir = $upload_dir['basedir'] . '/imports/';
+					$import_dir = $upload_dir['basedir'] . '/pmpro-imports/';
 
 					// create the dir and subdir if needed
 					if ( ! is_dir( $import_dir ) ) {
@@ -345,7 +345,7 @@ class PMPro_Import_Users_From_CSV {
 
 		// figure out upload dir
 		$upload_dir = wp_upload_dir();
-		$import_dir = $upload_dir['basedir'] . '/imports/';
+		$import_dir = $upload_dir['basedir'] . '/pmpro-imports/';
 
 		// make sure file exists
 		if ( ! file_exists( $import_dir . $filename ) ) {
@@ -612,39 +612,6 @@ class PMPro_Import_Users_From_CSV {
 			'user_ids' => $user_ids,
 			'errors'   => $errors,
 		);
-	}
-
-
-	/**
-	 * Check the first line of the CSV is valid and contains the required headers.
-	 *
-	 * @param file $file The CSV file to check for specific headers.
-	 * @return boolean|array $is_csv_valid True if everything is okay, otherwise it will return an array of a list of headers that are invalid or missing?
-	 */
-	public static function is_csv_valid( $filename ) {
-		$is_csv_valid = true;
-
-		// Return an empty array if empty.
-		if ( empty( $filename ) ) {
-			return array();
-		}
-		// Let's get the first line of the CSV file and make sure the headers are listed here.
-		$file_handle = fopen( $filename, 'r' );
-		$csv_reader  = new ReadCSV( $file_handle, PMPROIUCSV_CSV_DELIMITER, "\xEF\xBB\xBF" ); // Skip any UTF-8 byte order mark.
-		$headers     = $csv_reader->get_row(); // Gets the first row.
-
-		// Valid headers we need for import.
-		$valid_headers            = apply_filters( 'pmproiucsv_required_csv_headers_array', array( 'user_login', 'user_email' ) );
-		$missing_required_headers = array_diff( $valid_headers, $headers );
-
-		// If there are missing required headers, lets show a warning.
-		if ( ! empty( $missing_required_headers ) ) {
-			$is_csv_valid = $missing_required_headers;
-		}
-
-		// Close the file now that we're done with it.
-		fclose( $file_handle );
-		return $is_csv_valid;
 	}
 
 	/**
