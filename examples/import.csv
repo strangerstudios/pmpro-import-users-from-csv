@@ -1,3 +1,5 @@
-"user_login","user_email","user_pass","first_name","last_name","display_name","role","custom_usermeta_1","custom_usermeta_2"
-"johndoe","john.doe@localhost.localdomain",,"John","Doe","John Doe","administrator","Test","Test"
-"janedoe","jane.doe@localhost.localdomain.com","test","Jane","Doe","Jane Doe","contributor","0",
+user_login,user_email,user_pass,first_name,last_name,display_name,role,membership_id,membership_code_id,membership_initial_payment,membership_billing_amount,membership_cycle_number,membership_cycle_period,membership_billing_limit,membership_trial_amount,membership_trial_limit,membership_status,membership_startdate,membership_enddate,membership_subscription_transaction_id,membership_gateway,membership_payment_transaction_id,membership_affiliate_id,membership_timestamp
+johndoe,john.doe@localhost.localdomain,,John,Doe,John Doe,subscriber,1,,50,50,1,month,,,,active,2020-01-02,2025-01-02,,stripe,,,2020-12-02
+janedoe,jane.doe@localhost.localdomain,test,Jane,Doe,Jane Doe,contributor,2,,100,100,1,year,,,,active,2020-02-03,,,stripe,,,2020-02-03
+jerrydoe,jerry.doe@localhost.localdomain,,Jerry,Doe,Jerry Doe,subscriber,3,,250,,,,,,,active,2020-03-08,2025-03-08,,,,,2020-03-08
+juliedoe,julie.doe@localhost.localdomain,,Julie,Doe,Julie Doe,subscriber,2,,100,100,1,year,,,,active,2020-02-03,,,paypalexpress,,,2020-02-03
