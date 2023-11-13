@@ -121,6 +121,9 @@ class PMPro_Import_Users_From_CSV {
 					$filename = $_FILES['users_csv']['name'];
 					$count    = 0;
 
+					// Replace all special characters with underscores from the filename.
+					$filename = preg_replace( '/[^a-zA-Z0-9\.\-]/', '_', $filename );
+
 					while ( file_exists( $import_dir . $filename ) ) {
 						if ( $count ) {
 							$filename = str_replace( '-' . $count . '.' . $filetype['ext'], '-' . strval( $count + 1 ) . '.' . $filetype['ext'], $filename );
