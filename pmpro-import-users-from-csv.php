@@ -89,6 +89,16 @@ class PMPro_Import_Users_From_CSV {
 		}
 
 		wp_enqueue_script( 'pmpro-import-users-from-csv', plugin_dir_url( __FILE__ ) . 'includes/ajaximport.js' );
+
+		// localize the script
+		wp_localize_script(
+			'pmpro-import-users-from-csv',
+			'pmproiucsv',
+			array(
+				'ajaxurl' => admin_url( 'admin-ajax.php' ),
+				'required_headers' => apply_filters( 'pmproiucsv_required_import_headers', array( 'user_email' ) )
+			)
+		);
 	}
 
 	/**
@@ -239,6 +249,9 @@ class PMPro_Import_Users_From_CSV {
 				case 'success':
 					echo '<div class="updated"><p><strong>' . __( 'Users import was successful.', 'pmpro-import-users-from-csv' ) . '</strong></p></div>';
 					break;
+				case 'cancelled':
+					echo '<div class="notice notice-warning"><p><strong>' . __( 'Import cancelled. No information was imported.', 'pmpro-import-users-from-csv' ) . '</strong></p></div>';
+					break;
 				default:
 					break;
 			}
@@ -275,7 +288,7 @@ class PMPro_Import_Users_From_CSV {
 
 		if ( empty( $_REQUEST['filename'] ) ) {
 			?>
-		<form method="post" action="" enctype="multipart/form-data">
+		<form id="import_users_csv" method="post" action="" enctype="multipart/form-data">
 			<?php wp_nonce_field( 'pmproiucsv_page_import', '_wpnonce_pmproiucsv_process_csv' ); ?>
 			<table class="form-table">
 				<tr valign="top">

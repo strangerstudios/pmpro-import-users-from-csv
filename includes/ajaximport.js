@@ -77,3 +77,59 @@ jQuery(document).ready(function () {
         var $import_timer = setTimeout(function () { ai_importPartial(); }, 2000);
     }
 });
+
+
+jQuery(document).ready(function ($) {
+    $('#import_users_csv').submit(function (event) {
+        event.preventDefault();
+        const fileInput = $('#users_csv')[0];
+        const file = fileInput.files[0];
+
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const content = e.target.result;
+                const rows = content.split('\n');
+
+                // Check headers in the first row
+                const headers = rows[0].split(/\W/g).filter(e => e.length > 0);
+                const requiredHeaders = pmproiucsv.required_headers;
+
+                // if sub_transaction_id is in headers, add other required headers like payment_method
+                if (headers.includes('membership_subscription_transaction_id')) {
+                    requiredHeaders.push('membership_gateway');
+                }
+
+                const missingHeaders = [];
+
+                requiredHeaders.forEach(header => {
+                    if (!headers.includes(header)) {
+                        missingHeaders.push(header);
+                    }
+                });
+
+                if (missingHeaders.length > 0) {
+                    const confirmation = confirm('Warning missing headers: ' + missingHeaders.join(', ') + '\n\nYour import seems to be missing the required headers and might not import correctly (Ignore this message if you are certain about your CSV file)' + '\n\nDo you want to proceed?');
+                    if (!confirmation) {
+                        // window.location.reload(); /// Add query args later
+                        // return false;
+                        // Redirect to current URL and add ?import=cancelled in the URL.
+                        const url = new URL(window.location.href);
+                        url.searchParams.set('import', 'cancelled');
+                        window.location.href = url;
+
+
+                        return false;
+                    } else {
+                        // Headers are present, proceed with form submission
+                        $('#import_users_csv').unbind('submit').submit();
+                    }
+                }
+
+                // Headers are present, proceed with form submission
+            };
+
+            reader.readAsText(file);
+        }
+    });
+});

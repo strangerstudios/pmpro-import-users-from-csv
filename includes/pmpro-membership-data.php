@@ -330,3 +330,13 @@ function pmproiufcsv_add_import_options() {
 
 }
 add_action( 'pmproiucsv_import_page_inside_table_bottom', 'pmproiufcsv_add_import_options' );
+
+/**
+ * Required headers when importing members that shows a notice if it's missing.
+ * @since 1.0
+ */
+function pmproiucsv_required_pmpro_import_headers( $required_headers ) {
+	$required_headers[] = 'membership_id';
+	return $required_headers;
+}
+add_filter( 'pmproiucsv_required_import_headers', 'pmproiucsv_required_pmpro_import_headers', 10, 1 );
