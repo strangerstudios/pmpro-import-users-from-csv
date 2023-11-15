@@ -111,22 +111,20 @@ jQuery(document).ready(function ($) {
                 if (missingHeaders.length > 0) {
                     const confirmation = confirm('Warning missing headers: ' + missingHeaders.join(', ') + '\n\nYour import seems to be missing the required headers and might not import correctly (Ignore this message if you are certain about your CSV file)' + '\n\nDo you want to proceed?');
                     if (!confirmation) {
-                        // window.location.reload(); /// Add query args later
-                        // return false;
                         // Redirect to current URL and add ?import=cancelled in the URL.
                         const url = new URL(window.location.href);
                         url.searchParams.set('import', 'cancelled');
                         window.location.href = url;
-
-
                         return false;
                     } else {
                         // Headers are present, proceed with form submission
                         $('#import_users_csv').unbind('submit').submit();
                     }
+                } else {
+                    // Headers are present, proceed with form submission
+                    $('#import_users_csv').unbind('submit').submit();
                 }
 
-                // Headers are present, proceed with form submission
             };
 
             reader.readAsText(file);
