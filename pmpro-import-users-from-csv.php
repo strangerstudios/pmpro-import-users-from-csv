@@ -38,6 +38,7 @@ class PMPro_Import_Users_From_CSV {
 
 		add_filter( 'pmpro_mmpu_incompatible_add_ons', array( get_called_class(), 'pmproiucsv_mmpu_incompatible_add_ons' ) );
 
+		add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), array( get_called_class(), 'add_action_links' ), 10, 2);
 		add_filter( 'plugin_row_meta', array( get_called_class(), 'plugin_row_meta' ), 10, 2);
 
 
@@ -661,6 +662,7 @@ class PMPro_Import_Users_From_CSV {
 		</div>
 		<?php
 	}
+
 	/**
 	 * Log errors to a file
 	 *
@@ -683,9 +685,24 @@ class PMPro_Import_Users_From_CSV {
 		@fclose( $log );
 	}
 
-		/*
-	Function to add links to the plugin row meta
-	*/
+	/**
+	 * Add Run Import link to the plugin action links.
+	 */
+	public static function add_action_links($links) {
+		// Only add this if plugin is active.
+		if( is_plugin_active( 'pmpro-import-users-from-csv/pmpro-import-users-from-csv.php' ) ) {
+			$new_links = array(
+				'<a href="' . wp_nonce_url( get_admin_url( NULL, 'users.php?page=pmpro-import-users-from-csv' ), 'pmproiucsv_page_import' ) . '">' . esc_html__( 'Run Import', 'pmpro-import-users-from-csv' ) . '</a>',
+			);
+			return array_merge($new_links, $links);
+		}
+
+		return $links;
+	}
+
+	/**
+	 * Function to add links to the plugin row meta
+	 */
 	public static function plugin_row_meta( $links, $file ) {
 		if ( strpos( $file, 'pmpro-import-users-from-csv.php') !== false ) {
 			$new_links = array(
