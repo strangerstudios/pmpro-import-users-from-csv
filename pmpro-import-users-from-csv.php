@@ -657,7 +657,7 @@ class PMPro_Import_Users_From_CSV {
 		// Show admin notice that the old plugin was deactivated.
 		?>
 		<div class="notice notice-warning is-dismissible">
-			<p><?php esc_html_e( 'The Import Users From CSV plugin is no longer required to import members or non-members with Paid Memberships Pro, and has been deactivated to ensure no conflicts occur.', 'pmpro-import-users-from-csv' ); ?></p>
+			<p><?php esc_html_e( 'Import Users From CSV is no longer required to import users and members with Paid Memberships Pro. The plugin has been deactivated.', 'pmpro-import-users-from-csv' ); ?></p>
 		</div>
 		<?php
 	}
