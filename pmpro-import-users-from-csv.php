@@ -412,7 +412,7 @@ class PMPro_Import_Users_From_CSV {
 			'new_user_notification' => false,
 			'users_update'          => false,
 			'partial'               => false,
-			'per_partial'           => apply_filters( 'pmprocsv_ajax_import_batch', 20 ),
+			'per_partial'           => apply_filters( 'pmprocsv_ajax_import_batch', 50 ),
 		);
 		extract( wp_parse_args( $args, $defaults ) );
 
