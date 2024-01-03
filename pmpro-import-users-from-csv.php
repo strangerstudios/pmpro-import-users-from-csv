@@ -281,8 +281,8 @@ class PMPro_Import_Users_From_CSV {
 			<?php echo __( sprintf( '<strong>IMPORTANT:</strong> Your import is not finished. Closing this page will stop it. If the import stops or you have to close your browser, you can navigate to <a href="%s">this URL</a> to resume the import later.</p>', admin_url( 'users.php' . '?' . $_SERVER['QUERY_STRING'] ) ) );  // Separated the '?' for readability.
 			?>	
 			<p>
-				<a id="pauseimport" href="#"><?php esc_html_e( 'Click here to pause.', 'pmpro-import-users-from-csv' ); ?></a>
-				<a id="resumeimport" href="#" style="display:none;"><?php esc_html_e( 'Paused. Click here to resume.', 'pmpro-import-users-from-csv' ); ?></a>
+				<a id="pauseimport" href="avascript:void(0);"><?php esc_html_e( 'Click here to pause.', 'pmpro-import-users-from-csv' ); ?></a>
+				<a id="resumeimport" href="avascript:void(0);" style="display:none;"><?php esc_html_e( 'Paused. Click here to resume.', 'pmpro-import-users-from-csv' ); ?></a>
 			</p>
 
 			<textarea id="importstatus" rows="10" cols="60"><?php esc_html_e( 'Loading...', 'pmpro-import-users-from-csv' ); ?></textarea>
