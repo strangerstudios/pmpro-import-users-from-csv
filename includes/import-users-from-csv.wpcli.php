@@ -7,7 +7,7 @@ WP_CLI::add_command( 'iucsv', function ( $args, $params ) {
 		case 'import':
 			$filepath = $args[1] ?? false;
 			if ( $filepath === false || ! file_exists( $filepath ) ) {
-				echo esc_html( 'provided filename does not exists', 'import-users-from-csv' ) . PHP_EOL;
+				echo esc_html( 'provided filename does not exists', 'pmpro-import-users-from-csv' ) . PHP_EOL;
 				exit;
 			}
 
@@ -18,10 +18,10 @@ WP_CLI::add_command( 'iucsv', function ( $args, $params ) {
 
 			$result = PMPro_Import_Users_From_CSV::import_csv( $filepath, [ 'users_update' => true ] );
 
-			echo sprintf( esc_html( 'Updated %d users', 'import-users-from-csv' ), count( $result['user_ids'] ) );
+			echo sprintf( esc_html( 'Updated %d users', 'pmpro-import-users-from-csv' ), count( $result['user_ids'] ) );
 
 			if ( ! empty( $result['errors'] ) ) {
-				echo ' '. esc_html( 'with errors:', 'import-users-from-csv' );
+				echo ' '. esc_html( 'with errors:', 'pmpro-import-users-from-csv' );
 				echo implode( PHP_EOL, $result['errors'] );
 			}
 
@@ -29,7 +29,7 @@ WP_CLI::add_command( 'iucsv', function ( $args, $params ) {
 			break;
 
 		default:
-			echo esc_html( 'usage: wp iucsv import /path/to/file.csv', 'import-users-from-csv' ) . PHP_EOL;
+			echo esc_html( 'usage: wp iucsv import /path/to/file.csv', 'pmpro-import-users-from-csv' ) . PHP_EOL;
 			exit;
 	}
 } );

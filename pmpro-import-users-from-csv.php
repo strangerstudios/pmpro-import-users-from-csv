@@ -1,11 +1,11 @@
 <?php
 /*
-Plugin Name: Paid Memberships Pro - Import Users from CSV Add On
-Plugin URI: http://www.paidmembershipspro.com/pmpro-import-users-from-csv/
-Description: Add-on for the Import Users From CSV plugin to import PMPro and membership-related fields.
+Plugin Name: Paid Memberships Pro - Import Members From CSV Add On
+Plugin URI:  https://www.paidmembershipspro.com/add-ons/pmpro-import-users-csv/
+Description: Import your users or members list to WordPress and automatically assign membership levels in PMPro.
 Version: 1.0
-Author: Stranger Studios
-Author URI: http://www.strangerstudios.com
+Author: Paid Memberships Pro
+Author URI: https://www.paidmembershipspro.com
 Text Domain: pmpro-import-users-from-csv
 Domain Path: /languages
 */
@@ -38,6 +38,7 @@ class PMPro_Import_Users_From_CSV {
 
 		add_filter( 'pmpro_mmpu_incompatible_add_ons', array( get_called_class(), 'pmproiucsv_mmpu_incompatible_add_ons' ) );
 
+		add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), array( get_called_class(), 'add_action_links' ), 10, 2);
 		add_filter( 'plugin_row_meta', array( get_called_class(), 'plugin_row_meta' ), 10, 2);
 
 
@@ -85,7 +86,7 @@ class PMPro_Import_Users_From_CSV {
 	 * @since 0.1
 	 **/
 	public static function add_admin_pages() {
-		add_submenu_page( 'users.php', 'Import From CSV', 'Import From CSV', 'manage_options', 'pmpro-import-users-from-csv', array( get_called_class(), 'users_page' ) );
+		add_submenu_page( 'users.php', 'Import Members', 'Import Members', 'manage_options', 'pmpro-import-users-from-csv', array( get_called_class(), 'users_page' ) );
 	}
 
 	/**
@@ -223,16 +224,24 @@ class PMPro_Import_Users_From_CSV {
 		if ( ! current_user_can( 'create_users' ) ) {
 			wp_die( __( 'You do not have sufficient permissions to access this page.', 'pmpro-import-users-from-csv' ) );
 		}
+
+		// Show PMPro Header if PMPro is installed.
+		if ( defined( 'PMPRO_VERSION' ) ) {
+			require_once( PMPRO_DIR . '/adminpages/admin_header.php' );
+		} else {
+			?>
+			<div class="wrap">
+			<?php
+		}
 		?>
-	<div class="wrap">
-		<h2><?php _e( 'Import users from a CSV file', 'pmpro-import-users-from-csv' ); ?></h2>
+		<h1 class="wp-heading-inline"><?php esc_html_e( 'Import Users and Members from CSV', 'pmpro-import-users-from-csv' ); ?></h1>
 		<?php
 		$error_log_file = self::$log_dir_path . 'pmproiucsv_error.log';
 		$error_log_url  = self::$log_dir_url . 'pmproiucsv_error.log';
 
 		if ( ! file_exists( $error_log_file ) ) {
 			if ( ! @fopen( $error_log_file, 'x' ) ) {
-				echo '<div class="updated"><p><strong>' . sprintf( __( 'Notice: please make the directory %s writable so that you can see the error log.', 'pmpro-import-users-from-csv' ), self::$log_dir_path ) . '</strong></p></div>';
+				echo '<div class="updated"><p>' . sprintf( __( 'Notice: please make the directory %s writable so that you can see the error log.', 'pmpro-import-users-from-csv' ), '<code>' . self::$log_dir_path . '</code>' ) . '</p></div>';
 			}
 		}
 
@@ -245,22 +254,22 @@ class PMPro_Import_Users_From_CSV {
 
 			switch ( $_REQUEST['import'] ) {
 				case 'file':
-					echo '<div class="error"><p><strong>' . __( 'Error during file upload.', 'pmpro-import-users-from-csv' ) . '</strong></p></div>';
+					echo '<div class="error"><p>' . __( 'Error during file upload.', 'pmpro-import-users-from-csv' ) . '</p></div>';
 					break;
 				case 'data':
-					echo '<div class="error"><p><strong>' . __( 'Cannot extract data from uploaded file or no file was uploaded.', 'pmpro-import-users-from-csv' ) . '</strong></p></div>';
+					echo '<div class="error"><p>' . __( 'Cannot extract data from uploaded file or no file was uploaded.', 'pmpro-import-users-from-csv' ) . '</p></div>';
 					break;
 				case 'fail':
-					echo '<div class="error"><p><strong>' . sprintf( __( 'No user was successfully imported%s.', 'pmpro-import-users-from-csv' ), $error_log_msg ) . '</strong></p></div>';
+					echo '<div class="error"><p>' . sprintf( __( 'No user was successfully imported%s.', 'pmpro-import-users-from-csv' ), $error_log_msg ) . '</p></div>';
 					break;
 				case 'errors':
-					echo '<div class="error"><p><strong>' . sprintf( __( 'Some users were successfully imported but some were not%s.', 'pmpro-import-users-from-csv' ), $error_log_msg ) . '</strong></p></div>';
+					echo '<div class="error"><p>' . sprintf( __( 'Some users were successfully imported but some were not%s.', 'pmpro-import-users-from-csv' ), $error_log_msg ) . '</p></div>';
 					break;
 				case 'success':
-					echo '<div class="updated"><p><strong>' . __( 'Users import was successful.', 'pmpro-import-users-from-csv' ) . '</strong></p></div>';
+					echo '<div class="updated"><p>' . __( 'Users import was successful.', 'pmpro-import-users-from-csv' ) . '</p></div>';
 					break;
 				case 'cancelled':
-					echo '<div class="notice notice-warning"><p><strong>' . __( 'Import cancelled. No information was imported.', 'pmpro-import-users-from-csv' ) . '</strong></p></div>';
+					echo '<div class="notice notice-warning"><p>' . __( 'Import cancelled. No information was imported.', 'pmpro-import-users-from-csv' ) . '</p></div>';
 					break;
 				default:
 					break;
@@ -276,82 +285,111 @@ class PMPro_Import_Users_From_CSV {
 					delete_transient( 'pmproiucsv_' . $filename );
 				}
 				?>
-			<h3><?php esc_html_e( 'Importing file over AJAX', 'pmpro-import-users-from-csv' ); ?></h3>
-			<p>
-			<?php 
-			$url_query_args = array_map( 'sanitize_text_field', $_REQUEST ); // Get the current query args and sanitize them.
-			echo __( sprintf( '<strong>IMPORTANT:</strong> Your import is not finished. Closing this page will stop it. If the import stops or you have to close your browser, you can navigate to <a href="%s">this URL</a> to resume the import later.</p>', esc_url( add_query_arg( $url_query_args ) ) ), 'pmpro-import-users-from-csv' );
-			?>	
-			<p>
-				<a id="pauseimport" href="avascript:void(0);"><?php esc_html_e( 'Click here to pause.', 'pmpro-import-users-from-csv' ); ?></a>
-				<a id="resumeimport" href="avascript:void(0);" style="display:none;"><?php esc_html_e( 'Paused. Click here to resume.', 'pmpro-import-users-from-csv' ); ?></a>
-			</p>
+				<div class="pmpro_section">
+					<div class="pmpro_section_inside">
+						<h2><?php esc_html_e( 'Processing Import Using AJAX', 'pmpro-import-users-from-csv' ); ?></h2>
+						<p>
+							<strong><?php esc_html_e( 'Do not close this page until your import is finished processing.', 'pmpro-import-users-from-csv' ); ?></strong>
+							<?php esc_html_e( 'If the import stops or if you have to close your browser, navigate to the URL below to resume the import:', 'pmpro-import-users-from-csv' ); ?>
+						</p>
+						<p>
+							<?php
+								// Build the URL to return to.
+								$return_url = esc_url( add_query_arg( 'page', 'pmpro-import-users-from-csv', admin_url( 'users.php' ) ) );
 
-			<textarea id="importstatus" rows="10" cols="60"><?php esc_html_e( 'Loading...', 'pmpro-import-users-from-csv' ); ?></textarea>
-			<p id="pmproiucsv_return_home" style="display:none;"><a href='users.php?page=pmpro-import-users-from-csv'><?php esc_html_e( 'Return to Import From CSV home page.', 'pmpro-import-users-from-csv' ); ?></a></p>
-			<script>
-				var ai_filename = <?php echo json_encode( $filename ); ?>;
-				var ai_users_update = <?php echo json_encode( $users_update ); ?>;
-				var ai_new_user_notification = <?php echo json_encode( $new_user_notification ); ?>;
-			</script>
+								// Get the current query args and sanitize them.
+								$url_query_args = array_map( 'sanitize_text_field', $_REQUEST );
+
+								// Show the return URL.
+								echo '<code>' . esc_url( add_query_arg( $url_query_args, $return_url ) ) . '</code>';
+							?>
+						</p>
+						<hr />
+						<p>
+							<a id="pauseimport" href="javascript:void(0);"><?php esc_html_e( 'Click here to pause the import', 'pmpro-import-users-from-csv' ); ?></a>
+							<a id="resumeimport" href="javascript:void(0);" style="display:none;"><?php esc_html_e( 'Import paused. Click here to resume the import.', 'pmpro-import-users-from-csv' ); ?></a>
+						</p>
+						<textarea id="importstatus" rows="10" cols="60"><?php esc_html_e( 'Loading...', 'pmpro-import-users-from-csv' ); ?></textarea>
+						<p id="pmproiucsv_return_home" style="display:none;"><a href="<?php echo esc_url( add_query_arg( 'page', 'pmpro-import-users-from-csv', admin_url( 'users.php' ) ) ); ?>"><?php esc_html_e( 'Return to the Import Members From CSV screen', 'pmpro-import-users-from-csv' ); ?></a></p>
+						<script>
+							var ai_filename = <?php echo json_encode( $filename ); ?>;
+							var ai_users_update = <?php echo json_encode( $users_update ); ?>;
+							var ai_new_user_notification = <?php echo json_encode( $new_user_notification ); ?>;
+						</script>
+					</div> <!-- end pmpro_section_inside -->
+				</div> <!-- end pmpro_section -->
 				<?php
 			}
 		}
 
 		if ( empty( $_REQUEST['filename'] ) ) {
 			?>
-		<form id="import_users_csv" method="post" action="" enctype="multipart/form-data">
-			<?php wp_nonce_field( 'pmproiucsv_page_import', '_wpnonce_pmproiucsv_process_csv' ); ?>
-			<table class="form-table">
-				<tr valign="top">
-					<th scope="row"><label for="users_csv"><?php esc_html_e( 'CSV file', 'pmpro-import-users-from-csv' ); ?></label></th>
-					<td>
-						<input type="file" id="users_csv" name="users_csv" value="" class="all-options" /><br />
-						<span class="description"><?php echo sprintf( __( 'You may want to see <a href="%s">the example of the CSV file</a>.', 'pmpro-import-users-from-csv' ), plugin_dir_url( __FILE__ ) . 'examples/import.csv' ); ?></span>
-					</td>
-				</tr>
-				<tr valign="top">
-					<th scope="row"><?php esc_html_e( 'Notification', 'pmpro-import-users-from-csv' ); ?></th>
-					<td><fieldset>
-						<legend class="screen-reader-text"><span><?php esc_html_e( 'Notification', 'pmpro-import-users-from-csv' ); ?></span></legend>
-						<label for="new_user_notification">
-							<input id="new_user_notification" name="new_user_notification" type="checkbox" value="1" />
-							<?php esc_html_e( 'Send email notifications to new users and when existing users passwords are updated.', 'pmpro-import-users-from-csv' ); ?>
-						</label>
-					</fieldset></td>
-				</tr>
-				<tr valign="top">
-					<th scope="row"><?php esc_html_e( 'Users update', 'pmpro-import-users-from-csv' ); ?></th>
-					<td><fieldset>
-						<legend class="screen-reader-text"><span><?php esc_html_e( 'Users update', 'pmpro-import-users-from-csv' ); ?></span></legend>
-						<label for="users_update">
-							<input id="users_update" name="users_update" type="checkbox" value="1" />
-							<?php esc_html_e( 'Update user when a username or email exists', 'pmpro-import-users-from-csv' ); ?>
-						</label>
-					</fieldset></td>
-				</tr>
-				<tr valign="top">
-					<th scope="row"><?php esc_html_e( 'AJAX', 'pmpro-import-users-from-csv' ); ?></th>
-					<td><fieldset>
-						<legend class="screen-reader-text"><span><?php esc_html_e( 'AJAX', 'pmpro-import-users-from-csv' ); ?></span></legend>
-						<label for="ajaximport">
-							<input id="ajaximport" name="ajaximport" type="checkbox" value="1" />
-							<?php esc_html_e( 'Use AJAX to process the import gradually over time.', 'pmpro-import-users-from-csv' ); ?>
-						</label>
-					</fieldset></td>
-				</tr>
-
-					<?php do_action( 'pmproiucsv_import_page_inside_table_bottom' ); ?>
-			</table>
+		<div class="pmpro_section">
+			<div class="pmpro_section_inside">
+				<form id="import_users_csv" method="post" action="" enctype="multipart/form-data">
+					<?php wp_nonce_field( 'pmproiucsv_page_import', '_wpnonce_pmproiucsv_process_csv' ); ?>
+					<table class="form-table">
+						<tbody>
+							<tr>
+								<th scope="row">
+									<label for="users_csv"><?php esc_html_e( 'Import File (.csv)', 'pmpro-import-users-from-csv' ); ?></label>
+								</th>
+								<td>
+									<input type="file" id="users_csv" name="users_csv" value="" class="all-options" required /><br />
+									<p class="description"><?php printf( __( 'Download the <a href="%s">example CSV file</a> for help formatting your data for import.', 'pmpro-import-users-from-csv' ), esc_url( plugin_dir_url( __FILE__ ) . 'examples/import.csv' ) ); ?></p>
+								</td>
+							</tr>
+							<tr>
+								<th scope="row"><?php esc_html_e( 'Notify Members', 'pmpro-import-users-from-csv' ); ?></th>
+								<td><fieldset>
+									<legend class="screen-reader-text"><span><?php esc_html_e( 'Notify Members', 'pmpro-import-users-from-csv' ); ?></span></legend>
+									<label for="new_user_notification">
+										<input id="new_user_notification" name="new_user_notification" type="checkbox" value="1" />
+										<?php esc_html_e( 'Send new users an email with their username and a link to reset their password.', 'pmpro-import-users-from-csv' ); ?>
+									</label>
+								</fieldset></td>
+							</tr>
+							<tr>
+								<th scope="row"><?php esc_html_e( 'Update Existing Users', 'pmpro-import-users-from-csv' ); ?></th>
+								<td><fieldset>
+									<legend class="screen-reader-text"><span><?php esc_html_e( 'Update Existing Users', 'pmpro-import-users-from-csv' ); ?></span></legend>
+									<label for="users_update">
+										<input id="users_update" name="users_update" type="checkbox" value="1" />
+										<?php esc_html_e( 'Update existing users when a matching username or email address is found (recommended).', 'pmpro-import-users-from-csv' ); ?>
+									</label>
+								</fieldset></td>
+							</tr>
+							<tr>
+								<th scope="row"><?php esc_html_e( 'Process With AJAX', 'pmpro-import-users-from-csv' ); ?></th>
+								<td><fieldset>
+									<legend class="screen-reader-text"><span><?php esc_html_e( 'Process With AJAX', 'pmpro-import-users-from-csv' ); ?></span></legend>
+									<label for="ajaximport">
+										<input id="ajaximport" name="ajaximport" type="checkbox" value="1" />
+										<?php esc_html_e( 'Process the import in batches using AJAX (recommended).', 'pmpro-import-users-from-csv' ); ?>
+									</label>
+								</fieldset></td>
+							</tr>
+							<?php do_action( 'pmproiucsv_import_page_inside_table_bottom' ); ?>
+						</tbody>
+					</table>
 
 					<?php do_action( 'pmproiucsv_import_page_after_table' ); ?>
-			<p class="submit">
-				<input type="submit" class="button-primary" name="pmproiucsv_import" value="<?php esc_html_e( 'Import', 'pmpro-import-users-from-csv' ); ?>" />
-			</p>
-		</form>
 
-
-			<?php
+					<p class="submit">
+						<input type="submit" class="button button-primary" name="pmproiucsv_import" value="<?php esc_html_e( 'Import', 'pmpro-import-users-from-csv' ); ?>" />
+					</p>
+				</form>
+			</div> <!-- end pmpro_section_inside -->
+		</div> <!-- end pmpro_section -->
+		<?php
+			// Show PMPro Footer if PMPro is installed.
+			if ( defined( 'PMPRO_VERSION' ) ) {
+				require_once( PMPRO_DIR . '/adminpages/admin_footer.php' );
+			} else {
+				?>
+				</div> <!-- end wrap -->
+				<?php
+			}
 		}
 	}
 
@@ -657,10 +695,11 @@ class PMPro_Import_Users_From_CSV {
 		// Show admin notice that the old plugin was deactivated.
 		?>
 		<div class="notice notice-warning is-dismissible">
-			<p><?php esc_html_e( 'The Import Users From CSV plugin is no longer required to import members or non-members with Paid Memberships Pro, and has been deactivated to ensure no conflicts occur.', 'pmpro-import-users-from-csv' ); ?></p>
+			<p><?php esc_html_e( 'Import Users From CSV is no longer required to import users and members with Paid Memberships Pro. The plugin has been deactivated.', 'pmpro-import-users-from-csv' ); ?></p>
 		</div>
 		<?php
 	}
+
 	/**
 	 * Log errors to a file
 	 *
@@ -683,14 +722,29 @@ class PMPro_Import_Users_From_CSV {
 		@fclose( $log );
 	}
 
-		/*
-	Function to add links to the plugin row meta
-	*/
+	/**
+	 * Add Run Import link to the plugin action links.
+	 */
+	public static function add_action_links($links) {
+		// Only add this if plugin is active.
+		if( is_plugin_active( 'pmpro-import-users-from-csv/pmpro-import-users-from-csv.php' ) ) {
+			$new_links = array(
+				'<a href="' . wp_nonce_url( get_admin_url( NULL, 'users.php?page=pmpro-import-users-from-csv' ), 'pmproiucsv_page_import' ) . '">' . esc_html__( 'Run Import', 'pmpro-import-users-from-csv' ) . '</a>',
+			);
+			return array_merge($new_links, $links);
+		}
+
+		return $links;
+	}
+
+	/**
+	 * Function to add links to the plugin row meta
+	 */
 	public static function plugin_row_meta( $links, $file ) {
 		if ( strpos( $file, 'pmpro-import-users-from-csv.php') !== false ) {
 			$new_links = array(
-				'<a href="' . esc_url('http://www.paidmembershipspro.com/add-ons/third-party-integration/pmpro-import-users-csv/')  . '" title="' . esc_attr( __( 'View Documentation', 'pmpro-import-users-from-csv' ) ) . '">' . __( 'Docs', 'pmpro-import-users-from-csv' ) . '</a>',
-				'<a href="' . esc_url('http://paidmembershipspro.com/support/') . '" title="' . esc_attr( __( 'Visit Customer Support Forum', 'pmpro-import-users-from-csv' ) ) . '">' . __( 'Support', 'pmpro-import-users-from-csv' ) . '</a>',
+				'<a href="' . esc_url( 'https://www.paidmembershipspro.com/add-ons/pmpro-import-users-csv/' )  . '" title="' . esc_attr( __( 'View Documentation', 'pmpro-import-users-from-csv' ) ) . '">' . __( 'Docs', 'pmpro-import-users-from-csv' ) . '</a>',
+				'<a href="' . esc_url( 'https://www.paidmembershipspro.com/support/' ) . '" title="' . esc_attr( __( 'Visit Customer Support Forum', 'pmpro-import-users-from-csv' ) ) . '">' . __( 'Support', 'pmpro-import-users-from-csv' ) . '</a>',
 			);
 			$links = array_merge( $links, $new_links );
 		}

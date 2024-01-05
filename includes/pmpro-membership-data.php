@@ -306,26 +306,19 @@ function pmproiufcsv_report_sub_error ( $errors, $user_ids ){
  *
  * @since 0.4
  */
-function pmproiufcsv_add_import_options() {
-
-	?>
-
-	<tr valign="top">
-		<th scope="row"><?php esc_html_e( 'Skip existing members' , 'pmpro-import-users-from-csv'); ?></th>
+function pmproiufcsv_add_import_options() { ?>
+	<tr>
+		<th scope="row"><?php esc_html_e( 'Skip Existing Members' , 'pmpro-import-users-from-csv'); ?></th>
 		<td>
 			<fieldset>
-				<legend class="screen-reader-text"><span><?php esc_html_e( 'Skip existing members' , 'pmpro-import-users-from-csv' ); ?></span></legend>
-
-
+				<legend class="screen-reader-text"><span><?php esc_html_e( 'Skip Existing Members' , 'pmpro-import-users-from-csv' ); ?></span></legend>
 				<label for="skip_existing_members_same_level">
 					<input id="skip_existing_members_same_level" name="skip_existing_members_same_level" type="checkbox" value="1" />
-					<?php esc_html_e( 'Do not change membership level of user if they already have the same membership_id level during import', 'pmpro-import-users-from-csv' ) ;?>
-
+					<?php esc_html_e( 'Do not change the membership level of users with the same active membership level during import.', 'pmpro-import-users-from-csv' ) ;?>
 				</label>
 			</fieldset>
 		</td>
 	</tr>
-
 	<?php
 
 }
