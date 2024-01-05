@@ -289,12 +289,25 @@ class PMPro_Import_Users_From_CSV {
 					<div class="pmpro_section_inside">
 						<h2><?php esc_html_e( 'Processing Import Using AJAX', 'pmpro-import-users-from-csv' ); ?></h2>
 						<p>
-							<?php echo __( sprintf( '<strong>IMPORTANT:</strong> Your import is not finished. Closing this page will stop it. If the import stops or you have to close your browser, you can navigate to <a href="%s">this URL</a> to resume the import later.', admin_url( 'users.php' . '?' . $_SERVER['QUERY_STRING'] ) ) );  // Separated the '?' for readability.
-							?>
+							<strong><?php esc_html_e( 'Do not close this page until your import is finished processing.', 'pmpro-import-users-from-csv' ); ?></strong>
+							<?php esc_html_e( 'If the import stops or if you have to close your browser, navigate to the URL below to resume the import:', 'pmpro-import-users-from-csv' ); ?>
 						</p>
 						<p>
-							<a id="pauseimport" href="#"><?php esc_html_e( 'Click here to pause the import', 'pmpro-import-users-from-csv' ); ?></a>
-							<a id="resumeimport" href="#" style="display:none;"><?php esc_html_e( 'Import paused. Click here to resume the import.', 'pmpro-import-users-from-csv' ); ?></a>
+							<?php
+								// Build the URL to return to.
+								$return_url = esc_url( add_query_arg( 'page', 'pmpro-import-users-from-csv', admin_url( 'users.php' ) ) );
+
+								// Get the current query args and sanitize them.
+								$url_query_args = array_map( 'sanitize_text_field', $_REQUEST );
+
+								// Show the return URL.
+								echo '<code>' . esc_url( add_query_arg( $url_query_args, $return_url ) ) . '</code>';
+							?>
+						</p>
+						<hr />
+						<p>
+							<a id="pauseimport" href="javascript:void(0);"><?php esc_html_e( 'Click here to pause the import', 'pmpro-import-users-from-csv' ); ?></a>
+							<a id="resumeimport" href="javascript:void(0);" style="display:none;"><?php esc_html_e( 'Import paused. Click here to resume the import.', 'pmpro-import-users-from-csv' ); ?></a>
 						</p>
 						<textarea id="importstatus" rows="10" cols="60"><?php esc_html_e( 'Loading...', 'pmpro-import-users-from-csv' ); ?></textarea>
 						<p id="pmproiucsv_return_home" style="display:none;"><a href="<?php echo esc_url( add_query_arg( 'page', 'pmpro-import-users-from-csv', admin_url( 'users.php' ) ) ); ?>"><?php esc_html_e( 'Return to the Import Members From CSV screen', 'pmpro-import-users-from-csv' ); ?></a></p>
@@ -332,7 +345,7 @@ class PMPro_Import_Users_From_CSV {
 									<legend class="screen-reader-text"><span><?php esc_html_e( 'Notify Members', 'pmpro-import-users-from-csv' ); ?></span></legend>
 									<label for="new_user_notification">
 										<input id="new_user_notification" name="new_user_notification" type="checkbox" value="1" />
-										<?php esc_html_e( 'Send an email to new users and to existing users when their password is updated.', 'pmpro-import-users-from-csv' ); ?>
+										<?php esc_html_e( 'Send new users an email with their username and a link to reset their password.', 'pmpro-import-users-from-csv' ); ?>
 									</label>
 								</fieldset></td>
 							</tr>
