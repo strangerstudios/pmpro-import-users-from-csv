@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Paid Memberships Pro - Import Members From CSV Add On
-Plugin URI: http://www.paidmembershipspro.com/pmpro-import-users-from-csv/
+Plugin URI:  https://www.paidmembershipspro.com/add-ons/pmpro-import-users-csv/
 Description: Import your users or members list to WordPress and automatically assign membership levels in PMPro.
 Version: 1.0
 Author: Paid Memberships Pro
@@ -745,8 +745,8 @@ class PMPro_Import_Users_From_CSV {
 	public static function plugin_row_meta( $links, $file ) {
 		if ( strpos( $file, 'pmpro-import-users-from-csv.php') !== false ) {
 			$new_links = array(
-				'<a href="' . esc_url('http://www.paidmembershipspro.com/add-ons/third-party-integration/pmpro-import-users-csv/')  . '" title="' . esc_attr( __( 'View Documentation', 'pmpro-import-users-from-csv' ) ) . '">' . __( 'Docs', 'pmpro-import-users-from-csv' ) . '</a>',
-				'<a href="' . esc_url('http://paidmembershipspro.com/support/') . '" title="' . esc_attr( __( 'Visit Customer Support Forum', 'pmpro-import-users-from-csv' ) ) . '">' . __( 'Support', 'pmpro-import-users-from-csv' ) . '</a>',
+				'<a href="' . esc_url( 'https://www.paidmembershipspro.com/add-ons/pmpro-import-users-csv/' )  . '" title="' . esc_attr( __( 'View Documentation', 'pmpro-import-users-from-csv' ) ) . '">' . __( 'Docs', 'pmpro-import-users-from-csv' ) . '</a>',
+				'<a href="' . esc_url( 'https://www.paidmembershipspro.com/support/' ) . '" title="' . esc_attr( __( 'Visit Customer Support Forum', 'pmpro-import-users-from-csv' ) ) . '">' . __( 'Support', 'pmpro-import-users-from-csv' ) . '</a>',
 			);
 			$links = array_merge( $links, $new_links );
 		}
