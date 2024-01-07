@@ -153,40 +153,44 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 		add_filter( 'pmproiucsv_errors_filter', 'pmproiufcsv_report_sub_error', 10, 2 );
 	}
 
+	// Process level changes if membership_id is set.
+	if ( isset( $membership_id ) && ( $membership_id === '0' || ! empty( $membership_id ) ) ) {
+		// Cancel all memberships if membership_id is set to 0.
+		if ( $membership_id === '0' ) {
+			pmpro_changeMembershipLevel( 0, $user_id );
+		} else {
+			// Give the user the membership level.
+			$custom_level = array(
+				'user_id' => $user_id,
+				'membership_id' => $membership_id,
+				'code_id' => $membership_code_id,
+				'initial_payment' => $membership_initial_payment,
+				'billing_amount' => $membership_billing_amount,
+				'cycle_number' => $membership_cycle_number,
+				'cycle_period' => $membership_cycle_period,
+				'billing_limit' => $membership_billing_limit,
+				'trial_amount' => $membership_trial_amount,
+				'trial_limit' => $membership_trial_limit,
+				'status' => $membership_status,
+				'startdate' => $membership_startdate,
+				'enddate' => $membership_enddate
+			);
 
-	// Change membership level.
-	if(!empty($membership_id))
-	{
-		$custom_level = array(
-			'user_id' => $user_id,
-			'membership_id' => $membership_id,
-			'code_id' => $membership_code_id,
-			'initial_payment' => $membership_initial_payment,
-			'billing_amount' => $membership_billing_amount,
-			'cycle_number' => $membership_cycle_number,
-			'cycle_period' => $membership_cycle_period,
-			'billing_limit' => $membership_billing_limit,
-			'trial_amount' => $membership_trial_amount,
-			'trial_limit' => $membership_trial_limit,
-			'status' => $membership_status,
-			'startdate' => $membership_startdate,
-			'enddate' => $membership_enddate
-		);
+			pmpro_changeMembershipLevel($custom_level, $user_id);
 
-		pmpro_changeMembershipLevel($custom_level, $user_id);
+			// If membership was in the past make it inactive.
+			if($membership_status === "inactive" || (!empty($membership_enddate) && $membership_enddate !== "NULL" && strtotime($membership_enddate, current_time('timestamp')) < current_time('timestamp')))
+			{
+				$sqlQuery = "UPDATE $wpdb->pmpro_memberships_users SET status = 'inactive' WHERE user_id = '" . $user_id . "' AND membership_id = '" . $membership_id . "'";
+				$wpdb->query($sqlQuery);
+				$membership_in_the_past = true;
+			}
 
-		// If membership was in the past make it inactive.
-		if($membership_status === "inactive" || (!empty($membership_enddate) && $membership_enddate !== "NULL" && strtotime($membership_enddate, current_time('timestamp')) < current_time('timestamp')))
-		{
-			$sqlQuery = "UPDATE $wpdb->pmpro_memberships_users SET status = 'inactive' WHERE user_id = '" . $user_id . "' AND membership_id = '" . $membership_id . "'";
-			$wpdb->query($sqlQuery);
-			$membership_in_the_past = true;
-		}
-
-		if($membership_status === "active" && (empty($membership_enddate) || $membership_enddate === "NULL" || strtotime($membership_enddate, current_time('timestamp')) >= current_time('timestamp')))
-		{
-			$sqlQuery = $wpdb->prepare("UPDATE {$wpdb->pmpro_memberships_users} SET status = 'active' WHERE user_id = %d AND membership_id = %d ORDER BY id DESC LIMIT 1", $user_id, $membership_id);
-			$wpdb->query($sqlQuery);
+			if($membership_status === "active" && (empty($membership_enddate) || $membership_enddate === "NULL" || strtotime($membership_enddate, current_time('timestamp')) >= current_time('timestamp')))
+			{
+				$sqlQuery = $wpdb->prepare("UPDATE {$wpdb->pmpro_memberships_users} SET status = 'active' WHERE user_id = %d AND membership_id = %d ORDER BY id DESC LIMIT 1", $user_id, $membership_id);
+				$wpdb->query($sqlQuery);
+			}
 		}
 	}
 
