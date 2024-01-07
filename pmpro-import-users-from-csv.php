@@ -245,7 +245,7 @@ class PMPro_Import_Users_From_CSV {
 			}
 		}
 
-		// Show error log link if there are errors.
+		// Adds a query arg in the
 		if ( isset( $_REQUEST['import'] ) ) {
 			$error_log_msg = '';
 			if ( file_exists( $error_log_file ) ) {
