@@ -2,7 +2,7 @@
 /**
  * Get list of PMPro-related fields.
  */
-function pmproiufcsv_getFields() {
+function pmproiucsv_getFields() {
 	$pmpro_fields = array(
 		"membership_id",
 		"membership_code_id",
@@ -31,10 +31,10 @@ function pmproiufcsv_getFields() {
 /**
  * Delete all import_ meta fields before an import in case the user has been imported in the past.
  */
-function pmproiufcsv_is_iu_pre_user_import( $userdata, $usermeta, $user ) {
+function pmproiucsv_is_iu_pre_user_import( $userdata, $usermeta, $user ) {
 	
 	if(!empty($user)) {
-		$pmpro_fields = pmproiufcsv_getFields();
+		$pmpro_fields = pmproiucsv_getFields();
 
 		foreach($pmpro_fields as $field) {
 			delete_user_meta($user->ID, "import_" . $field);
@@ -47,19 +47,19 @@ function pmproiufcsv_is_iu_pre_user_import( $userdata, $usermeta, $user ) {
 	 * @since 0.4
 	 * @param boolean $allow_sub_cancellations Set this option to true if you want to let subscriptions cancel on the gateway level during import.
 	 */
-	if ( ! apply_filters( 'pmproiufcsv_cancel_prev_sub_on_import', false ) ) {
+	if ( ! apply_filters( 'pmproiufcsv_cancel_prev_sub_on_import', false ) || ! apply_filters( 'pmproiucsv_cancel_prev_sub_on_import', false ) ) {
 		add_filter( 'pmpro_cancel_previous_subscriptions', '__return_false' );
 	}
 	
 }
-add_action( 'pmproiucsv_pre_user_import', 'pmproiufcsv_is_iu_pre_user_import', 10, 3 );
+add_action( 'pmproiucsv_pre_user_import', 'pmproiucsv_is_iu_pre_user_import', 10, 3 );
 
 /**
  * Change some of the imported columns to add "imported_" to the front so we don't confuse the data later.
  */
-function pmproiufcsv_is_iu_import_usermeta($usermeta, $userdata)
+function pmproiucsv_is_iu_import_usermeta($usermeta, $userdata)
 {
-	$pmpro_fields = pmproiufcsv_getFields();
+	$pmpro_fields = pmproiucsv_getFields();
 
 	$newusermeta = array();
 	foreach($usermeta as $key => $value)
@@ -72,12 +72,12 @@ function pmproiufcsv_is_iu_import_usermeta($usermeta, $userdata)
 
 	return $newusermeta;
 }
-add_filter("pmproiucsv_import_usermeta", "pmproiufcsv_is_iu_import_usermeta", 10, 2);
+add_filter("pmproiucsv_import_usermeta", "pmproiucsv_is_iu_import_usermeta", 10, 2);
 
 /**
  * After users are added, let's use the meta data imported to update the user.
  */
-function pmproiufcsv_is_iu_post_user_import($user_id)
+function pmproiucsv_is_iu_post_user_import($user_id)
 {
     global $wpdb;
 
@@ -231,7 +231,7 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 		$wpdb->query("INSERT INTO $wpdb->pmpro_discount_codes_uses (code_id, user_id, order_id, timestamp) VALUES('" . esc_sql($membership_code_id) . "', '" . esc_sql($user_id) . "', '" . intval($order->id) . "', now())");
 
 }
-add_action("pmproiucsv_post_user_import", "pmproiufcsv_is_iu_post_user_import");
+add_action("pmproiucsv_post_user_import", "pmproiucsv_is_iu_post_user_import");
 
 /**
  * Add error/warning message if user's were imported with both a subscription and expiration date.
