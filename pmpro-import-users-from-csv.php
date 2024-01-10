@@ -625,6 +625,11 @@ class PMPro_Import_Users_From_CSV {
 				// If no error, let's update the user meta too!
 				if ( $usermeta ) {
 					foreach ( $usermeta as $metakey => $metavalue ) {
+						// If the value of the meta key is empty, lets not do anything but skip it.
+						if ( empty( $metavalue ) ) {
+							continue;
+						}
+
 						$metavalue = maybe_unserialize( $metavalue );
 						update_user_meta( $user_id, $metakey, $metavalue );
 					}
