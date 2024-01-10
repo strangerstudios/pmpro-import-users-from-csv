@@ -194,13 +194,27 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 		}
 	}
 
-	// Add order so integration with gateway works.
-	if(
-// 		!empty($membership_subscription_transaction_id) &&
-		!empty($membership_gateway) ||
-		!empty($membership_timestamp) || !empty($membership_code_id)
-	)
-	{
+	/**
+	 * This logic adds an order for two specific cases:
+	 * - So the gateway can locate the correct user when new subscription payments are received (importing active subscriptions), or
+	 * - So the discount code use (if imported) can be tracked.
+	 */
+
+	// Are we creating an order? Assume no.
+	$create_order = false;
+
+	// Create an order if we have both a membership_subscription_transaction_id and membership_gateway.
+	if ( ! empty( $membership_subscription_transaction_id ) && ! empty( $membership_gateway ) ) {
+		$create_order = true;
+	}
+
+	// Create an order to track the discount code use if we have a membership_code_id.
+	if ( ! empty( $membership_code_id ) ) {
+		$create_order = true;
+	}
+
+	// Create the order.
+	if ( $create_order ) {
 		$order = new MemberOrder();
 		$order->user_id = $user_id;
 		$order->membership_id = $membership_id;
@@ -220,7 +234,7 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 
 		$order->saveOrder();
 
-		// Maybe update timestamp of order.
+		// Maybe update timestamp of order if the import includes the membership_timestamp.
 		if(!empty($membership_timestamp))
 		{
 			$timestamp = strtotime($membership_timestamp, current_time('timestamp'));
@@ -228,7 +242,7 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 		}
 	}
 
-	// Add code use.
+	// Add code use if we have the membership_code_id and there is an order to attach to.
 	if(!empty($membership_code_id) && !empty($order) && !empty($order->id))
 		$wpdb->query("INSERT INTO $wpdb->pmpro_discount_codes_uses (code_id, user_id, order_id, timestamp) VALUES('" . esc_sql($membership_code_id) . "', '" . esc_sql($user_id) . "', '" . intval($order->id) . "', now())");
 
