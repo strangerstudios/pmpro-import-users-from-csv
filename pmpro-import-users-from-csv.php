@@ -661,6 +661,8 @@ class PMPro_Import_Users_From_CSV {
 		// One more thing to do after all imports?
 		do_action( 'pmproiucsv_post_users_import', $user_ids, $errors );
 
+		$errors = apply_filters( 'pmproiucsv_errors_filter', $errors, $user_ids );
+		
 		// Let's log the errors
 		self::log_errors( $errors );
 

@@ -2,7 +2,7 @@
 /**
  * Get list of PMPro-related fields.
  */
-function pmproiufcsv_getFields() {
+function pmproiucsv_getFields() {
 	$pmpro_fields = array(
 		"membership_id",
 		"membership_code_id",
@@ -31,7 +31,7 @@ function pmproiufcsv_getFields() {
 /**
  * Delete all import_ meta fields before an import in case the user has been imported in the past.
  */
-function pmproiufcsv_is_iu_pre_user_import( $userdata, $usermeta, $user ) {
+function pmproiucsv_is_iu_pre_user_import( $userdata, $usermeta, $user ) {
 	//try to get user by ID
 	$user = $user_id = false;
 	if ( isset( $userdata['ID'] ) ) {
@@ -48,7 +48,7 @@ function pmproiufcsv_is_iu_pre_user_import( $userdata, $usermeta, $user ) {
 	}
 
 	if(!empty($user)) {
-		$pmpro_fields = pmproiufcsv_getFields();
+		$pmpro_fields = pmproiucsv_getFields();
 
 		foreach($pmpro_fields as $field) {
 			delete_user_meta($user->ID, "import_" . $field);
@@ -61,19 +61,19 @@ function pmproiufcsv_is_iu_pre_user_import( $userdata, $usermeta, $user ) {
 	 * @since 0.4
 	 * @param boolean $allow_sub_cancellations Set this option to true if you want to let subscriptions cancel on the gateway level during import.
 	 */
-	if ( ! apply_filters( 'pmproiufcsv_cancel_prev_sub_on_import', false ) ) {
+	if ( ! apply_filters( 'pmproiufcsv_cancel_prev_sub_on_import', false ) || ! apply_filters( 'pmproiucsv_cancel_prev_sub_on_import', false ) ) {
 		add_filter( 'pmpro_cancel_previous_subscriptions', '__return_false' );
 	}
 	
 }
-add_action( 'pmproiucsv_pre_user_import', 'pmproiufcsv_is_iu_pre_user_import', 10, 3 );
+add_action( 'pmproiucsv_pre_user_import', 'pmproiucsv_is_iu_pre_user_import', 10, 3 );
 
 /**
  * Change some of the imported columns to add "imported_" to the front so we don't confuse the data later.
  */
-function pmproiufcsv_is_iu_import_usermeta($usermeta, $userdata)
+function pmproiucsv_is_iu_import_usermeta($usermeta, $userdata)
 {
-	$pmpro_fields = pmproiufcsv_getFields();
+	$pmpro_fields = pmproiucsv_getFields();
 
 	$newusermeta = array();
 	foreach($usermeta as $key => $value)
@@ -86,12 +86,12 @@ function pmproiufcsv_is_iu_import_usermeta($usermeta, $userdata)
 
 	return $newusermeta;
 }
-add_filter("pmproiucsv_import_usermeta", "pmproiufcsv_is_iu_import_usermeta", 10, 2);
+add_filter("pmproiucsv_import_usermeta", "pmproiucsv_is_iu_import_usermeta", 10, 2);
 
 /**
  * After users are added, let's use the meta data imported to update the user.
  */
-function pmproiufcsv_is_iu_post_user_import($user_id)
+function pmproiucsv_is_iu_post_user_import($user_id)
 {
     global $wpdb;
 
@@ -164,7 +164,7 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 		 * If there is a membership_subscription_transaction_id column with a value AND membership_status column with value active (or assume active if missing) AND the membership_enddate column is not empty, then (1) throw an warning but continue to import
 		 */
 
-		add_filter( 'pmproiucsv_errors_filter', 'pmproiufcsv_report_sub_error', 10, 2 );
+		add_filter( 'pmproiucsv_errors_filter', 'pmproiucsv_report_sub_error', 10, 2 );
 	}
 
 	// Process level changes if membership_id is set.
@@ -190,7 +190,9 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 				'enddate' => $membership_enddate
 			);
 
-			pmpro_changeMembershipLevel($custom_level, $user_id);
+      if ( ! pmpro_changeMembershipLevel( $custom_level, $user_id ) ) {
+			  add_filter( 'pmproiucsv_errors_filter', 'pmproiucsv_report_non_existent_level', 10, 2 );
+      }
 
 			// If membership was in the past make it inactive.
 			if($membership_status === "inactive" || (!empty($membership_enddate) && $membership_enddate !== "NULL" && strtotime($membership_enddate, current_time('timestamp')) < current_time('timestamp')))
@@ -247,7 +249,7 @@ function pmproiufcsv_is_iu_post_user_import($user_id)
 		$wpdb->query("INSERT INTO $wpdb->pmpro_discount_codes_uses (code_id, user_id, order_id, timestamp) VALUES('" . esc_sql($membership_code_id) . "', '" . esc_sql($user_id) . "', '" . intval($order->id) . "', now())");
 
 }
-add_action("pmproiucsv_post_user_import", "pmproiufcsv_is_iu_post_user_import");
+add_action("pmproiucsv_post_user_import", "pmproiucsv_is_iu_post_user_import");
 
 /**
  * Add error/warning message if user's were imported with both a subscription and expiration date.
@@ -258,7 +260,7 @@ add_action("pmproiucsv_post_user_import", "pmproiufcsv_is_iu_post_user_import");
  * @param [type] $user_ids
  * @return array $error The error message that is set when an import fails.
  */
-function pmproiufcsv_report_sub_error ( $errors, $user_ids ){
+function pmproiucsv_report_sub_error ( $errors, $user_ids ){
 
 	$error_message = sprintf( __( 'User imported with both an active subscription and a membership enddate. This configuration is not recommended with PMPro ($1$s). This user has been imported with no enddate.', 'pmpro-import-users-from-csv' ), 'https://www.paidmembershipspro.com/important-notes-on-recurring-billing-and-expiration-dates-for-membership-levels/' );
 
@@ -269,11 +271,26 @@ function pmproiufcsv_report_sub_error ( $errors, $user_ids ){
 }
 
 /**
+ * Throw an error/warning when importing a membership ID but the level does not exist in the database.
+ *
+ * @since TBD
+ */
+function pmproiucsv_report_non_existent_level( $errors, $user_ids ) {
+	
+	$error_message = __( "Failed to import membership level. Level does not exist. Please confirm your membership_id value corresponds to one of your membership ID's", 'pmpro-import-users-from-csv' );
+
+	$errors[] = new WP_Error( 'level_not_found', $error_message );
+
+	return $errors;
+
+}
+
+/**
  * Render the additional options for the Import Users from CSV plugin settings page.
  *
  * @since 0.4
  */
-function pmproiufcsv_add_import_options() { ?>
+function pmproiucsv_add_import_options() { ?>
 	<tr>
 		<th scope="row"><?php esc_html_e( 'Skip Existing Members' , 'pmpro-import-users-from-csv'); ?></th>
 		<td>
@@ -288,7 +305,7 @@ function pmproiufcsv_add_import_options() { ?>
 	</tr>
 	<?php
 }
-add_action( 'pmproiucsv_import_page_inside_table_bottom', 'pmproiufcsv_add_import_options' );
+add_action( 'pmproiucsv_import_page_inside_table_bottom', 'pmproiucsv_add_import_options' );
 
 /**
  * Required headers when importing members that shows a notice if it's missing.
