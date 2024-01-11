@@ -36,8 +36,6 @@ class PMPro_Import_Users_From_CSV {
 		add_action( 'admin_enqueue_scripts', array( get_called_class(), 'admin_enqueue_scripts' ) );
 		add_action( 'wp_ajax_pmpro_import_users_from_csv', array( get_called_class(), 'wp_ajax_pmpro_import_users_from_csv' ) );
 
-		add_filter( 'pmpro_mmpu_incompatible_add_ons', array( get_called_class(), 'pmproiucsv_mmpu_incompatible_add_ons' ) );
-
 		add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), array( get_called_class(), 'add_action_links' ), 10, 2);
 		add_filter( 'plugin_row_meta', array( get_called_class(), 'plugin_row_meta' ), 10, 2);
 
@@ -70,14 +68,6 @@ class PMPro_Import_Users_From_CSV {
 	 */
 	public static function pmproiucsv_load_textdomain() {
 		load_plugin_textdomain( 'pmpro-import-users-from-csv', false, plugin_basename( dirname( __FILE__ ) ) . '/languages' );
-	}
-
-	/**
- 	 * Mark the plugin as MMPU-incompatible.
- 	 */
-	public static function pmproiucsv_mmpu_incompatible_add_ons( $incompatible ) {
-		$incompatible[] = 'PMPro Import Users from CSV Add On';
-		return $incompatible;
 	}
 
 	/**
