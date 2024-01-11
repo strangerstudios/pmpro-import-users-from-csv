@@ -32,7 +32,21 @@ function pmproiufcsv_getFields() {
  * Delete all import_ meta fields before an import in case the user has been imported in the past.
  */
 function pmproiufcsv_is_iu_pre_user_import( $userdata, $usermeta, $user ) {
-	
+	//try to get user by ID
+	$user = $user_id = false;
+	if ( isset( $userdata['ID'] ) ) {
+		$user = get_user_by( 'ID', $userdata['ID'] );
+	}
+
+	//try to find user by login or email if still not found.
+	if ( ! $user ) {
+		if ( isset( $userdata['user_login'] ) )
+			$user = get_user_by( 'login', $userdata['user_login'] );
+
+		if ( ! $user && isset( $userdata['user_email'] ) )
+			$user = get_user_by( 'email', $userdata['user_email'] );
+	}
+
 	if(!empty($user)) {
 		$pmpro_fields = pmproiufcsv_getFields();
 
