@@ -1,54 +1,21 @@
-=== Paid Memberships Pro - Import Users from CSV Add On ===
+=== Paid Memberships Pro - Import Members From CSV Add On ===
 Contributors: strangerstudios
 Tags: paid memberships pro, import users from csv, import, csv, members
-Requires at least: 5.0
-Tested up to: 5.9
-Stable tag: 0.4
+Requires at least: 5.4
+Tested up to: 6.4.2
+Stable tag: 1.0
 
-Add-on for the Import Users From CSV plugin to import PMPro and membership-related fields.
+Import your users or members list to WordPress and automatically assign membership levels in PMPro.
  
 == Description ==
 
-If you add specific fields (see installation section) to your CSV when importing with the Import Users from CSV, membership levels and dummy orders (for gateway syncing) will be created.
+Import Members From CSV is a Paid Memberships Pro Add On that allows you to create new users and update existing users by importing a simple CSV file.
 
-Requires both the Import Users From CSV and Paid Memberships Pro Plugins
-* http://wordpress.org/plugins/import-users-from-csv/
-* http://wordpress.org/extend/plugins/paid-memberships-pro
+This Add On creates users, assigns membership levels to new or existing users, and updates subscription information.
 
-== Installation ==
+If you are migrating from another platform, you can adding gateway subscription information to your import and continue existing subscriptions. After import, a single placeholder order (used for gateway syncing) will be created.
 
-1. Activate Plugin
-2. Add the usual columns to your import CSV: user_login, user_email, first_name, last_name, etc.
-3. Add the following columns to your import CSV. * = required for membership level, ** = required for gateway subscription
-	- membership_id * (id of the membership level)
-	- membership_code_id
-	- membership_initial_payment
-	- membership_billing_amount
-	- membership_cycle_number
-	- membership_cycle_period
-	- membership_billing_limit
-	- membership_trial_amount
-	- membership_trial_limit
-	- membership_status
-	- membership_startdate
-	- membership_enddate
-	- membership_subscription_transaction_id ** (subscription transaction id or customer id from the gateway)
-	- membership_gateway ** (gateway = check, stripe, paypalstandard, paypalexpress, paypal (for website payments pro), payflowpro, authorizenet, braintree)
-	- membership_payment_transaction_id
-	- membership_affiliate_id
-	- membership_timestamp
-4. Go to Users --> Import From CSV. Browse to CSV file and import.
-	- pmpro_stripe_customerid (for Stripe users, will be same as membership_subscription_transaction_id above)
-5. (Optional) Send a welcome email by setting the global $pmproiufcsv_email. See example below.
-6. Go to Users --> Import From CSV. Browse to CSV file and import.
-
-Copy these lines to your active theme's functions.php or custom plugin and modify as desired to send a welcome email to members after import:
-
-global $pmproiufcsv_email;
-$pmproiufcsv_email = array(
-    'subject'   => sprintf('Welcome to %s', get_bloginfo('sitename')), //email subject, "Welcome to Sitename"
-    'body'      => 'Your welcome email body text will go here.'        //email body
-);
+For more help using this Add On, refer to the documentation here: https://www.paidmembershipspro.com/add-ons/pmpro-import-users-csv/.
 
 == Frequently Asked Questions ==
 
@@ -61,6 +28,17 @@ Please post it in the GitHub issue tracker here: https://github.com/strangerstud
 Please visit our premium support site at http://www.paidmembershipspro.com for more documentation and our support forums.
 
 == Changelog ==
+
+= 1.0 - 2024-01-16 =
+* ENHANCEMENT: Refactored entire plugin to be a standalone plugin. This plugin no longer requires the Import Users From CSV plugin to work.
+* ENHANCEMENT: Supports importing multiple memberships per user.
+* ENHANCEMENT: Importing membership_id 0 will cancel any existing memberships for the user.
+* ENHANCEMENT: The password reset email will only send out if the option is selected during import and the user is new. This will never send when updating users or members.
+* ENHANCEMENT: Added batch importing for large CSV files. This defaults to 50 imports per iteration, adjust the amount by using the filter `pmprocsv_ajax_import_batch`.
+* ENHANCEMENT: General improvements and warnings when importing data that is required but missing from the CSV or importing a level that doesn't exist.
+* ENHANCEMENT: Updated the CSV sample file to have newer values.
+* REFACTOR: Improved logic around creating orders during import. See documentation for full details.
+* BUG FIX: Fixed an issue where empty meta keys were being imported as "". This now skips and does not update the meta key if the value is blank.
 
 = 0.4 - 2022-03-14 =
 * ENHANCEMENT: Added in an option to skip over members if trying to import members with their current membership level. This is helpful for large CSV files that may have duplicate records.
