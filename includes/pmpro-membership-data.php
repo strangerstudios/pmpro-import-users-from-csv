@@ -263,6 +263,13 @@ function pmproiucsv_is_iu_post_user_import($user_id)
 		$wpdb->query("INSERT INTO $wpdb->pmpro_discount_codes_uses (code_id, user_id, order_id, timestamp) VALUES('" . esc_sql($membership_code_id) . "', '" . esc_sql($user_id) . "', '" . intval($order->id) . "', now())");
 	}
 
+	/**
+	 * Action hook to run code after membership information is imported.
+	 * 
+	 * @param WP_User $user The user object that was imported.
+	 * @param int $membership_id The membership level ID that was imported.
+	 * @param MemberOrder $order The order object that was created during import.
+	 */
 	do_action( 'pmproiucsv_after_member_import', $user, $membership_id, $order );
 
 }
