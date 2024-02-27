@@ -270,7 +270,7 @@ function pmproiucsv_is_iu_post_user_import($user_id)
 	 * 
 	 * @param WP_User $user The user object that was imported.
 	 * @param int $membership_id The membership level ID that was imported.
-	 * @param MemberOrder|null $order The order object that was created during import.
+	 * @param MemberOrder|null $order The order object that was created during import. Null if no order is created.
 	 */
 	do_action( 'pmproiucsv_after_member_import', $user, $membership_id, $order );
 
