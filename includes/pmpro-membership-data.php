@@ -256,6 +256,8 @@ function pmproiucsv_is_iu_post_user_import($user_id)
 			$timestamp = strtotime($membership_timestamp, current_time('timestamp'));
 			$order->updateTimeStamp(date("Y", $timestamp), date("m", $timestamp), date("d", $timestamp), date("H:i:s", $timestamp));
 		}
+	} else {
+		$order = null; // No order created, so set to null for the action below.
 	}
 
 	// Add code use if we have the membership_code_id and there is an order to attach to.
@@ -268,7 +270,7 @@ function pmproiucsv_is_iu_post_user_import($user_id)
 	 * 
 	 * @param WP_User $user The user object that was imported.
 	 * @param int $membership_id The membership level ID that was imported.
-	 * @param MemberOrder $order The order object that was created during import.
+	 * @param MemberOrder|null $order The order object that was created during import.
 	 */
 	do_action( 'pmproiucsv_after_member_import', $user, $membership_id, $order );
 
