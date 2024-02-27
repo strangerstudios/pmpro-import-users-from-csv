@@ -259,8 +259,11 @@ function pmproiucsv_is_iu_post_user_import($user_id)
 	}
 
 	// Add code use if we have the membership_code_id and there is an order to attach to.
-	if(!empty($membership_code_id) && !empty($order) && !empty($order->id))
+	if ( ! empty( $membership_code_id ) && ! empty( $order ) && ! empty( $order->id ) ) {
 		$wpdb->query("INSERT INTO $wpdb->pmpro_discount_codes_uses (code_id, user_id, order_id, timestamp) VALUES('" . esc_sql($membership_code_id) . "', '" . esc_sql($user_id) . "', '" . intval($order->id) . "', now())");
+	}
+
+	do_action( 'pmproiucsv_after_member_import', $user, $membership_id, $order );
 
 }
 add_action("pmproiucsv_post_user_import", "pmproiucsv_is_iu_post_user_import");
