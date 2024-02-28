@@ -111,6 +111,10 @@ class PMPro_Import_Users_From_CSV {
 		if ( isset( $_REQUEST['_wpnonce_pmproiucsv_process_csv'] ) ) {
 			check_admin_referer( 'pmproiucsv_page_import', '_wpnonce_pmproiucsv_process_csv' );
 
+			if ( ! current_user_can( 'create_users' ) ) {
+				wp_die( __( 'You do not have sufficient process this import.', 'pmpro-import-users-from-csv' ) );
+			}
+
 			if ( isset( $_FILES['users_csv']['tmp_name'] ) ) {
 				// Setup settings variables
 				$filename              = $_FILES['users_csv']['tmp_name'];
