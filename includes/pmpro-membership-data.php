@@ -231,6 +231,56 @@ function pmproiucsv_is_iu_post_user_import($user_id)
 
 	// Create the order.
 	if ( $create_order ) {
+		// Get the order status. We may need it to create the subscription.
+		if ( ! empty( $membership_order_status ) ) {
+			$order_status = $membership_order_status;
+		} elseif ( ! empty( $membership_in_the_past ) ) {
+			$order_status = 'cancelled';
+		} else {
+			$order_status = 'success';
+		}
+
+		// Check if we need to create a subscription first.
+		if ( class_exists( 'PMPro_Subscription' ) && ! empty( $membership_subscription_transaction_id ) && ! empty( $membership_gateway ) ) {
+			// Normally, creating an order with a subscription transaction ID will create a subscription as well, but
+			// this process would make an API call to the gateway to sync data. We don't want to do that here for performance reasons.
+			// Instead, we'll create a blank subscription and then run a db update later to sync the subscription data.
+			$sqlQuery = "
+				INSERT IGNORE INTO {$wpdb->pmpro_subscriptions} ( user_id, membership_level_id, gateway,  gateway_environment, subscription_transaction_id, status )
+				VALUES ( %d, %d, %s, %s, %s, %s )
+			";
+			$wpdb->query(
+				$wpdb->prepare(
+					$sqlQuery,
+					$user_id,
+					$membership_id,
+					$membership_gateway,
+					pmpro_getOption( 'gateway_environment' ),
+					$membership_subscription_transaction_id,
+					( $order_status === 'cancelled' ? 'cancelled' : 'active' )
+				)
+			);
+
+			// Make sure that we don't fix default migration data during this page load. This is a performance optimization.
+			static $pmproiucsv_disabled_pmpro_migrate_data = false;
+			if ( ! $pmproiucsv_disabled_pmpro_migrate_data ) {
+				// Skip syncing with gateway now.
+				add_filter( 'pmpro_skip_fixing_default_migration_data', '__return_true' );
+
+				// Add PMPro Update to sync with gateway later.
+				pmpro_addUpdate( 'pmpro_upgrade_3_0_ajax' );
+
+				// We only need to do this once per import.
+				$pmproiucsv_disabled_pmpro_migrate_data = true;
+			}
+		}
+
+		// In 3.0, cancelled order status is no longer suported.
+		if ( class_exists( 'PMPro_Subscription' ) && $order_status === 'cancelled' ) {
+			$order_status = 'success';
+		}
+
+
 		$order = new MemberOrder();
 		$order->user_id = $user_id;
 		$order->membership_id = $membership_id;
@@ -239,14 +289,7 @@ function pmproiucsv_is_iu_post_user_import($user_id)
 		$order->subscription_transaction_id = $membership_subscription_transaction_id;
 		$order->affiliate_id = $membership_affiliate_id;
 		$order->gateway = $membership_gateway;
-
-		if ( ! empty( $membership_order_status ) ) {
-			$order->status = $membership_order_status;
-		} elseif ( ! empty( $membership_in_the_past ) ) {
-			$order->status = 'cancelled';
-		} else {
-			$order->status = 'success';
-		}
+		$order->status = $order_status;
 
 		$order->saveOrder();
 
