@@ -112,7 +112,7 @@ class PMPro_Import_Users_From_CSV {
 			check_admin_referer( 'pmproiucsv_page_import', '_wpnonce_pmproiucsv_process_csv' );
 
 			if ( ! current_user_can( 'create_users' ) ) {
-				wp_die( __( 'You do not have sufficient process this import.', 'pmpro-import-users-from-csv' ) );
+				wp_die( __( 'You do not have sufficient permissions to process this import.', 'pmpro-import-users-from-csv' ) );
 			}
 
 			if ( isset( $_FILES['users_csv']['tmp_name'] ) ) {
