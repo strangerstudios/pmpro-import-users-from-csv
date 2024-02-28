@@ -265,7 +265,7 @@ function pmproiucsv_is_iu_post_user_import($user_id)
 			static $pmproiucsv_disabled_pmpro_migrate_data = false;
 			if ( ! $pmproiucsv_disabled_pmpro_migrate_data ) {
 				// Skip syncing with gateway now.
-				add_filter( 'pmpro_skip_fixing_default_migration_data', '__return_true' );
+				add_filter( 'pmpro_subscription_skip_fixing_default_migration_data', '__return_true' );
 
 				// Add PMPro Update to sync with gateway later.
 				pmpro_addUpdate( 'pmpro_upgrade_3_0_ajax' );
