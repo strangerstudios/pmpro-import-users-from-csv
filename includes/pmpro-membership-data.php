@@ -29,32 +29,9 @@ function pmproiucsv_getFields() {
 }
 
 /**
- * Delete all import_ meta fields before an import in case the user has been imported in the past.
+ * Don't cancel the user's previous subscription during import.
  */
 function pmproiucsv_is_iu_pre_user_import( $userdata, $usermeta, $user ) {
-	//try to get user by ID
-	$user = $user_id = false;
-	if ( isset( $userdata['ID'] ) ) {
-		$user = get_user_by( 'ID', $userdata['ID'] );
-	}
-
-	//try to find user by login or email if still not found.
-	if ( ! $user ) {
-		if ( isset( $userdata['user_login'] ) )
-			$user = get_user_by( 'login', $userdata['user_login'] );
-
-		if ( ! $user && isset( $userdata['user_email'] ) )
-			$user = get_user_by( 'email', $userdata['user_email'] );
-	}
-
-	if(!empty($user)) {
-		$pmpro_fields = pmproiucsv_getFields();
-
-		foreach($pmpro_fields as $field) {
-			delete_user_meta($user->ID, "import_" . $field);
-		}
-	}
-
 	/**
 	 * Filter to allow cancellation of subscriptions during import.
 	 * 
@@ -87,6 +64,24 @@ function pmproiucsv_is_iu_import_usermeta($usermeta, $userdata)
 	return $newusermeta;
 }
 add_filter("pmproiucsv_import_usermeta", "pmproiucsv_is_iu_import_usermeta", 10, 2);
+
+/**
+ * Clean up import meta after the user data and user meta has been imported.
+ *
+ * @param int $user_id The user's ID of the recently imported user. 
+ */
+function pmproiucsv_is_iu_import_cleanup_import_meta( $user_id ) {
+
+	if ( ! empty( $user_id ) ) {
+		$pmpro_fields = pmproiucsv_getFields();
+
+		foreach( $pmpro_fields as $field ) {
+			$meta_key = sanitize_text_field( 'import_' . $field );
+			delete_user_meta( $user_id, $meta_key );
+		}
+	}
+}
+add_action( 'pmproiucsv_post_user_import', 'pmproiucsv_is_iu_import_cleanup_import_meta', 99, 1 );
 
 /**
  * After users are added, let's use the meta data imported to update the user.
