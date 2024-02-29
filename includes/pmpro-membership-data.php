@@ -119,7 +119,7 @@ function pmproiucsv_is_iu_post_user_import($user_id)
 	if ( ! empty( $membership_enddate ) ) {
 		$membership_enddate = date( 'Y-m-d', strtotime( $membership_enddate, current_time( 'timestamp' ) ) );
 	} else {
-		$membership_enddate = 'NULL';
+		$membership_enddate = '';
 	}
 
 	if ( ! empty( $membership_timestamp ) ) {
