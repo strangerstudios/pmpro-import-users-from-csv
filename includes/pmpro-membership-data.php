@@ -81,7 +81,7 @@ function pmproiucsv_is_iu_import_cleanup_import_meta( $user_id ) {
 		}
 	}
 }
-add_action( 'pmproiucsv_post_user_import', 'pmproiucsv_is_iu_import_cleanup_import_meta', 30, 1 );
+add_action( 'pmproiucsv_post_user_import', 'pmproiucsv_is_iu_import_cleanup_import_meta', 99, 1 );
 
 /**
  * After users are added, let's use the meta data imported to update the user.
