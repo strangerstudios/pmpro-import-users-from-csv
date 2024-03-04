@@ -118,6 +118,7 @@ class PMPro_Import_Users_From_CSV {
 			if ( isset( $_FILES['users_csv']['tmp_name'] ) ) {
 				// Setup settings variables
 				$filename              = $_FILES['users_csv']['tmp_name'];
+				$filetype = wp_check_filetype( $filename );
 				$users_update          = isset( $_REQUEST['users_update'] ) ? $_REQUEST['users_update'] : false;
 				$new_user_notification = isset( $_REQUEST['new_user_notification'] ) ? $_REQUEST['new_user_notification'] : false;
 
