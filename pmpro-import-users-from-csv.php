@@ -621,7 +621,7 @@ class PMPro_Import_Users_From_CSV {
 				if ( $usermeta ) {
 					foreach ( $usermeta as $metakey => $metavalue ) {
 						// If the value of the meta key is empty, lets not do anything but skip it.
-						if ( empty( $metavalue ) ) {
+						if ( empty( $metavalue ) && $metavalue !== '0' ) {
 							continue;
 						}
 
