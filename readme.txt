@@ -3,7 +3,7 @@ Contributors: strangerstudios
 Tags: paid memberships pro, import users from csv, import, csv, members
 Requires at least: 5.4
 Tested up to: 6.4
-Stable tag: 1.1
+Stable tag: 1.1.1
 
 Import your users or members list to WordPress and automatically assign membership levels in PMPro.
  
@@ -28,6 +28,9 @@ Please post it in the GitHub issue tracker here: https://github.com/strangerstud
 Please visit our premium support site at http://www.paidmembershipspro.com for more documentation and our support forums.
 
 == Changelog ==
+= 1.1.1 - 2024-04-02 =
+* BUG FIX: Fixed an issue when trying to import membership_id "0" wasn't cancelling the members level.
+
 = 1.1 - 2024-03-05 =
 * ENHANCEMENT: Improved cleaning up temporary user meta during member importing.
 * ENHANCEMENT: New hook added 'pmproiucsv_after_member_import' to allow custom code to run after membership information is imported.
