@@ -76,7 +76,7 @@ class PMPro_Import_Users_From_CSV {
 	 * @since 0.1
 	 **/
 	public static function add_admin_pages() {
-		add_submenu_page( 'users.php', 'Import Members', 'Import Members', 'manage_options', 'pmpro-import-users-from-csv', array( get_called_class(), 'users_page' ) );
+		add_submenu_page( 'users.php', 'Import Members', 'Import Members', 'create_users', 'pmpro-import-users-from-csv', array( get_called_class(), 'users_page' ) );
 	}
 
 	/**
