@@ -34,5 +34,4 @@ There are various **ways to the help development** of Import Members From CSV:
 Here are some ways for **non-developers to contribute** to Import Members From CSV:
 
 1. Translate Import Members From CSV into your own [language](https://www.paidmembershipspro.com/paid-memberships-pro-in-your-language/).
-2. [Purchase a plus membership](https://paidmembershipspro.com/pricing) to help fund ongoing development and bug fixes.
-3. Leave an honest review for [Import Members From CSV](https://wordpress.org/support/plugin/pmpro-import-users-from-csv/reviews/#new-post).
+2. [Purchase a premium membership](https://www.paidmembershipspro.com/pricing) to help fund ongoing development and bug fixes.
