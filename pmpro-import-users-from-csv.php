@@ -626,7 +626,7 @@ class PMPro_Import_Users_From_CSV {
 						}
 
 						$metavalue = maybe_unserialize( $metavalue );
-						update_user_meta( $user_id, $metakey, $metavalue );
+						update_user_meta( $user_id, trim( $metakey ), $metavalue );
 					}
 				}
 
