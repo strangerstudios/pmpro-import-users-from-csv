@@ -1,17 +1,17 @@
-# Copyright (C) 2024 Paid Memberships Pro
+# Copyright (C) 2025 Paid Memberships Pro
 # This file is distributed under the same license as the Paid Memberships Pro - Import Members From CSV Add On plugin.
 msgid ""
 msgstr ""
-"Project-Id-Version: Paid Memberships Pro - Import Members From CSV Add On 1.0\n"
+"Project-Id-Version: Paid Memberships Pro - Import Members From CSV Add On 1.1.2\n"
 "Report-Msgid-Bugs-To: info@paidmembershipspro.com\n"
 "Last-Translator: Paid Memberships Pro <info@paidmembershipspro.com>\n"
 "Language-Team: Paid Memberships Pro <info@paidmembershipspro.com>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2024-01-16T08:48:45+00:00\n"
+"POT-Creation-Date: 2025-10-29T09:41:08+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"X-Generator: WP-CLI 2.9.0\n"
+"X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: pmpro-import-users-from-csv\n"
 
 #. Plugin Name of the plugin
@@ -40,26 +40,31 @@ msgstr ""
 
 #: pmpro-import-users-from-csv.php:402
 #: includes/pmpro-membership-data.php:279
+#: includes/pmpro-membership-data.php:330
 msgid "User imported with both an active subscription and a membership enddate. This configuration is not recommended with PMPro ($1$s). This user has been imported with no enddate."
 msgstr ""
 
 #: pmpro-import-users-from-csv.php:417
 #: pmpro-import-users-from-csv.php:743
+#: pmpro-import-users-from-csv.php:748
 msgid "View Documentation"
 msgstr ""
 
 #: pmpro-import-users-from-csv.php:417
 #: pmpro-import-users-from-csv.php:743
+#: pmpro-import-users-from-csv.php:748
 msgid "Docs"
 msgstr ""
 
 #: pmpro-import-users-from-csv.php:418
 #: pmpro-import-users-from-csv.php:744
+#: pmpro-import-users-from-csv.php:749
 msgid "Visit Customer Support Forum"
 msgstr ""
 
 #: pmpro-import-users-from-csv.php:418
 #: pmpro-import-users-from-csv.php:744
+#: pmpro-import-users-from-csv.php:749
 msgid "Support"
 msgstr ""
 
@@ -73,157 +78,210 @@ msgid "Do not change membership level of user if they already have the same memb
 msgstr ""
 
 #. Plugin Name of the plugin
+#: pmpro-import-users-from-csv.php
 msgid "Paid Memberships Pro - Import Members From CSV Add On"
 msgstr ""
 
 #. Plugin URI of the plugin
+#: pmpro-import-users-from-csv.php
 msgid "https://www.paidmembershipspro.com/add-ons/pmpro-import-users-csv/"
 msgstr ""
 
 #. Description of the plugin
+#: pmpro-import-users-from-csv.php
 msgid "Import your users or members list to WordPress and automatically assign membership levels in PMPro."
 msgstr ""
 
 #. Author of the plugin
+#: pmpro-import-users-from-csv.php
 msgid "Paid Memberships Pro"
 msgstr ""
 
 #. Author URI of the plugin
+#: pmpro-import-users-from-csv.php
 msgid "https://www.paidmembershipspro.com"
 msgstr ""
 
 #: includes/pmpro-membership-data.php:294
+#: includes/pmpro-membership-data.php:345
 msgid "Failed to import membership level. Level does not exist. Please confirm your membership_id value corresponds to one of your membership ID's"
 msgstr ""
 
 #: includes/pmpro-membership-data.php:309
 #: includes/pmpro-membership-data.php:312
+#: includes/pmpro-membership-data.php:360
+#: includes/pmpro-membership-data.php:363
 msgid "Skip Existing Members"
 msgstr ""
 
 #: includes/pmpro-membership-data.php:315
+#: includes/pmpro-membership-data.php:366
 msgid "Do not change the membership level of users with the same active membership level during import."
 msgstr ""
 
 #: pmpro-import-users-from-csv.php:215
+#: pmpro-import-users-from-csv.php:220
 msgid "You do not have sufficient permissions to access this page."
 msgstr ""
 
 #: pmpro-import-users-from-csv.php:227
+#: pmpro-import-users-from-csv.php:232
 msgid "Import Users and Members from CSV"
 msgstr ""
 
 #: pmpro-import-users-from-csv.php:234
+#: pmpro-import-users-from-csv.php:239
+#, php-format
 msgid "Notice: please make the directory %s writable so that you can see the error log."
 msgstr ""
 
 #: pmpro-import-users-from-csv.php:242
+#: pmpro-import-users-from-csv.php:247
+#, php-format
 msgid ", please <a href=\"%s\">check the error log</a>"
 msgstr ""
 
 #: pmpro-import-users-from-csv.php:247
+#: pmpro-import-users-from-csv.php:252
 msgid "Error during file upload."
 msgstr ""
 
 #: pmpro-import-users-from-csv.php:250
+#: pmpro-import-users-from-csv.php:255
 msgid "Cannot extract data from uploaded file or no file was uploaded."
 msgstr ""
 
 #: pmpro-import-users-from-csv.php:253
+#: pmpro-import-users-from-csv.php:258
+#, php-format
 msgid "No user was successfully imported%s."
 msgstr ""
 
 #: pmpro-import-users-from-csv.php:256
+#: pmpro-import-users-from-csv.php:261
+#, php-format
 msgid "Some users were successfully imported but some were not%s."
 msgstr ""
 
 #: pmpro-import-users-from-csv.php:259
+#: pmpro-import-users-from-csv.php:264
 msgid "Users import was successful."
 msgstr ""
 
 #: pmpro-import-users-from-csv.php:262
+#: pmpro-import-users-from-csv.php:267
 msgid "Import cancelled. No information was imported."
 msgstr ""
 
 #: pmpro-import-users-from-csv.php:280
+#: pmpro-import-users-from-csv.php:285
 msgid "Processing Import Using AJAX"
 msgstr ""
 
 #: pmpro-import-users-from-csv.php:282
+#: pmpro-import-users-from-csv.php:287
 msgid "Do not close this page until your import is finished processing."
 msgstr ""
 
 #: pmpro-import-users-from-csv.php:283
+#: pmpro-import-users-from-csv.php:288
 msgid "If the import stops or if you have to close your browser, navigate to the URL below to resume the import:"
 msgstr ""
 
 #: pmpro-import-users-from-csv.php:299
+#: pmpro-import-users-from-csv.php:304
 msgid "Click here to pause the import"
 msgstr ""
 
 #: pmpro-import-users-from-csv.php:300
+#: pmpro-import-users-from-csv.php:305
 msgid "Import paused. Click here to resume the import."
 msgstr ""
 
 #: pmpro-import-users-from-csv.php:302
+#: pmpro-import-users-from-csv.php:307
 msgid "Loading..."
 msgstr ""
 
 #: pmpro-import-users-from-csv.php:303
+#: pmpro-import-users-from-csv.php:308
 msgid "Return to the Import Members From CSV screen"
 msgstr ""
 
 #: pmpro-import-users-from-csv.php:325
+#: pmpro-import-users-from-csv.php:330
 msgid "Import File (.csv)"
 msgstr ""
 
 #: pmpro-import-users-from-csv.php:329
+#: pmpro-import-users-from-csv.php:334
+#, php-format
 msgid "Download the <a href=\"%s\">example CSV file</a> for help formatting your data for import."
 msgstr ""
 
 #: pmpro-import-users-from-csv.php:333
 #: pmpro-import-users-from-csv.php:335
+#: pmpro-import-users-from-csv.php:338
+#: pmpro-import-users-from-csv.php:340
 msgid "Notify Members"
 msgstr ""
 
 #: pmpro-import-users-from-csv.php:338
+#: pmpro-import-users-from-csv.php:343
 msgid "Send new users an email with their username and a link to reset their password."
 msgstr ""
 
 #: pmpro-import-users-from-csv.php:343
 #: pmpro-import-users-from-csv.php:345
+#: pmpro-import-users-from-csv.php:348
+#: pmpro-import-users-from-csv.php:350
 msgid "Update Existing Users"
 msgstr ""
 
 #: pmpro-import-users-from-csv.php:348
+#: pmpro-import-users-from-csv.php:353
 msgid "Update existing users when a matching username or email address is found (recommended)."
 msgstr ""
 
 #: pmpro-import-users-from-csv.php:353
 #: pmpro-import-users-from-csv.php:355
+#: pmpro-import-users-from-csv.php:358
+#: pmpro-import-users-from-csv.php:360
 msgid "Process With AJAX"
 msgstr ""
 
 #: pmpro-import-users-from-csv.php:358
+#: pmpro-import-users-from-csv.php:363
 msgid "Process the import in batches using AJAX (recommended)."
 msgstr ""
 
 #: pmpro-import-users-from-csv.php:369
+#: pmpro-import-users-from-csv.php:374
 msgid "Import"
 msgstr ""
 
 #: pmpro-import-users-from-csv.php:695
+#: pmpro-import-users-from-csv.php:700
 msgid "Import Users From CSV is no longer required to import users and members with Paid Memberships Pro. The plugin has been deactivated."
 msgstr ""
 
 #: pmpro-import-users-from-csv.php:711
+#: pmpro-import-users-from-csv.php:716
+#, php-format
 msgid "BEGIN %s"
 msgstr ""
 
 #: pmpro-import-users-from-csv.php:716
+#: pmpro-import-users-from-csv.php:721
+#, php-format
 msgid "[Line %1$s] %2$s"
 msgstr ""
 
 #: pmpro-import-users-from-csv.php:729
+#: pmpro-import-users-from-csv.php:734
 msgid "Run Import"
+msgstr ""
+
+#: pmpro-import-users-from-csv.php:115
+msgid "You do not have sufficient permissions to process this import."
 msgstr ""
