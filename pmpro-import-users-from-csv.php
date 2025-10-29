@@ -518,7 +518,7 @@ class PMPro_Import_Users_From_CSV {
 
 			// If we are on the first line, the columns are the headers
 			if ( $first ) {
-				$headers = $line;
+				$headers = array_map( 'trim', $line );
 				$first   = false;
 
 				// skip ahead for partial imports
@@ -626,7 +626,7 @@ class PMPro_Import_Users_From_CSV {
 						}
 
 						$metavalue = maybe_unserialize( $metavalue );
-						update_user_meta( $user_id, trim( $metakey ), $metavalue );
+						update_user_meta( $user_id, $metakey, $metavalue );
 					}
 				}
 
