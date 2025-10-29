@@ -279,12 +279,13 @@ function pmproiucsv_is_iu_post_user_import($user_id)
 		$order = new MemberOrder();
 		$order->user_id = $user_id;
 		$order->membership_id = $membership_id;
-		$order->InitialPayment = $membership_initial_payment;
 		$order->payment_transaction_id = $membership_payment_transaction_id;
 		$order->subscription_transaction_id = $membership_subscription_transaction_id;
 		$order->affiliate_id = $membership_affiliate_id;
 		$order->gateway = $membership_gateway;
 		$order->status = $order_status;
+		$order->subtotal = $membership_initial_payment;
+		$order->total = $membership_initial_payment;
 
 		$order->saveOrder();
 
