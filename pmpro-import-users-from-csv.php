@@ -640,7 +640,7 @@ class PMPro_Import_Users_From_CSV {
 
 				// If we need to show the new password notification, let's send it.
 				if ( $new_user_notification && ! $update ) {
-					wp_new_user_notification( $user_id, $userdata['user_pass'], 'user' );
+					wp_new_user_notification( $user_id, null, 'user' );
 				}
 				
 				// Some plugins may need to do things after one user has been imported. Who know?
