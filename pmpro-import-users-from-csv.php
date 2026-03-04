@@ -36,13 +36,23 @@ class PMPro_Import_Users_From_CSV {
 		add_action( 'admin_enqueue_scripts', array( get_called_class(), 'admin_enqueue_scripts' ) );
 		add_action( 'wp_ajax_pmpro_import_users_from_csv', array( get_called_class(), 'wp_ajax_pmpro_import_users_from_csv' ) );
 
+		add_filter( 'pmpro_can_access_restricted_file', array( get_called_class(), 'pmpro_can_access_restricted_file' ), 10, 2 );
+
 		add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), array( get_called_class(), 'add_action_links' ), 10, 2);
 		add_filter( 'plugin_row_meta', array( get_called_class(), 'plugin_row_meta' ), 10, 2);
 
+		// Add support for PMPro 3.5+ with the restricted file system.
+		if ( function_exists( 'pmpro_get_restricted_file_path' ) ) {
+			// Create the directories for the restricted files.
+			$upload_dir         = pmpro_get_restricted_file_path( 'pmpro-import-users-from-csv' );
+			self::$log_dir_path = $upload_dir . 'pmproiucsv_error.log';
+			self::$log_dir_url  = add_query_arg( array( 'pmpro_restricted_file_dir' => 'pmpro-import-users-from-csv', 'pmpro_restricted_file' => 'pmproiucsv_error.log' ), home_url() );
+		} else {
+			$upload_dir         = wp_upload_dir();
+			self::$log_dir_path = trailingslashit( $upload_dir['basedir'] ) . 'pmproiucsv_error.log';
+			self::$log_dir_url  = trailingslashit( $upload_dir['baseurl'] ) . 'pmproiucsv_error.log';
+		}
 
-		$upload_dir         = wp_upload_dir();
-		self::$log_dir_path = trailingslashit( $upload_dir['basedir'] );
-		self::$log_dir_url  = trailingslashit( $upload_dir['baseurl'] );
 
 		if ( defined( 'WP_CLI' ) && WP_CLI ) {
 			require_once __DIR__ . '/includes/import-users-from-csv.wpcli.php';
@@ -231,8 +241,8 @@ class PMPro_Import_Users_From_CSV {
 		?>
 		<h1 class="wp-heading-inline"><?php esc_html_e( 'Import Users and Members from CSV', 'pmpro-import-users-from-csv' ); ?></h1>
 		<?php
-		$error_log_file = self::$log_dir_path . 'pmproiucsv_error.log';
-		$error_log_url  = self::$log_dir_url . 'pmproiucsv_error.log';
+		$error_log_file = self::$log_dir_path;
+		$error_log_url  = self::$log_dir_url;
 
 		if ( ! file_exists( $error_log_file ) ) {
 			if ( ! @fopen( $error_log_file, 'x' ) ) {
@@ -712,7 +722,7 @@ class PMPro_Import_Users_From_CSV {
 			return;
 		}
 
-		$log = @fopen( self::$log_dir_path . 'pmproiucsv_error.log', 'a' );
+		$log = @fopen( self::$log_dir_path, 'a' );
 		@fwrite( $log, sprintf( __( 'BEGIN %s', 'pmpro-import-users-from-csv' ), date_i18n( 'Y-m-d H:i:s', time() ) ) . "\n" );
 
 		foreach ( $errors as $key => $error ) {
@@ -739,6 +749,30 @@ class PMPro_Import_Users_From_CSV {
 		return $links;
 	}
 
+	/**
+	 * Allow access of the restricted file if the current user can create users.
+	 * 
+	 * @since TBD
+	 *
+	 * @param bool $can_access Whether or not the current user can access the log file.
+	 * @param string $file_dir The directory of the file being accessed.
+	 * @return bool $can_access 
+	 */
+	public static function pmpro_can_access_restricted_file( $can_access, $file_dir ) {
+		if ( 'pmpro-import-users-from-csv' === $file_dir ) {
+
+			// While we at it, let's see if the uploads directory has pmproiucsv_error.log file, let's delete it since we moved to the pmpro restricted file system and clean up.
+			$upload_dir = wp_upload_dir();
+			$error_log_file = $upload_dir['basedir'] . '/pmproiucsv_error.log';
+			if ( file_exists( $error_log_file ) ) {
+				unlink( $error_log_file );
+			}
+
+			$can_access = current_user_can( 'create_users' );
+		}
+ 
+		return $can_access;
+	}
 	/**
 	 * Function to add links to the plugin row meta
 	 */
