@@ -451,6 +451,10 @@ class PMPro_Import_Users_From_CSV {
 	 * @since 0.5
 	 */
 	public static function import_csv( $filename, $args ) {
+		if ( ! defined( 'DOING_PMPRO_IMPORT' ) ) {
+			define( 'DOING_PMPRO_IMPORT', true );
+		}
+
 		$errors = $user_ids = array();
 
 		$defaults = array(
