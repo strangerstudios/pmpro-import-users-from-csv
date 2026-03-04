@@ -567,6 +567,15 @@ class PMPro_Import_Users_From_CSV {
 				continue;
 			}
 
+			// Validate email address, if it's invalid let's skip. It causes more issues than not.
+			if ( ! empty( $userdata['user_email'] ) && ! is_email( $userdata['user_email'] ) ) {
+				$error_message = sprintf( __( 'Invalid email address: %s', 'pmpro-import-users-from-csv' ), $userdata['user_email'] );
+				$error = new WP_Error( 'invalid_email', $error_message );
+				$errors[ $rkey ] = $error;
+				$rkey++;
+				continue;
+			}
+
 			$user = $user_id = false;
 
 			if ( ! empty( $userdata['ID'] ) ) {
