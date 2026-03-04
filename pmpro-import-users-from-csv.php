@@ -760,15 +760,19 @@ class PMPro_Import_Users_From_CSV {
 	 */
 	public static function pmpro_can_access_restricted_file( $can_access, $file_dir ) {
 		if ( 'pmpro-import-users-from-csv' === $file_dir ) {
-
-			// While we at it, let's see if the uploads directory has pmproiucsv_error.log file, let's delete it since we moved to the pmpro restricted file system and clean up.
-			$upload_dir = wp_upload_dir();
-			$error_log_file = $upload_dir['basedir'] . '/pmproiucsv_error.log';
-			if ( file_exists( $error_log_file ) ) {
-				unlink( $error_log_file );
-			}
-
+			// Only users who can create users should be able to access the restricted file
+			// and trigger any related cleanup.
 			$can_access = current_user_can( 'create_users' );
+
+			// While we are at it, let's see if the uploads directory has pmproiucsv_error.log file.
+			// Delete it as a one-time cleanup now that we moved to the pmpro restricted file system.
+			if ( $can_access ) {
+				$upload_dir      = wp_upload_dir();
+				$error_log_file  = $upload_dir['basedir'] . '/pmproiucsv_error.log';
+				if ( file_exists( $error_log_file ) && is_writable( $error_log_file ) ) {
+					@unlink( $error_log_file );
+				}
+			}
 		}
  
 		return $can_access;
