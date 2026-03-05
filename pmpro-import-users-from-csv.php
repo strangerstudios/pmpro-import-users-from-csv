@@ -941,6 +941,29 @@ class PMPro_Import_Users_From_CSV {
 			return;
 		}
 
+		// Warn if the first row looks like data rather than headers.
+		$looks_like_data = false;
+		foreach ( $headers as $header ) {
+			if ( is_email( $header ) ) {
+				$looks_like_data = true;
+				break;
+			}
+			// Matches common date formats: YYYY-MM-DD, MM/DD/YYYY, DD-MM-YYYY, etc.
+			if ( preg_match( '/^\d{1,4}[-\/]\d{1,2}[-\/]\d{1,4}$/', $header ) ) {
+				$looks_like_data = true;
+				break;
+			}
+			// Pure integer (e.g. a user ID or membership level ID).
+			if ( ctype_digit( $header ) ) {
+				$looks_like_data = true;
+				break;
+			}
+		}
+
+		if ( $looks_like_data ) {
+			echo '<div class="notice notice-warning"><p><strong>' . esc_html__( 'Warning:', 'pmpro-import-users-from-csv' ) . '</strong> ' . esc_html__( 'It looks like your CSV may be missing a header row. The first row appears to contain user data rather than column names, which will cause the import to fail. Please add a header row to your CSV file and re-upload.', 'pmpro-import-users-from-csv' ) . '</p></div>';
+		}
+
 		$mapping_fields = self::get_mapping_fields();
 		?>
 		<div class="pmpro_section">
