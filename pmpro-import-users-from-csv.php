@@ -31,6 +31,7 @@ class PMPro_Import_Users_From_CSV {
 	public static function init() {
 		add_action( 'admin_menu', array( get_called_class(), 'add_admin_pages' ) );
 		add_action( 'init', array( get_called_class(), 'process_csv' ) );
+		add_action( 'init', array( get_called_class(), 'handle_mapping_submission' ) );
 		add_action( 'init', array( get_called_class(), 'pmproiucsv_load_textdomain' ) );
 		add_action( 'admin_init', array( get_called_class(), 'deactivate_old_plugin' ) );
 		add_action( 'admin_enqueue_scripts', array( get_called_class(), 'admin_enqueue_scripts' ) );
@@ -103,110 +104,125 @@ class PMPro_Import_Users_From_CSV {
 	}
 
 	/**
-	 * Process content of CSV file
+	 * Process content of CSV file — saves file to disk and redirects to field mapping screen.
 	 *
 	 * @since 0.1
 	 **/
 	public static function process_csv() {
-		if ( isset( $_REQUEST['_wpnonce_pmproiucsv_process_csv'] ) ) {
-			check_admin_referer( 'pmproiucsv_page_import', '_wpnonce_pmproiucsv_process_csv' );
+		if ( ! isset( $_REQUEST['_wpnonce_pmproiucsv_process_csv'] ) ) {
+			return;
+		}
 
-			if ( ! current_user_can( 'create_users' ) ) {
-				wp_die( __( 'You do not have sufficient permissions to process this import.', 'pmpro-import-users-from-csv' ) );
-			}
+		check_admin_referer( 'pmproiucsv_page_import', '_wpnonce_pmproiucsv_process_csv' );
 
-			if ( isset( $_FILES['users_csv']['tmp_name'] ) ) {
-				// Setup settings variables
-				$filename              = $_FILES['users_csv']['tmp_name'];
-				$filetype = wp_check_filetype( $filename );
-				$users_update          = isset( $_REQUEST['users_update'] ) ? $_REQUEST['users_update'] : false;
-				$new_user_notification = isset( $_REQUEST['new_user_notification'] ) ? $_REQUEST['new_user_notification'] : false;
+		if ( ! current_user_can( 'create_users' ) ) {
+			wp_die( __( 'You do not have sufficient permissions to process this import.', 'pmpro-import-users-from-csv' ) );
+		}
 
-				// use AJAX?
-				if ( ! empty( $_REQUEST['ajaximport'] ) ) {
-					// check for a imports directory in wp-content
-					$upload_dir = wp_upload_dir();
-					$import_dir = $upload_dir['basedir'] . '/pmpro-imports/';
-
-					// create the dir and subdir if needed
-					if ( ! is_dir( $import_dir ) ) {
-						wp_mkdir_p( $import_dir );
-					}
-
-					// figure out filename
-					$filename = $_FILES['users_csv']['name'];
-					$count    = 0;
-
-					// Replace all special characters with underscores from the filename.
-					$filename = preg_replace( '/[^a-zA-Z0-9\.\-]/', '_', $filename );
-
-					while ( file_exists( $import_dir . $filename ) ) {
-						if ( $count ) {
-							$filename = str_replace( '-' . $count . '.' . $filetype['ext'], '-' . strval( $count + 1 ) . '.' . $filetype['ext'], $filename );
-						} else {
-							$filename = str_replace( '.' . $filetype['ext'], '-1.' . $filetype['ext'], $filename );
-						}
-
-						$count++;
-
-						// let's not expect more than 50 files with the same name
-						if ( $count > 50 ) {
-							die( 'Error uploading file. Too many files with the same name. Clean out the ' . $import_dir . ' directory on your server.' );
-						}
-					}
-
-					// save file
-					if ( strpos( $_FILES['users_csv']['tmp_name'], $upload_dir['basedir'] ) !== false ) {
-						// was uploaded and saved to $_SESSION
-						rename( $_FILES['users_csv']['tmp_name'], $import_dir . $filename );
-					} else {
-						// it was just uploaded
-						move_uploaded_file( $_FILES['users_csv']['tmp_name'], $import_dir . $filename );
-					}
-
-					// redurect to the page to run AJAX
-					$url = admin_url( 'users.php?page=pmpro-import-users-from-csv&import=resume&filename=' . $filename );
-					$url = add_query_arg(
-						array(
-							'new_user_notification' => $new_user_notification,
-							'users_update'          => $users_update,
-						),
-						$url
-					);
-
-					wp_redirect( $url );
-					exit;
-				} else {
-					$results = self::import_csv(
-						$filename,
-						array(
-							'new_user_notification' => $new_user_notification,
-							'users_update'          => $users_update,
-						)
-					);
-
-					// No users imported?
-					if ( ! $results['user_ids'] ) {
-						wp_redirect( add_query_arg( 'import', 'fail', wp_get_referer() ) );
-					}
-
-					// Some users imported?
-					elseif ( $results['errors'] ) {
-						wp_redirect( add_query_arg( 'import', 'errors', wp_get_referer() ) );
-					}
-
-					// All users imported? :D
-					else {
-						wp_redirect( add_query_arg( 'import', 'success', wp_get_referer() ) );
-					}
-
-					exit;
-				}
-			}
-
+		if ( empty( $_FILES['users_csv']['tmp_name'] ) ) {
 			wp_redirect( add_query_arg( 'import', 'file', wp_get_referer() ) );
 			exit;
 		}
+
+		$users_update          = isset( $_REQUEST['users_update'] ) ? $_REQUEST['users_update'] : false;
+		$new_user_notification = isset( $_REQUEST['new_user_notification'] ) ? $_REQUEST['new_user_notification'] : false;
+
+		// Always save the uploaded file so we can read headers on the mapping screen.
+		$upload_dir = wp_upload_dir();
+		$import_dir = $upload_dir['basedir'] . '/pmpro-imports/';
+
+		if ( ! is_dir( $import_dir ) ) {
+			wp_mkdir_p( $import_dir );
+		}
+
+		$original_name = $_FILES['users_csv']['name'];
+		$filetype      = wp_check_filetype( $original_name );
+		$filename      = preg_replace( '/[^a-zA-Z0-9\.\-]/', '_', $original_name );
+		$count         = 0;
+
+		while ( file_exists( $import_dir . $filename ) ) {
+			if ( $count ) {
+				$filename = str_replace( '-' . $count . '.' . $filetype['ext'], '-' . strval( $count + 1 ) . '.' . $filetype['ext'], $filename );
+			} else {
+				$filename = str_replace( '.' . $filetype['ext'], '-1.' . $filetype['ext'], $filename );
+			}
+			$count++;
+			if ( $count > 50 ) {
+				die( 'Error uploading file. Too many files with the same name. Clean out the ' . esc_html( $import_dir ) . ' directory on your server.' );
+			}
+		}
+
+		move_uploaded_file( $_FILES['users_csv']['tmp_name'], $import_dir . $filename );
+
+		// Redirect to the field mapping screen.
+		$url = add_query_arg(
+			array(
+				'page'                  => 'pmpro-import-users-from-csv',
+				'import'                => 'map',
+				'filename'              => $filename,
+				'users_update'          => $users_update,
+				'new_user_notification' => $new_user_notification,
+			),
+			admin_url( 'users.php' )
+		);
+
+		wp_redirect( $url );
+		exit;
+	}
+
+	/**
+	 * Handle the field mapping form submission.
+	 * Stores the mapping in a transient and redirects to the AJAX processing screen.
+	 *
+	 * @since TBD
+	 */
+	public static function handle_mapping_submission() {
+		if ( empty( $_REQUEST['_wpnonce_pmproiucsv_mapping'] ) ) {
+			return;
+		}
+
+		check_admin_referer( 'pmproiucsv_mapping', '_wpnonce_pmproiucsv_mapping' );
+
+		if ( ! current_user_can( 'create_users' ) ) {
+			wp_die( __( 'You do not have sufficient permissions to process this import.', 'pmpro-import-users-from-csv' ) );
+		}
+
+		$filename              = sanitize_file_name( wp_unslash( $_REQUEST['filename'] ) );
+		$users_update          = isset( $_REQUEST['users_update'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['users_update'] ) ) : false;
+		$new_user_notification = isset( $_REQUEST['new_user_notification'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['new_user_notification'] ) ) : false;
+
+		$field_map = array();
+
+		if ( ! empty( $_REQUEST['field_map'] ) && is_array( $_REQUEST['field_map'] ) ) {
+			foreach ( $_REQUEST['field_map'] as $csv_col => $mapped_to ) {
+				$csv_col   = sanitize_text_field( wp_unslash( $csv_col ) );
+				$mapped_to = sanitize_text_field( wp_unslash( $mapped_to ) );
+
+				if ( $mapped_to === '_custom_' ) {
+					$field_map[ $csv_col ] = 'custom:' . sanitize_key( $csv_col );
+				} else {
+					$field_map[ $csv_col ] = $mapped_to; // empty string = skip
+				}
+			}
+		}
+
+		// Store the mapping for retrieval during AJAX import.
+		set_transient( 'pmproiucsv_map_' . $filename, $field_map, DAY_IN_SECONDS * 2 );
+
+		// Redirect to the AJAX processing screen.
+		$url = add_query_arg(
+			array(
+				'page'                  => 'pmpro-import-users-from-csv',
+				'import'                => 'resume',
+				'filename'              => $filename,
+				'users_update'          => $users_update,
+				'new_user_notification' => $new_user_notification,
+			),
+			admin_url( 'users.php' )
+		);
+
+		wp_redirect( $url );
+		exit;
 	}
 
 
@@ -268,6 +284,18 @@ class PMPro_Import_Users_From_CSV {
 					break;
 				default:
 					break;
+			}
+
+			if ( $_REQUEST['import'] == 'map' && ! empty( $_REQUEST['filename'] ) ) {
+				self::render_mapping_screen();
+
+				// Show PMPro Footer if PMPro is installed.
+				if ( defined( 'PMPRO_VERSION' ) ) {
+					require_once( PMPRO_DIR . '/adminpages/admin_footer.php' );
+				} else {
+					echo '</div><!-- end wrap -->';
+				}
+				return;
 			}
 
 			if ( $_REQUEST['import'] == 'resume' && ! empty( $_REQUEST['filename'] ) ) {
@@ -354,16 +382,6 @@ class PMPro_Import_Users_From_CSV {
 									</label>
 								</fieldset></td>
 							</tr>
-							<tr>
-								<th scope="row"><?php esc_html_e( 'Process With AJAX', 'pmpro-import-users-from-csv' ); ?></th>
-								<td><fieldset>
-									<legend class="screen-reader-text"><span><?php esc_html_e( 'Process With AJAX', 'pmpro-import-users-from-csv' ); ?></span></legend>
-									<label for="ajaximport">
-										<input id="ajaximport" name="ajaximport" type="checkbox" value="1" />
-										<?php esc_html_e( 'Process the import in batches using AJAX (recommended).', 'pmpro-import-users-from-csv' ); ?>
-									</label>
-								</fieldset></td>
-							</tr>
 							<?php do_action( 'pmproiucsv_import_page_inside_table_bottom' ); ?>
 						</tbody>
 					</table>
@@ -414,11 +432,18 @@ class PMPro_Import_Users_From_CSV {
 		$users_update          = isset( $_REQUEST['users_update'] ) ? $_REQUEST['users_update'] : false;
 		$new_user_notification = isset( $_REQUEST['new_user_notification'] ) ? $_REQUEST['new_user_notification'] : false;
 
+		// Load the field mapping saved during the mapping screen step.
+		$field_map = get_transient( 'pmproiucsv_map_' . $filename );
+		if ( ! is_array( $field_map ) ) {
+			$field_map = array();
+		}
+
 		// import next few lines of file
 		$args = array(
 			'partial'               => true,
 			'users_update'          => $users_update,
 			'new_user_notification' => $new_user_notification,
+			'field_map'             => $field_map,
 		);
 
 		$results = self::import_csv( $import_dir . $filename, $args );
@@ -430,8 +455,9 @@ class PMPro_Import_Users_From_CSV {
 			// delete file
 			unlink( $import_dir . $filename );
 
-			// delete position transient
+			// delete position and mapping transients
 			delete_transient( 'pmproiucsv_' . $filename );
+			delete_transient( 'pmproiucsv_map_' . $filename );
 		}
 
 		// Some users imported?
@@ -462,6 +488,7 @@ class PMPro_Import_Users_From_CSV {
 			'users_update'          => false,
 			'partial'               => false,
 			'per_partial'           => apply_filters( 'pmprocsv_ajax_import_batch', 50 ),
+			'field_map'             => array(),
 		);
 		extract( wp_parse_args( $args, $defaults ) );
 
@@ -539,11 +566,33 @@ class PMPro_Import_Users_From_CSV {
 			//Support multiple roles during import.
 			$user_roles = array();
 
-			// Separate user data from meta
+			// Separate user data from meta, applying any field mapping.
 			$userdata = $usermeta = array();
 			foreach ( $line as $ckey => $column ) {
-				$column_name = $headers[ $ckey ];
-				$column      = trim( $column );
+				$csv_column = isset( $headers[ $ckey ] ) ? $headers[ $ckey ] : '';
+				$column     = trim( $column );
+
+				if ( ! empty( $field_map ) ) {
+					// If this CSV column was not included in the mapping, skip it.
+					if ( ! array_key_exists( $csv_column, $field_map ) ) {
+						continue;
+					}
+
+					$column_name = $field_map[ $csv_column ];
+
+					// Empty mapped value means the user chose to skip this column.
+					if ( $column_name === '' || $column_name === null ) {
+						continue;
+					}
+
+					// Custom user meta: stored as "custom:meta_key".
+					if ( strpos( $column_name, 'custom:' ) === 0 ) {
+						$usermeta[ substr( $column_name, 7 ) ] = $column;
+						continue;
+					}
+				} else {
+					$column_name = $csv_column;
+				}
 
 				if ( in_array( $column_name, $userdata_fields ) ) {
 					$userdata[ $column_name ] = $column;
@@ -679,6 +728,270 @@ class PMPro_Import_Users_From_CSV {
 			'user_ids' => $user_ids,
 			'errors'   => $errors,
 		);
+	}
+
+	/**
+	 * Return available field groups for the mapping screen.
+	 * Filterable so add-ons can register additional field groups.
+	 *
+	 * @since TBD
+	 * @return array Associative array of group_key => array( 'label' => string, 'fields' => array( field_key => label ) )
+	 */
+	public static function get_mapping_fields() {
+		$fields = array(
+			'wp_user' => array(
+				'label'  => __( 'WordPress User Fields', 'pmpro-import-users-from-csv' ),
+				'fields' => array(
+					'user_email'      => __( 'Email Address', 'pmpro-import-users-from-csv' ),
+					'user_login'      => __( 'Username', 'pmpro-import-users-from-csv' ),
+					'user_pass'       => __( 'Password', 'pmpro-import-users-from-csv' ),
+					'first_name'      => __( 'First Name', 'pmpro-import-users-from-csv' ),
+					'last_name'       => __( 'Last Name', 'pmpro-import-users-from-csv' ),
+					'display_name'    => __( 'Display Name', 'pmpro-import-users-from-csv' ),
+					'user_nicename'   => __( 'Nicename / Slug', 'pmpro-import-users-from-csv' ),
+					'user_url'        => __( 'Website URL', 'pmpro-import-users-from-csv' ),
+					'user_registered' => __( 'Registration Date', 'pmpro-import-users-from-csv' ),
+					'description'     => __( 'Bio / Description', 'pmpro-import-users-from-csv' ),
+					'nickname'        => __( 'Nickname', 'pmpro-import-users-from-csv' ),
+					'role'            => __( 'User Role', 'pmpro-import-users-from-csv' ),
+					'ID'              => __( 'User ID', 'pmpro-import-users-from-csv' ),
+				),
+			),
+		);
+
+		if ( defined( 'PMPRO_VERSION' ) ) {
+			$fields['pmpro'] = array(
+				'label'  => __( 'PMPro Membership Fields', 'pmpro-import-users-from-csv' ),
+				'fields' => array(
+					'membership_id'                          => __( 'Membership Level ID', 'pmpro-import-users-from-csv' ),
+					'membership_status'                      => __( 'Membership Status', 'pmpro-import-users-from-csv' ),
+					'membership_startdate'                   => __( 'Start Date', 'pmpro-import-users-from-csv' ),
+					'membership_enddate'                     => __( 'End Date', 'pmpro-import-users-from-csv' ),
+					'membership_billing_amount'              => __( 'Billing Amount', 'pmpro-import-users-from-csv' ),
+					'membership_cycle_number'                => __( 'Billing Cycle Number', 'pmpro-import-users-from-csv' ),
+					'membership_cycle_period'                => __( 'Billing Cycle Period', 'pmpro-import-users-from-csv' ),
+					'membership_initial_payment'             => __( 'Initial Payment', 'pmpro-import-users-from-csv' ),
+					'membership_billing_limit'               => __( 'Billing Limit', 'pmpro-import-users-from-csv' ),
+					'membership_trial_amount'                => __( 'Trial Amount', 'pmpro-import-users-from-csv' ),
+					'membership_trial_limit'                 => __( 'Trial Limit', 'pmpro-import-users-from-csv' ),
+					'membership_discount_code'               => __( 'Discount Code', 'pmpro-import-users-from-csv' ),
+					'membership_code_id'                     => __( 'Discount Code ID', 'pmpro-import-users-from-csv' ),
+					'membership_gateway'                     => __( 'Payment Gateway', 'pmpro-import-users-from-csv' ),
+					'membership_subscription_transaction_id' => __( 'Subscription Transaction ID', 'pmpro-import-users-from-csv' ),
+					'membership_payment_transaction_id'      => __( 'Payment Transaction ID', 'pmpro-import-users-from-csv' ),
+					'membership_order_status'                => __( 'Order Status', 'pmpro-import-users-from-csv' ),
+					'membership_affiliate_id'                => __( 'Affiliate ID', 'pmpro-import-users-from-csv' ),
+					'membership_timestamp'                   => __( 'Order Timestamp', 'pmpro-import-users-from-csv' ),
+				),
+			);
+		}
+
+		return apply_filters( 'pmproiucsv_mapping_fields', $fields );
+	}
+
+	/**
+	 * Try to auto-detect the best mapping for a given CSV column header.
+	 * Returns a known field key on match, or an empty string if none found.
+	 *
+	 * @since TBD
+	 * @param string $header CSV column header.
+	 * @return string
+	 */
+	public static function auto_detect_field( $header ) {
+		$header_lower = strtolower( trim( $header ) );
+
+		// Build flat list of all known field keys.
+		$all_field_keys = array();
+		foreach ( self::get_mapping_fields() as $group ) {
+			foreach ( $group['fields'] as $key => $label ) {
+				$all_field_keys[] = strtolower( $key );
+			}
+		}
+
+		// Direct match (CSV column already uses the field key, e.g. "user_email").
+		if ( in_array( $header_lower, $all_field_keys, true ) ) {
+			return $header_lower;
+		}
+
+		// Common aliases.
+		$aliases = array(
+			'email'            => 'user_email',
+			'e-mail'           => 'user_email',
+			'mail'             => 'user_email',
+			'username'         => 'user_login',
+			'login'            => 'user_login',
+			'password'         => 'user_pass',
+			'pass'             => 'user_pass',
+			'first name'       => 'first_name',
+			'firstname'        => 'first_name',
+			'fname'            => 'first_name',
+			'last name'        => 'last_name',
+			'lastname'         => 'last_name',
+			'lname'            => 'last_name',
+			'surname'          => 'last_name',
+			'name'             => 'display_name',
+			'display name'     => 'display_name',
+			'full name'        => 'display_name',
+			'fullname'         => 'display_name',
+			'website'          => 'user_url',
+			'url'              => 'user_url',
+			'registered'       => 'user_registered',
+			'bio'              => 'description',
+			'level'            => 'membership_id',
+			'level id'         => 'membership_id',
+			'membership level' => 'membership_id',
+			'membership'       => 'membership_id',
+			'status'           => 'membership_status',
+			'start date'       => 'membership_startdate',
+			'startdate'        => 'membership_startdate',
+			'end date'         => 'membership_enddate',
+			'enddate'          => 'membership_enddate',
+			'expiry'           => 'membership_enddate',
+			'expiry date'      => 'membership_enddate',
+			'expiration'       => 'membership_enddate',
+			'expiration date'  => 'membership_enddate',
+			'gateway'          => 'membership_gateway',
+		);
+
+		if ( isset( $aliases[ $header_lower ] ) ) {
+			return $aliases[ $header_lower ];
+		}
+
+		return '';
+	}
+
+	/**
+	 * Read the first two rows of a saved CSV file and return them as headers + sample data.
+	 *
+	 * @since TBD
+	 * @param string $filename Sanitized filename (no path) inside the pmpro-imports directory.
+	 * @return array{ headers: string[], sample: string[] }
+	 */
+	public static function get_csv_sample_data( $filename ) {
+		$upload_dir = wp_upload_dir();
+		$filepath   = $upload_dir['basedir'] . '/pmpro-imports/' . $filename;
+
+		if ( ! file_exists( $filepath ) ) {
+			return array( 'headers' => array(), 'sample' => array() );
+		}
+
+		if ( ! class_exists( 'ReadCSV' ) ) {
+			include plugin_dir_path( __FILE__ ) . 'class-readcsv.php';
+		}
+
+		$file_handle = fopen( $filepath, 'r' );
+		$csv_reader  = new ReadCSV( $file_handle, PMPROIUCSV_CSV_DELIMITER, "\xEF\xBB\xBF" );
+
+		$headers = $csv_reader->get_row();
+		$sample  = $csv_reader->get_row();
+
+		fclose( $file_handle );
+
+		return array(
+			'headers' => $headers ? array_map( 'trim', $headers ) : array(),
+			'sample'  => $sample  ? array_map( 'trim', $sample )  : array(),
+		);
+	}
+
+	/**
+	 * Render the field mapping screen.
+	 *
+	 * @since TBD
+	 */
+	public static function render_mapping_screen() {
+		$filename              = sanitize_file_name( wp_unslash( $_REQUEST['filename'] ) );
+		$users_update          = isset( $_REQUEST['users_update'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['users_update'] ) ) : '';
+		$new_user_notification = isset( $_REQUEST['new_user_notification'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['new_user_notification'] ) ) : '';
+
+		$csv_data = self::get_csv_sample_data( $filename );
+		$headers  = $csv_data['headers'];
+		$sample   = $csv_data['sample'];
+
+		if ( empty( $headers ) ) {
+			echo '<div class="error"><p>' . esc_html__( 'Could not read CSV file headers. Please try uploading your file again.', 'pmpro-import-users-from-csv' ) . '</p></div>';
+			return;
+		}
+
+		$mapping_fields = self::get_mapping_fields();
+		?>
+		<div class="pmpro_section">
+			<div class="pmpro_section_inside">
+				<h2><?php esc_html_e( 'Map CSV Fields', 'pmpro-import-users-from-csv' ); ?></h2>
+				<p><?php esc_html_e( 'Match each column from your CSV file to the corresponding WordPress or membership field. Columns set to "Skip" will not be imported.', 'pmpro-import-users-from-csv' ); ?></p>
+
+				<form method="post" action="">
+					<?php wp_nonce_field( 'pmproiucsv_mapping', '_wpnonce_pmproiucsv_mapping' ); ?>
+					<input type="hidden" name="filename"              value="<?php echo esc_attr( $filename ); ?>">
+					<input type="hidden" name="users_update"          value="<?php echo esc_attr( $users_update ); ?>">
+					<input type="hidden" name="new_user_notification" value="<?php echo esc_attr( $new_user_notification ); ?>">
+
+					<table class="widefat striped" id="pmproiucsv-mapping-table">
+						<thead>
+							<tr>
+								<th style="width:25%"><?php esc_html_e( 'CSV Column', 'pmpro-import-users-from-csv' ); ?></th>
+								<th style="width:25%"><?php esc_html_e( 'Sample Value', 'pmpro-import-users-from-csv' ); ?></th>
+								<th><?php esc_html_e( 'Maps To', 'pmpro-import-users-from-csv' ); ?></th>
+							</tr>
+						</thead>
+						<tbody>
+							<?php foreach ( $headers as $i => $header ) :
+								$sample_val = isset( $sample[ $i ] ) ? $sample[ $i ] : '';
+								$auto_map   = self::auto_detect_field( $header );
+								$select_name = 'field_map[' . esc_attr( $header ) . ']';
+								?>
+							<tr>
+								<td><strong><?php echo esc_html( $header ); ?></strong></td>
+								<td><code><?php echo esc_html( $sample_val !== '' ? $sample_val : '—' ); ?></code></td>
+								<td>
+									<select
+										name="<?php echo esc_attr( $select_name ); ?>"
+										class="pmproiucsv-field-select"
+										style="min-width:260px"
+									>
+										<option value=""><?php esc_html_e( '— Skip Column —', 'pmpro-import-users-from-csv' ); ?></option>
+										<?php foreach ( $mapping_fields as $group_key => $group ) : ?>
+										<optgroup label="<?php echo esc_attr( $group['label'] ); ?>">
+											<?php foreach ( $group['fields'] as $field_value => $field_label ) : ?>
+											<option value="<?php echo esc_attr( $field_value ); ?>" <?php selected( $auto_map, $field_value ); ?>>
+												<?php echo esc_html( $field_label ); ?>
+											</option>
+											<?php endforeach; ?>
+										</optgroup>
+										<?php endforeach; ?>
+										<option value="_custom_"><?php esc_html_e( 'Custom User Meta', 'pmpro-import-users-from-csv' ); ?></option>
+										
+									</select>
+									<p class="pmproiucsv-custom-hint" style="display:none; margin:4px 0 0; color:#646970; font-style:italic;"><?php printf( esc_html__( 'Will be saved as meta key: %s', 'pmpro-import-users-from-csv' ), '<code>' . esc_html( sanitize_key( $header ) ) . '</code>' ); ?></p>
+								</td>
+							</tr>
+							<?php endforeach; ?>
+						</tbody>
+					</table>
+
+					<script>
+					jQuery( document ).ready( function( $ ) {
+						$( '.pmproiucsv-field-select' ).on( 'change', function() {
+							var $hint = $( this ).closest( 'td' ).find( '.pmproiucsv-custom-hint' );
+							if ( $( this ).val() === '_custom_' ) {
+								$hint.show();
+							} else {
+								$hint.hide();
+							}
+						} );
+					} );
+					</script>
+
+					<p class="submit">
+						<input type="submit" class="button button-primary" value="<?php esc_attr_e( 'Confirm Mapping and Import', 'pmpro-import-users-from-csv' ); ?>">
+						&nbsp;
+						<a href="<?php echo esc_url( admin_url( 'users.php?page=pmpro-import-users-from-csv' ) ); ?>" class="button">
+							<?php esc_html_e( 'Cancel', 'pmpro-import-users-from-csv' ); ?>
+						</a>
+					</p>
+				</form>
+			</div><!-- end pmpro_section_inside -->
+		</div><!-- end pmpro_section -->
+		<?php
 	}
 
 	/**
