@@ -736,7 +736,7 @@ class PMPro_Import_Users_From_CSV {
 			// if doing a partial import, save our spot and break
 			if ( ! empty( $partial ) && $rkey ) {
 				$position = $csv_reader->get_position();
-				set_transient( 'pmproiucsv_' . basename( $filename ), $position, 60 * 60 * 24 * 2 );
+				set_transient( 'pmproiucsv_' . basename( $filename ), $position, DAYS_IN_SECONDS * 2 );
 
 				if ( $rkey > $per_partial - 1 ) {
 					break;
@@ -987,6 +987,9 @@ class PMPro_Import_Users_From_CSV {
 						</thead>
 						<tbody>
 							<?php foreach ( $headers as $i => $header ) :
+								if ( $header === '' ) {
+									$header = sprintf( __( 'Column %d', 'pmpro-import-users-from-csv' ), $i + 1 );
+								}
 								$sample_val = isset( $sample[ $i ] ) ? $sample[ $i ] : '';
 								$auto_map   = self::auto_detect_field( $header );
 								$select_name = 'field_map[' . esc_attr( $header ) . ']';
