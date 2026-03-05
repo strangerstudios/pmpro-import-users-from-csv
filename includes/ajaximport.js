@@ -53,9 +53,18 @@ jQuery(document).ready(function () {
                         document.title = $title;
                         jQuery('#pmproiucsv_return_home').show();
                     }
-                    else if (responseHTML == 'done') {
+                    else if (responseHTML == 'done' || responseHTML == 'done_with_errors') {
                         $status.html($status.html() + '\nDone!');
                         document.title = '! ' + $title;
+
+                        var $result = jQuery('#pmproiucsv_result');
+                        if (responseHTML === 'done_with_errors') {
+                            var errorLogLink = ' Please <a href="' + ai_error_log_url + '">check the error log</a>.';
+                            $result.html('<div class="notice notice-error"><p>Some users were successfully imported but some were not.' + errorLogLink + '</p></div>');
+                        } else {
+                            $result.html('<div class="notice notice-success"><p>Users import was successful.</p></div>');
+                        }
+                        $result.show();
                         jQuery('#pmproiucsv_return_home').show();
                     }
                     else {

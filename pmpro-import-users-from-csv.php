@@ -318,6 +318,7 @@ class PMPro_Import_Users_From_CSV {
 					delete_transient( 'pmproiucsv_' . $filename );
 				}
 				?>
+				<div id="pmproiucsv_result" style="display:none;"></div>
 				<div class="pmpro_section">
 					<div class="pmpro_section_inside">
 						<h2><?php esc_html_e( 'Processing Import Using AJAX', 'pmpro-import-users-from-csv' ); ?></h2>
@@ -343,11 +344,12 @@ class PMPro_Import_Users_From_CSV {
 							<a id="resumeimport" href="javascript:void(0);" style="display:none;"><?php esc_html_e( 'Import paused. Click here to resume the import.', 'pmpro-import-users-from-csv' ); ?></a>
 						</p>
 						<textarea id="importstatus" rows="10" cols="60"><?php esc_html_e( 'Loading...', 'pmpro-import-users-from-csv' ); ?></textarea>
-						<p id="pmproiucsv_return_home" style="display:none;"><a href="<?php echo esc_url( add_query_arg( 'page', 'pmpro-import-users-from-csv', admin_url( 'users.php' ) ) ); ?>"><?php esc_html_e( 'Return to the Import Members From CSV screen', 'pmpro-import-users-from-csv' ); ?></a></p>
+								<p id="pmproiucsv_return_home" style="display:none;"><a href="<?php echo esc_url( add_query_arg( 'page', 'pmpro-import-users-from-csv', admin_url( 'users.php' ) ) ); ?>"><?php esc_html_e( 'Return to the Import Members From CSV screen', 'pmpro-import-users-from-csv' ); ?></a></p>
 						<script>
 							var ai_filename = <?php echo json_encode( $filename ); ?>;
 							var ai_users_update = <?php echo json_encode( $users_update ); ?>;
 							var ai_new_user_notification = <?php echo json_encode( $new_user_notification ); ?>;
+							var ai_error_log_url = <?php echo json_encode( self::$log_dir_url ); ?>;
 						</script>
 					</div> <!-- end pmpro_section_inside -->
 				</div> <!-- end pmpro_section -->
@@ -458,16 +460,24 @@ class PMPro_Import_Users_From_CSV {
 
 		$results = self::import_csv( $import_dir . $filename, $args );
 
-		// No users imported?
+		// Track whether any errors have occurred across batches.
+		if ( $results['errors'] ) {
+			set_transient( 'pmproiucsv_errors_' . $filename, true, DAYS_IN_SECONDS * 2 );
+		}
+
+		// No users imported? Import is complete.
 		if ( ! $results['user_ids'] ) {
-			echo 'done';
+			$has_errors = get_transient( 'pmproiucsv_errors_' . $filename );
+
+			echo $has_errors ? 'done_with_errors' : 'done';
 
 			// delete file
 			unlink( $import_dir . $filename );
 
-			// delete position and mapping transients
+			// delete position, mapping, and error transients
 			delete_transient( 'pmproiucsv_' . $filename );
 			delete_transient( 'pmproiucsv_map_' . $filename );
+			delete_transient( 'pmproiucsv_errors_' . $filename );
 		}
 
 		// Some users imported?
