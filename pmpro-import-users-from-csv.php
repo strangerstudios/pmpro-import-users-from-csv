@@ -915,7 +915,15 @@ class PMPro_Import_Users_From_CSV {
 				),
 			);
 		}
-
+		
+		/**
+		 * Filter the dropdown fields options. 
+		 * This is useful for existing plugins to hook into our process and add their own fields to the mapping screen.
+		 * 
+		 * @since TBD
+		 * 
+		 * @param array $fields The available fields for mapping, organized by group.
+		 */
 		return apply_filters( 'pmproiucsv_mapping_fields', $fields );
 	}
 
@@ -943,8 +951,15 @@ class PMPro_Import_Users_From_CSV {
 			return $header_lower;
 		}
 
-		// Common aliases.
-		$aliases = array(
+		/**
+		 * Common aliases to assume the field's linkage. See 'pmproiucsv_mapping_fields' for a complete list.
+		 * This allows plugins to predefine or assume a column header to a field type. (i.e. 'parent_id' => 'sponsored_parent')
+		 * 
+		 * @since TBD
+		 * 
+		 * @param array $aliases An array of column header aliases and the field type.
+		 */
+		$aliases = apply_filters( 'pmproiucsv_field_aliases', array(
 			'email'            => 'user_email',
 			'e-mail'           => 'user_email',
 			'mail'             => 'user_email',
@@ -981,7 +996,7 @@ class PMPro_Import_Users_From_CSV {
 			'expiration'       => 'membership_enddate',
 			'expiration date'  => 'membership_enddate',
 			'gateway'          => 'membership_gateway',
-		);
+		) );
 
 		if ( isset( $aliases[ $header_lower ] ) ) {
 			return $aliases[ $header_lower ];
