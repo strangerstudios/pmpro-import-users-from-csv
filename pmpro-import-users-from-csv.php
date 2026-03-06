@@ -163,9 +163,18 @@ class PMPro_Import_Users_From_CSV {
 		}
 
 		$original_name = $_FILES['users_csv']['name'];
-		$allowed_mimes = array( 'csv' => 'text/csv|text/plain|application/csv' );
-		$filetype      = wp_check_filetype_and_ext( $_FILES['users_csv']['tmp_name'], $original_name, $allowed_mimes );
-		if ( $filetype['ext'] !== 'csv' || empty( $filetype['type'] ) ) {
+
+		// Use extension-only validation: CSV MIME types are inconsistently reported across
+		// browsers, OSes, and tools (e.g. Google Sheets exports as text/plain), making
+		// wp_check_filetype_and_ext() unreliable and prone to false rejections.
+		$filetype = wp_check_filetype( $original_name );
+		if ( $filetype['ext'] !== 'csv' ) {
+			wp_die( __( 'Invalid file type. Please upload a CSV file.', 'pmpro-import-users-from-csv' ) );
+		}
+
+		// Guard against binary files disguised with a .csv extension by checking for null bytes.
+		$file_sample = file_get_contents( $_FILES['users_csv']['tmp_name'], false, null, 0, 1024 );
+		if ( $file_sample !== false && strpos( $file_sample, "\x00" ) !== false ) {
 			wp_die( __( 'Invalid file type. Please upload a CSV file.', 'pmpro-import-users-from-csv' ) );
 		}
 		$filename      = preg_replace( '/[^a-zA-Z0-9\.\-]/', '_', $original_name );
@@ -414,7 +423,7 @@ class PMPro_Import_Users_From_CSV {
 				<div id="pmproiucsv_result" style="display:none;"></div>
 				<div class="pmpro_section">
 					<div class="pmpro_section_inside">
-						<h2><?php esc_html_e( 'Processing Import Using AJAX', 'pmpro-import-users-from-csv' ); ?></h2>
+						<h2><?php esc_html_e( 'Processing Import', 'pmpro-import-users-from-csv' ); ?></h2>
 						<p>
 							<strong><?php esc_html_e( 'Do not close this page until your import is finished processing.', 'pmpro-import-users-from-csv' ); ?></strong>
 							<?php esc_html_e( 'If the import stops or if you have to close your browser, navigate to the URL below to resume the import:', 'pmpro-import-users-from-csv' ); ?>
