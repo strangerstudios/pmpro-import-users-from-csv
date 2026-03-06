@@ -20,8 +20,9 @@ if ( ! defined( 'PMPROIUCSV_CSV_DELIMITER' ) ) {
  * @since 0.1
  **/
 class PMPro_Import_Users_From_CSV {
-	private static $log_dir_path = '';
-	private static $log_dir_url  = '';
+	private static $log_dir_path    = '';
+	private static $log_dir_url     = '';
+	private static $import_dir_path = '';
 
 	/**
 	 * Initialization
@@ -45,13 +46,15 @@ class PMPro_Import_Users_From_CSV {
 		// Add support for PMPro 3.5+ with the restricted file system.
 		if ( function_exists( 'pmpro_get_restricted_file_path' ) ) {
 			// Create the directories for the restricted files.
-			$upload_dir         = pmpro_get_restricted_file_path( 'pmpro-import-users-from-csv' );
-			self::$log_dir_path = $upload_dir . 'pmproiucsv_error.log';
-			self::$log_dir_url  = add_query_arg( array( 'pmpro_restricted_file_dir' => 'pmpro-import-users-from-csv', 'pmpro_restricted_file' => 'pmproiucsv_error.log' ), home_url() );
+			$upload_dir              = pmpro_get_restricted_file_path( 'pmpro-import-users-from-csv' );
+			self::$log_dir_path      = $upload_dir . 'pmproiucsv_error.log';
+			self::$log_dir_url       = add_query_arg( array( 'pmpro_restricted_file_dir' => 'pmpro-import-users-from-csv', 'pmpro_restricted_file' => 'pmproiucsv_error.log' ), home_url() );
+			self::$import_dir_path   = $upload_dir;
 		} else {
-			$upload_dir         = wp_upload_dir();
-			self::$log_dir_path = trailingslashit( $upload_dir['basedir'] ) . 'pmproiucsv_error.log';
-			self::$log_dir_url  = trailingslashit( $upload_dir['baseurl'] ) . 'pmproiucsv_error.log';
+			$upload_dir              = wp_upload_dir();
+			self::$log_dir_path      = trailingslashit( $upload_dir['basedir'] ) . 'pmproiucsv_error.log';
+			self::$log_dir_url       = trailingslashit( $upload_dir['baseurl'] ) . 'pmproiucsv_error.log';
+			self::$import_dir_path   = trailingslashit( $upload_dir['basedir'] ) . 'pmpro-imports/';
 		}
 
 
@@ -138,15 +141,27 @@ class PMPro_Import_Users_From_CSV {
 		$new_user_notification = isset( $_REQUEST['new_user_notification'] ) ? $_REQUEST['new_user_notification'] : false;
 
 		// Always save the uploaded file so we can read headers on the mapping screen.
-		$upload_dir = wp_upload_dir();
-		$import_dir = $upload_dir['basedir'] . '/pmpro-imports/';
+		$import_dir = self::$import_dir_path;
 
 		if ( ! is_dir( $import_dir ) ) {
 			wp_mkdir_p( $import_dir );
 		}
 
+		// Protect the directory from direct web access when not using the PMPro restricted file system.
+		if ( ! function_exists( 'pmpro_get_restricted_file_path' ) ) {
+			if ( ! file_exists( $import_dir . '.htaccess' ) ) {
+				file_put_contents( $import_dir . '.htaccess', 'deny from all' );
+			}
+			if ( ! file_exists( $import_dir . 'index.php' ) ) {
+				file_put_contents( $import_dir . 'index.php', '<?php // Silence is golden.' );
+			}
+		}
+
 		$original_name = $_FILES['users_csv']['name'];
 		$filetype      = wp_check_filetype( $original_name );
+		if ( $filetype['ext'] !== 'csv' ) {
+			wp_die( __( 'Invalid file type. Please upload a CSV file.', 'pmpro-import-users-from-csv' ) );
+		}
 		$filename      = preg_replace( '/[^a-zA-Z0-9\.\-]/', '_', $original_name );
 		$count         = 0;
 
@@ -162,7 +177,9 @@ class PMPro_Import_Users_From_CSV {
 			}
 		}
 
-		move_uploaded_file( $_FILES['users_csv']['tmp_name'], $import_dir . $filename );
+		if ( ! move_uploaded_file( $_FILES['users_csv']['tmp_name'], $import_dir . $filename ) ) {
+			wp_die( __( 'Failed to save the uploaded file. Please try again.', 'pmpro-import-users-from-csv' ) );
+		}
 
 		// Redirect to the field mapping screen.
 		$url = add_query_arg(
@@ -214,6 +231,12 @@ class PMPro_Import_Users_From_CSV {
 					$field_map[ $csv_col ] = $mapped_to; // empty string = skip
 				}
 			}
+		}
+
+		// Verify the file exists before storing the mapping transient.
+		$import_dir = self::$import_dir_path;
+		if ( ! file_exists( $import_dir . $filename ) ) {
+			wp_die( __( 'The uploaded CSV file could not be found. Please try uploading it again.', 'pmpro-import-users-from-csv' ) );
 		}
 
 		// Store the mapping for retrieval during AJAX import.
@@ -432,8 +455,7 @@ class PMPro_Import_Users_From_CSV {
 		}
 
 		// figure out upload dir
-		$upload_dir = wp_upload_dir();
-		$import_dir = $upload_dir['basedir'] . '/pmpro-imports/';
+		$import_dir = self::$import_dir_path;
 
 		// make sure file exists
 		if ( ! file_exists( $import_dir . $filename ) ) {
@@ -594,11 +616,11 @@ class PMPro_Import_Users_From_CSV {
 
 				if ( ! empty( $field_map ) ) {
 					// If this CSV column was not included in the mapping, skip it.
-					if ( ! array_key_exists( $csv_column, $field_map ) ) {
+					if ( ! array_key_exists( $ckey, $field_map ) ) {
 						continue;
 					}
 
-					$column_name = $field_map[ $csv_column ];
+					$column_name = $field_map[ $ckey ];
 
 					// Empty mapped value means the user chose to skip this column.
 					if ( $column_name === '' || $column_name === null ) {
@@ -897,8 +919,7 @@ class PMPro_Import_Users_From_CSV {
 	 * @return array{ headers: string[], sample: string[] }
 	 */
 	public static function get_csv_sample_data( $filename ) {
-		$upload_dir = wp_upload_dir();
-		$filepath   = $upload_dir['basedir'] . '/pmpro-imports/' . $filename;
+		$filepath = self::$import_dir_path . $filename;
 
 		if ( ! file_exists( $filepath ) ) {
 			return array( 'headers' => array(), 'sample' => array() );
@@ -909,6 +930,9 @@ class PMPro_Import_Users_From_CSV {
 		}
 
 		$file_handle = fopen( $filepath, 'r' );
+		if ( $file_handle === false ) {
+			return array( 'headers' => array(), 'sample' => array() );
+		}
 		$csv_reader  = new ReadCSV( $file_handle, PMPROIUCSV_CSV_DELIMITER, "\xEF\xBB\xBF" );
 
 		$headers = $csv_reader->get_row();
@@ -992,7 +1016,7 @@ class PMPro_Import_Users_From_CSV {
 								}
 								$sample_val = isset( $sample[ $i ] ) ? $sample[ $i ] : '';
 								$auto_map   = self::auto_detect_field( $header );
-								$select_name = 'field_map[' . esc_attr( $header ) . ']';
+								$select_name = 'field_map[' . $i . ']';
 								?>
 							<tr>
 								<td><strong><?php echo esc_html( $header ); ?></strong></td>

@@ -59,8 +59,17 @@ jQuery(document).ready(function () {
 
                         var $result = jQuery('#pmproiucsv_result');
                         if (responseHTML === 'done_with_errors') {
-                            var errorLogLink = ' Please <a href="' + ai_error_log_url + '">check the error log</a>.';
-                            $result.html('<div class="notice notice-error"><p>Some users were successfully imported but some were not.' + errorLogLink + '</p></div>');
+                            var $notice = jQuery('<div class="notice notice-error"></div>');
+                            var $p = jQuery('<p></p>');
+                            $p.text('Some users were successfully imported but some were not. ');
+                            if (typeof ai_error_log_url === 'string' && /^https?:\/\//i.test(ai_error_log_url)) {
+                                var $link = jQuery('<a></a>');
+                                $link.attr('href', ai_error_log_url);
+                                $link.text('Please check the error log.');
+                                $p.append($link);
+                            }
+                            $notice.append($p);
+                            $result.empty().append($notice);
                         } else {
                             $result.html('<div class="notice notice-success"><p>Users import was successful.</p></div>');
                         }
