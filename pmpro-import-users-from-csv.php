@@ -736,7 +736,7 @@ class PMPro_Import_Users_From_CSV {
 			// if doing a partial import, save our spot and break
 			if ( ! empty( $partial ) && $rkey ) {
 				$position = $csv_reader->get_position();
-				set_transient( 'pmproiucsv_' . basename( $filename ), $position, DAYS_IN_SECONDS * 2 );
+				set_transient( 'pmproiucsv_' . basename( $filename ), $position, DAY_IN_SECONDS * 2 );
 
 				if ( $rkey > $per_partial - 1 ) {
 					break;
