@@ -462,7 +462,7 @@ class PMPro_Import_Users_From_CSV {
 
 		// Track whether any errors have occurred across batches.
 		if ( $results['errors'] ) {
-			set_transient( 'pmproiucsv_errors_' . $filename, true, DAYS_IN_SECONDS * 2 );
+			set_transient( 'pmproiucsv_errors_' . $filename, true, DAY_IN_SECONDS * 2 );
 		}
 
 		// No users imported? Import is complete.
