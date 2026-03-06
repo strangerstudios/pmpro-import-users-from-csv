@@ -472,7 +472,7 @@ class PMPro_Import_Users_From_CSV {
 									<label for="users_csv"><?php esc_html_e( 'Import File (.csv)', 'pmpro-import-users-from-csv' ); ?></label>
 								</th>
 								<td>
-									<input type="file" id="users_csv" name="users_csv" value="" class="all-options" required /><br />
+									<input type="file" id="users_csv" name="users_csv" value="" class="all-options" accept=".csv" required /><br />
 									<p class="description"><?php printf( __( 'Download the <a href="%s">example CSV file</a> for help formatting your data for import.', 'pmpro-import-users-from-csv' ), esc_url( plugin_dir_url( __FILE__ ) . 'examples/import.csv' ) ); ?></p>
 								</td>
 							</tr>
