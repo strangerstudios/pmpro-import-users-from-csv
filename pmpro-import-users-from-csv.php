@@ -33,6 +33,7 @@ class PMPro_Import_Users_From_CSV {
 		add_action( 'admin_menu', array( get_called_class(), 'add_admin_pages' ) );
 		add_action( 'init', array( get_called_class(), 'process_csv' ) );
 		add_action( 'init', array( get_called_class(), 'handle_mapping_submission' ) );
+		add_action( 'init', array( get_called_class(), 'handle_cancel_mapping' ) );
 		add_action( 'init', array( get_called_class(), 'pmproiucsv_load_textdomain' ) );
 		add_action( 'admin_init', array( get_called_class(), 'deactivate_old_plugin' ) );
 		add_action( 'admin_enqueue_scripts', array( get_called_class(), 'admin_enqueue_scripts' ) );
@@ -150,16 +151,21 @@ class PMPro_Import_Users_From_CSV {
 		// Protect the directory from direct web access when not using the PMPro restricted file system.
 		if ( ! function_exists( 'pmpro_get_restricted_file_path' ) ) {
 			if ( ! file_exists( $import_dir . '.htaccess' ) ) {
-				file_put_contents( $import_dir . '.htaccess', 'deny from all' );
+				if ( false === file_put_contents( $import_dir . '.htaccess', 'deny from all' ) ) {
+					error_log( 'PMPro Import Users from CSV: Could not write .htaccess to ' . $import_dir . '. The import directory may be publicly accessible.' );
+				}
 			}
 			if ( ! file_exists( $import_dir . 'index.php' ) ) {
-				file_put_contents( $import_dir . 'index.php', '<?php // Silence is golden.' );
+				if ( false === file_put_contents( $import_dir . 'index.php', '<?php // Silence is golden.' ) ) {
+					error_log( 'PMPro Import Users from CSV: Could not write index.php to ' . $import_dir . '. The import directory may be publicly accessible.' );
+				}
 			}
 		}
 
 		$original_name = $_FILES['users_csv']['name'];
-		$filetype      = wp_check_filetype( $original_name );
-		if ( $filetype['ext'] !== 'csv' ) {
+		$allowed_mimes = array( 'csv' => 'text/csv|text/plain|application/csv' );
+		$filetype      = wp_check_filetype_and_ext( $_FILES['users_csv']['tmp_name'], $original_name, $allowed_mimes );
+		if ( $filetype['ext'] !== 'csv' || empty( $filetype['type'] ) ) {
 			wp_die( __( 'Invalid file type. Please upload a CSV file.', 'pmpro-import-users-from-csv' ) );
 		}
 		$filename      = preg_replace( '/[^a-zA-Z0-9\.\-]/', '_', $original_name );
@@ -173,8 +179,19 @@ class PMPro_Import_Users_From_CSV {
 			}
 			$count++;
 			if ( $count > 50 ) {
-				die( 'Error uploading file. Too many files with the same name. Clean out the ' . esc_html( $import_dir ) . ' directory on your server.' );
+				wp_die( 'Error uploading file. Too many files with the same name. Clean out the ' . esc_html( $import_dir ) . ' directory on your server.' );
 			}
+		}
+
+		// Enforce WordPress's configured upload size limit, since we bypass wp_handle_upload().
+		if ( $_FILES['users_csv']['size'] > wp_max_upload_size() ) {
+			wp_die(
+				sprintf(
+					/* translators: %s: max upload size */
+					esc_html__( 'The uploaded file exceeds the maximum upload size of %s.', 'pmpro-import-users-from-csv' ),
+					size_format( wp_max_upload_size() )
+				)
+			);
 		}
 
 		if ( ! move_uploaded_file( $_FILES['users_csv']['tmp_name'], $import_dir . $filename ) ) {
@@ -233,6 +250,21 @@ class PMPro_Import_Users_From_CSV {
 			}
 		}
 
+		// Ensure all required fields are mapped before proceeding.
+		$required_fields = apply_filters( 'pmproiucsv_required_import_headers', array( 'user_email' ) );
+		$mapped_values   = array_values( $field_map );
+		foreach ( $required_fields as $required_field ) {
+			if ( ! in_array( $required_field, $mapped_values, true ) ) {
+				wp_die(
+					sprintf(
+						/* translators: %s: required field name */
+						esc_html__( 'Import cancelled: the required field "%s" must be mapped to a column before importing.', 'pmpro-import-users-from-csv' ),
+						esc_html( $required_field )
+					)
+				);
+			}
+		}
+
 		// Verify the file exists before storing the mapping transient.
 		$import_dir = self::$import_dir_path;
 		if ( ! file_exists( $import_dir . $filename ) ) {
@@ -240,6 +272,8 @@ class PMPro_Import_Users_From_CSV {
 		}
 
 		// Store the mapping for retrieval during AJAX import.
+		// Delete first to avoid stale data from a previous mapping submission for the same filename.
+		delete_transient( 'pmproiucsv_map_' . $filename );
 		set_transient( 'pmproiucsv_map_' . $filename, $field_map, DAY_IN_SECONDS * 2 );
 
 		// Redirect to the AJAX processing screen.
@@ -255,6 +289,42 @@ class PMPro_Import_Users_From_CSV {
 		);
 
 		wp_redirect( $url );
+		exit;
+	}
+
+	/**
+	 * Handle cancellation from the mapping screen.
+	 *
+	 * Deletes the uploaded CSV file and any stored mapping transient,
+	 * then redirects back to the import page with a cancelled status.
+	 *
+	 * @since TBD
+	 */
+	public static function handle_cancel_mapping() {
+		if ( empty( $_REQUEST['_wpnonce_pmproiucsv_cancel'] ) ) {
+			return;
+		}
+
+		check_admin_referer( 'pmproiucsv_cancel', '_wpnonce_pmproiucsv_cancel' );
+
+		if ( ! current_user_can( 'create_users' ) ) {
+			wp_die( __( 'You do not have sufficient permissions to cancel this import.', 'pmpro-import-users-from-csv' ) );
+		}
+
+		$filename = sanitize_file_name( wp_unslash( $_REQUEST['filename'] ?? '' ) );
+
+		if ( $filename ) {
+			$import_dir = self::$import_dir_path;
+			$file_path  = $import_dir . $filename;
+
+			if ( file_exists( $file_path ) ) {
+				wp_delete_file( $file_path );
+			}
+
+			delete_transient( 'pmproiucsv_map_' . $filename );
+		}
+
+		wp_redirect( add_query_arg( array( 'page' => 'pmpro-import-users-from-csv', 'import' => 'cancelled' ), admin_url( 'users.php' ) ) );
 		exit;
 	}
 
@@ -612,15 +682,15 @@ class PMPro_Import_Users_From_CSV {
 			$userdata = $usermeta = array();
 			foreach ( $line as $ckey => $column ) {
 				$csv_column = isset( $headers[ $ckey ] ) ? $headers[ $ckey ] : '';
-				$column     = trim( $column );
+				$column     = sanitize_text_field( trim( $column ) );
 
 				if ( ! empty( $field_map ) ) {
 					// If this CSV column was not included in the mapping, skip it.
-					if ( ! array_key_exists( $ckey, $field_map ) ) {
+					if ( ! array_key_exists( (string) $ckey, $field_map ) ) {
 						continue;
 					}
 
-					$column_name = $field_map[ $ckey ];
+					$column_name = $field_map[ (string) $ckey ];
 
 					// Empty mapped value means the user chose to skip this column.
 					if ( $column_name === '' || $column_name === null ) {
@@ -1063,7 +1133,7 @@ class PMPro_Import_Users_From_CSV {
 					<p class="submit">
 						<input type="submit" class="button button-primary" value="<?php esc_attr_e( 'Confirm Mapping and Import', 'pmpro-import-users-from-csv' ); ?>">
 						&nbsp;
-						<a href="<?php echo esc_url( admin_url( 'users.php?page=pmpro-import-users-from-csv' ) ); ?>" class="button">
+						<a href="<?php echo esc_url( wp_nonce_url( add_query_arg( array( 'page' => 'pmpro-import-users-from-csv', 'filename' => $filename ), admin_url( 'users.php' ) ), 'pmproiucsv_cancel', '_wpnonce_pmproiucsv_cancel' ) ); ?>" class="button">
 							<?php esc_html_e( 'Cancel', 'pmpro-import-users-from-csv' ); ?>
 						</a>
 					</p>
