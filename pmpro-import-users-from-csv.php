@@ -250,12 +250,7 @@ class PMPro_Import_Users_From_CSV {
 			foreach ( $_REQUEST['field_map'] as $csv_col => $mapped_to ) {
 				$csv_col   = sanitize_text_field( wp_unslash( $csv_col ) );
 				$mapped_to = sanitize_text_field( wp_unslash( $mapped_to ) );
-
-				if ( $mapped_to === '_custom_' ) {
-					$field_map[ $csv_col ] = 'custom:' . sanitize_key( $csv_col );
-				} else {
-					$field_map[ $csv_col ] = $mapped_to; // empty string = skip
-				}
+				$field_map[ $csv_col ] = $mapped_to;
 			}
 		}
 
