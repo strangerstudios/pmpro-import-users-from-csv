@@ -3,7 +3,7 @@
 Plugin Name: Paid Memberships Pro - Import Members From CSV Add On
 Plugin URI:  https://www.paidmembershipspro.com/add-ons/pmpro-import-users-csv/
 Description: Import your users or members list to WordPress and automatically assign membership levels in PMPro.
-Version: 1.2
+Version: 1.2.1
 Author: Paid Memberships Pro
 Author URI: https://www.paidmembershipspro.com
 Text Domain: pmpro-import-users-from-csv
@@ -97,7 +97,7 @@ class PMPro_Import_Users_From_CSV {
 	/**
 	 * Add admin JS
 	 *
-	 * @since TBD
+	 * @since 1.2
 	 **/
 	public static function admin_enqueue_scripts( $hook ) {
 		if ( empty( $_REQUEST['page'] ) || $_REQUEST['page'] != 'pmpro-import-users-from-csv' ) {
@@ -227,7 +227,7 @@ class PMPro_Import_Users_From_CSV {
 	 * Handle the field mapping form submission.
 	 * Stores the mapping in a transient and redirects to the AJAX processing screen.
 	 *
-	 * @since TBD
+	 * @since 1.2
 	 */
 	public static function handle_mapping_submission() {
 		if ( empty( $_REQUEST['_wpnonce_pmproiucsv_mapping'] ) ) {
@@ -250,12 +250,7 @@ class PMPro_Import_Users_From_CSV {
 			foreach ( $_REQUEST['field_map'] as $csv_col => $mapped_to ) {
 				$csv_col   = sanitize_text_field( wp_unslash( $csv_col ) );
 				$mapped_to = sanitize_text_field( wp_unslash( $mapped_to ) );
-
-				if ( $mapped_to === '_custom_' ) {
-					$field_map[ $csv_col ] = 'custom:' . sanitize_key( $csv_col );
-				} else {
-					$field_map[ $csv_col ] = $mapped_to; // empty string = skip
-				}
+				$field_map[ $csv_col ] = $mapped_to;
 			}
 		}
 
@@ -307,7 +302,7 @@ class PMPro_Import_Users_From_CSV {
 	 * Deletes the uploaded CSV file and any stored mapping transient,
 	 * then redirects back to the import page with a cancelled status.
 	 *
-	 * @since TBD
+	 * @since 1.2
 	 */
 	public static function handle_cancel_mapping() {
 		if ( empty( $_REQUEST['_wpnonce_pmproiucsv_cancel'] ) ) {
@@ -864,7 +859,7 @@ class PMPro_Import_Users_From_CSV {
 	 * Return available field groups for the mapping screen.
 	 * Filterable so add-ons can register additional field groups.
 	 *
-	 * @since TBD
+	 * @since 1.2
 	 * @return array Associative array of group_key => array( 'label' => string, 'fields' => array( field_key => label ) )
 	 */
 	public static function get_mapping_fields() {
@@ -920,7 +915,7 @@ class PMPro_Import_Users_From_CSV {
 		 * Filter the dropdown fields options. 
 		 * This is useful for existing plugins to hook into our process and add their own fields to the mapping screen.
 		 * 
-		 * @since TBD
+		 * @since 1.2
 		 * 
 		 * @param array $fields The available fields for mapping, organized by group.
 		 */
@@ -931,7 +926,7 @@ class PMPro_Import_Users_From_CSV {
 	 * Try to auto-detect the best mapping for a given CSV column header.
 	 * Returns a known field key on match, or an empty string if none found.
 	 *
-	 * @since TBD
+	 * @since 1.2
 	 * @param string $header CSV column header.
 	 * @return string
 	 */
@@ -955,7 +950,7 @@ class PMPro_Import_Users_From_CSV {
 		 * Common aliases to assume the field's linkage. See 'pmproiucsv_mapping_fields' for a complete list.
 		 * This allows plugins to predefine or assume a column header to a field type. (i.e. 'parent_id' => 'sponsored_parent')
 		 * 
-		 * @since TBD
+		 * @since 1.2
 		 * 
 		 * @param array $aliases An array of column header aliases and the field type.
 		 */
@@ -996,6 +991,8 @@ class PMPro_Import_Users_From_CSV {
 			'expiration'       => 'membership_enddate',
 			'expiration date'  => 'membership_enddate',
 			'gateway'          => 'membership_gateway',
+			'subscription_transaction_id' => 'membership_subscription_transaction_id',
+			'payment_transaction_id'      => 'membership_payment_transaction_id',
 		) );
 
 		if ( isset( $aliases[ $header_lower ] ) ) {
@@ -1008,7 +1005,7 @@ class PMPro_Import_Users_From_CSV {
 	/**
 	 * Read the first two rows of a saved CSV file and return them as headers + sample data.
 	 *
-	 * @since TBD
+	 * @since 1.2
 	 * @param string $filename Sanitized filename (no path) inside the pmpro-imports directory.
 	 * @return array{ headers: string[], sample: string[] }
 	 */
@@ -1043,7 +1040,7 @@ class PMPro_Import_Users_From_CSV {
 	/**
 	 * Render the field mapping screen.
 	 *
-	 * @since TBD
+	 * @since 1.2
 	 */
 	public static function render_mapping_screen() {
 		$filename              = sanitize_file_name( wp_unslash( $_REQUEST['filename'] ) );
@@ -1131,7 +1128,7 @@ class PMPro_Import_Users_From_CSV {
 											<?php endforeach; ?>
 										</optgroup>
 										<?php endforeach; ?>
-										<option value="_custom_"><?php esc_html_e( 'Custom User Meta', 'pmpro-import-users-from-csv' ); ?></option>
+										<option value="custom:<?php echo esc_attr( sanitize_key( $header ) ); ?>"><?php esc_html_e( 'Custom User Meta', 'pmpro-import-users-from-csv' ); ?></option>
 										
 									</select>
 									<p class="pmproiucsv-custom-hint" style="display:none; margin:4px 0 0; color:#646970; font-style:italic;"><?php printf( esc_html__( 'Will be saved as meta key: %s', 'pmpro-import-users-from-csv' ), '<code>' . esc_html( sanitize_key( $header ) ) . '</code>' ); ?></p>
@@ -1145,7 +1142,7 @@ class PMPro_Import_Users_From_CSV {
 					jQuery( document ).ready( function( $ ) {
 						$( '.pmproiucsv-field-select' ).on( 'change', function() {
 							var $hint = $( this ).closest( 'td' ).find( '.pmproiucsv-custom-hint' );
-							if ( $( this ).val() === '_custom_' ) {
+							if ( $( this ).val().indexOf( 'custom:' ) === 0 ) {
 								$hint.show();
 							} else {
 								$hint.hide();
@@ -1232,7 +1229,7 @@ class PMPro_Import_Users_From_CSV {
 	/**
 	 * Allow access of the restricted file if the current user can create users.
 	 * 
-	 * @since TBD
+	 * @since 1.2
 	 *
 	 * @param bool $can_access Whether or not the current user can access the log file.
 	 * @param string $file_dir The directory of the file being accessed.

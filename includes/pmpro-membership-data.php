@@ -338,7 +338,7 @@ function pmproiucsv_report_sub_error ( $errors, $user_ids ){
 /**
  * Throw an error/warning when importing a membership ID but the level does not exist in the database.
  *
- * @since TBD
+ * @since 1.2
  */
 function pmproiucsv_report_non_existent_level( $errors, $user_ids ) {
 	
