@@ -250,12 +250,7 @@ class PMPro_Import_Users_From_CSV {
 			foreach ( $_REQUEST['field_map'] as $csv_col => $mapped_to ) {
 				$csv_col   = sanitize_text_field( wp_unslash( $csv_col ) );
 				$mapped_to = sanitize_text_field( wp_unslash( $mapped_to ) );
-
-				if ( $mapped_to === '_custom_' ) {
-					$field_map[ $csv_col ] = 'custom:' . sanitize_key( $csv_col );
-				} else {
-					$field_map[ $csv_col ] = $mapped_to; // empty string = skip
-				}
+				$field_map[ $csv_col ] = $mapped_to;
 			}
 		}
 
@@ -1133,7 +1128,7 @@ class PMPro_Import_Users_From_CSV {
 											<?php endforeach; ?>
 										</optgroup>
 										<?php endforeach; ?>
-										<option value="_custom_"><?php esc_html_e( 'Custom User Meta', 'pmpro-import-users-from-csv' ); ?></option>
+										<option value="custom:<?php echo esc_attr( sanitize_key( $header ) ); ?>"><?php esc_html_e( 'Custom User Meta', 'pmpro-import-users-from-csv' ); ?></option>
 										
 									</select>
 									<p class="pmproiucsv-custom-hint" style="display:none; margin:4px 0 0; color:#646970; font-style:italic;"><?php printf( esc_html__( 'Will be saved as meta key: %s', 'pmpro-import-users-from-csv' ), '<code>' . esc_html( sanitize_key( $header ) ) . '</code>' ); ?></p>
@@ -1147,7 +1142,7 @@ class PMPro_Import_Users_From_CSV {
 					jQuery( document ).ready( function( $ ) {
 						$( '.pmproiucsv-field-select' ).on( 'change', function() {
 							var $hint = $( this ).closest( 'td' ).find( '.pmproiucsv-custom-hint' );
-							if ( $( this ).val() === '_custom_' ) {
+							if ( $( this ).val().indexOf( 'custom:' ) === 0 ) {
 								$hint.show();
 							} else {
 								$hint.hide();
