@@ -97,7 +97,7 @@ class PMPro_Import_Users_From_CSV {
 	/**
 	 * Add admin JS
 	 *
-	 * @since 2.0
+	 * @since 1.2
 	 **/
 	public static function admin_enqueue_scripts( $hook ) {
 		if ( empty( $_REQUEST['page'] ) || $_REQUEST['page'] != 'pmpro-import-users-from-csv' ) {
@@ -227,7 +227,7 @@ class PMPro_Import_Users_From_CSV {
 	 * Handle the field mapping form submission.
 	 * Stores the mapping in a transient and redirects to the AJAX processing screen.
 	 *
-	 * @since 2.0
+	 * @since 1.2
 	 */
 	public static function handle_mapping_submission() {
 		if ( empty( $_REQUEST['_wpnonce_pmproiucsv_mapping'] ) ) {
@@ -307,7 +307,7 @@ class PMPro_Import_Users_From_CSV {
 	 * Deletes the uploaded CSV file and any stored mapping transient,
 	 * then redirects back to the import page with a cancelled status.
 	 *
-	 * @since 2.0
+	 * @since 1.2
 	 */
 	public static function handle_cancel_mapping() {
 		if ( empty( $_REQUEST['_wpnonce_pmproiucsv_cancel'] ) ) {
@@ -864,7 +864,7 @@ class PMPro_Import_Users_From_CSV {
 	 * Return available field groups for the mapping screen.
 	 * Filterable so add-ons can register additional field groups.
 	 *
-	 * @since 2.0
+	 * @since 1.2
 	 * @return array Associative array of group_key => array( 'label' => string, 'fields' => array( field_key => label ) )
 	 */
 	public static function get_mapping_fields() {
@@ -920,7 +920,7 @@ class PMPro_Import_Users_From_CSV {
 		 * Filter the dropdown fields options. 
 		 * This is useful for existing plugins to hook into our process and add their own fields to the mapping screen.
 		 * 
-		 * @since 2.0
+		 * @since 1.2
 		 * 
 		 * @param array $fields The available fields for mapping, organized by group.
 		 */
@@ -931,7 +931,7 @@ class PMPro_Import_Users_From_CSV {
 	 * Try to auto-detect the best mapping for a given CSV column header.
 	 * Returns a known field key on match, or an empty string if none found.
 	 *
-	 * @since 2.0
+	 * @since 1.2
 	 * @param string $header CSV column header.
 	 * @return string
 	 */
@@ -955,7 +955,7 @@ class PMPro_Import_Users_From_CSV {
 		 * Common aliases to assume the field's linkage. See 'pmproiucsv_mapping_fields' for a complete list.
 		 * This allows plugins to predefine or assume a column header to a field type. (i.e. 'parent_id' => 'sponsored_parent')
 		 * 
-		 * @since 2.0
+		 * @since 1.2
 		 * 
 		 * @param array $aliases An array of column header aliases and the field type.
 		 */
@@ -996,6 +996,8 @@ class PMPro_Import_Users_From_CSV {
 			'expiration'       => 'membership_enddate',
 			'expiration date'  => 'membership_enddate',
 			'gateway'          => 'membership_gateway',
+			'subscription_transaction_id' => 'membership_subscription_transaction_id',
+			'payment_transaction_id'      => 'membership_payment_transaction_id',
 		) );
 
 		if ( isset( $aliases[ $header_lower ] ) ) {
@@ -1008,7 +1010,7 @@ class PMPro_Import_Users_From_CSV {
 	/**
 	 * Read the first two rows of a saved CSV file and return them as headers + sample data.
 	 *
-	 * @since 2.0
+	 * @since 1.2
 	 * @param string $filename Sanitized filename (no path) inside the pmpro-imports directory.
 	 * @return array{ headers: string[], sample: string[] }
 	 */
@@ -1043,7 +1045,7 @@ class PMPro_Import_Users_From_CSV {
 	/**
 	 * Render the field mapping screen.
 	 *
-	 * @since 2.0
+	 * @since 1.2
 	 */
 	public static function render_mapping_screen() {
 		$filename              = sanitize_file_name( wp_unslash( $_REQUEST['filename'] ) );
@@ -1232,7 +1234,7 @@ class PMPro_Import_Users_From_CSV {
 	/**
 	 * Allow access of the restricted file if the current user can create users.
 	 * 
-	 * @since 2.0
+	 * @since 1.2
 	 *
 	 * @param bool $can_access Whether or not the current user can access the log file.
 	 * @param string $file_dir The directory of the file being accessed.
