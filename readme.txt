@@ -3,7 +3,7 @@ Contributors: strangerstudios
 Tags: paid memberships pro, import users from csv, import, csv, members
 Requires at least: 6.0
 Tested up to: 6.9
-Stable tag: 1.2.1
+Stable tag: 1.2.2
 
 Import your users or members list to WordPress and automatically assign membership levels in PMPro.
  
@@ -28,6 +28,10 @@ Please post it in the GitHub issue tracker here: https://github.com/strangerstud
 Please visit our premium support site at http://www.paidmembershipspro.com for more documentation and our support forums.
 
 == Changelog ==
+= 1.2.2 - 2026-05-15 =
+* BUG FIX: Fixed an issue where imported members were expiring one full day early because their end date was stored with a `00:00:00` time and the daily expiration cron cancelled them at the start of that day. End dates without an explicit time are now padded to `23:59:59` to match PMPro core's checkout behavior. #74 (@camilolunacom)
+* BUG FIX: Fixed an issue where error log line numbers reset to 1 at the start of each batch during batched imports, making it hard to tell which CSV row produced each error. The line numbers now track the absolute file row across all batches. #73 (@JarrydLong)
+
 = 1.2.1 - 2026-03-19 =
 * ENHANCEMENT: Added additional aliases for subscription and payment ID's.
 * BUG FIX: Fixed an issue where Custom User Meta fields were not correctly importing.
