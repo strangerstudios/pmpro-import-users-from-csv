@@ -413,6 +413,7 @@ class PMPro_Import_Users_From_CSV {
 				// resetting position transients?
 				if ( ! empty( $_REQUEST['reset'] ) ) {
 					delete_transient( 'pmproiucsv_' . $filename );
+					delete_transient( 'pmproiucsv_rowoffset_' . $filename );
 				}
 				?>
 				<div id="pmproiucsv_result" style="display:none;"></div>
@@ -570,10 +571,11 @@ class PMPro_Import_Users_From_CSV {
 			// delete file
 			unlink( $import_dir . $filename );
 
-			// delete position, mapping, and error transients
+			// delete position, mapping, error, and row offset transients
 			delete_transient( 'pmproiucsv_' . $filename );
 			delete_transient( 'pmproiucsv_map_' . $filename );
 			delete_transient( 'pmproiucsv_errors_' . $filename );
+			delete_transient( 'pmproiucsv_rowoffset_' . $filename );
 		}
 
 		// Some users imported?
@@ -649,8 +651,20 @@ class PMPro_Import_Users_From_CSV {
 		$file_handle = fopen( $filename, 'r' );
 		$csv_reader  = new ReadCSV( $file_handle, PMPROIUCSV_CSV_DELIMITER, "\xEF\xBB\xBF" ); // Skip any UTF-8 byte order mark.
 
-		$first = true;
-		$rkey  = 0;
+		$first       = true;
+		$rkey        = 0;
+		$batch_count = 0;
+
+		// For partial/batched imports, resume the absolute row counter from previous batches
+		// so that error log line numbers reflect the true position in the file. $batch_count
+		// stays at 0 each batch so the per-batch break limit ($per_partial) still applies.
+		if ( ! empty( $partial ) ) {
+			$saved_row_offset = get_transient( 'pmproiucsv_rowoffset_' . basename( $filename ) );
+			if ( $saved_row_offset !== false ) {
+				$rkey = (int) $saved_row_offset;
+			}
+		}
+
 		while ( ( $line = $csv_reader->get_row() ) !== null ) {
 
 			// If the first line is empty, abort
@@ -732,6 +746,7 @@ class PMPro_Import_Users_From_CSV {
 				$error = new WP_Error( 'invalid_email', $error_message );
 				$errors[ $rkey ] = $error;
 				$rkey++;
+				$batch_count++;
 				continue;
 			}
 
@@ -828,13 +843,15 @@ class PMPro_Import_Users_From_CSV {
 			}
 
 			$rkey++;
+			$batch_count++;
 
 			// if doing a partial import, save our spot and break
-			if ( ! empty( $partial ) && $rkey ) {
+			if ( ! empty( $partial ) && $batch_count ) {
 				$position = $csv_reader->get_position();
 				set_transient( 'pmproiucsv_' . basename( $filename ), $position, DAY_IN_SECONDS * 2 );
+				set_transient( 'pmproiucsv_rowoffset_' . basename( $filename ), $rkey, DAY_IN_SECONDS * 2 );
 
-				if ( $rkey > $per_partial - 1 ) {
+				if ( $batch_count > $per_partial - 1 ) {
 					break;
 				}
 			}
