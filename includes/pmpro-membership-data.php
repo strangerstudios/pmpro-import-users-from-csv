@@ -117,7 +117,13 @@ function pmproiucsv_is_iu_post_user_import($user_id)
 	}
 
 	if ( ! empty( $membership_enddate ) ) {
-		$membership_enddate = date( 'Y-m-d', strtotime( $membership_enddate, current_time( 'timestamp' ) ) );
+		// If the CSV value did not include an explicit time, pad to end-of-day so the user keeps
+		// access through the final day, matching PMPro core checkout behavior (includes/checkout.php).
+		// Otherwise the row is stored with 00:00:00 and the daily expiration cron cancels the user
+		// at the start of that day — effectively a day early.
+		$enddate_has_time   = (bool) preg_match( '/\d{1,2}:\d{2}/', $membership_enddate );
+		$enddate_format     = $enddate_has_time ? 'Y-m-d H:i:s' : 'Y-m-d 23:59:59';
+		$membership_enddate = date( $enddate_format, strtotime( $membership_enddate, current_time( 'timestamp' ) ) );
 	} else {
 		$membership_enddate = '';
 	}
