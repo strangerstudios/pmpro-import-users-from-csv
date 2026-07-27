@@ -819,6 +819,10 @@ class PMPro_Import_Users_From_CSV {
 						}
 
 						$metavalue = maybe_unserialize( $metavalue );
+						// Multi-value PMPro User Fields need arrays, not CSV strings.
+						if ( function_exists( 'pmproiucsv_normalize_user_field_meta_value' ) ) {
+							$metavalue = pmproiucsv_normalize_user_field_meta_value( $metavalue, $metakey );
+						}
 						update_user_meta( $user_id, $metakey, $metavalue );
 					}
 				}

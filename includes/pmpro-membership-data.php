@@ -388,3 +388,55 @@ function pmproiucsv_required_pmpro_import_headers( $required_headers ) {
 	return $required_headers;
 }
 add_filter( 'pmproiucsv_required_import_headers', 'pmproiucsv_required_pmpro_import_headers', 10, 1 );
+
+/**
+ * Convert multi-value User Field CSV cells into arrays before saving meta.
+ *
+ * Members List export joins checkbox_grouped / multiselect / select2 values with
+ * commas. Import must store those as arrays so the profile UI can check the
+ * matching options (wrapping a CSV string in array() leaves one unmatchable element).
+ *
+ * @since TBD
+ *
+ * @param mixed  $metavalue Value from the CSV cell (after maybe_unserialize).
+ * @param string $metakey   User meta key / field name.
+ * @return mixed Normalized value.
+ */
+function pmproiucsv_normalize_user_field_meta_value( $metavalue, $metakey ) {
+	if ( ! is_string( $metavalue ) || '' === $metavalue ) {
+		return $metavalue;
+	}
+
+	if ( ! class_exists( 'PMPro_Field_Group' ) ) {
+		return $metavalue;
+	}
+
+	$field = PMPro_Field_Group::get_field( $metakey );
+	if ( empty( $field ) ) {
+		return $metavalue;
+	}
+
+	// Prefer core helper when present; keep a local type check for older PMPro.
+	$is_multi = false;
+	if ( method_exists( $field, 'stores_array_values' ) ) {
+		$is_multi = $field->stores_array_values();
+	} else {
+		$is_multi = in_array( $field->type, array( 'checkbox_grouped', 'multiselect', 'select2' ), true )
+			|| ( 'select' === $field->type && ! empty( $field->multiple ) );
+	}
+
+	if ( ! $is_multi ) {
+		return $metavalue;
+	}
+
+	if ( method_exists( $field, 'get_values_as_array' ) ) {
+		return $field->get_values_as_array( $metavalue );
+	}
+
+	if ( false !== strpos( $metavalue, ',' ) ) {
+		$parts = array_map( 'trim', explode( ',', $metavalue ) );
+		return array_values( array_filter( $parts, 'strlen' ) );
+	}
+
+	return array( $metavalue );
+}
