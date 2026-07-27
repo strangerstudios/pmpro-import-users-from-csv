@@ -63,6 +63,9 @@ class PMPro_Import_Users_From_CSV {
 			require_once __DIR__ . '/includes/import-users-from-csv.wpcli.php';
 		}
 
+		// Always load — used during import; safe when PMPro is inactive.
+		require_once __DIR__ . '/includes/normalize-user-field-meta.php';
+
 		// Enable support for Paid Memberships Pro.
 		if ( defined( 'PMPRO_VERSION' ) ) {
 			require_once __DIR__ . '/includes/pmpro-membership-data.php';
@@ -820,9 +823,7 @@ class PMPro_Import_Users_From_CSV {
 
 						$metavalue = maybe_unserialize( $metavalue );
 						// Multi-value PMPro User Fields need arrays, not CSV strings.
-						if ( defined( 'PMPRO_VERSION' ) ) {
-							$metavalue = pmproiucsv_normalize_user_field_meta_value( $metavalue, $metakey );
-						}
+						$metavalue = pmproiucsv_normalize_user_field_meta_value( $metavalue, $metakey );
 						update_user_meta( $user_id, $metakey, $metavalue );
 					}
 				}
