@@ -812,6 +812,7 @@ class PMPro_Import_Users_From_CSV {
 			} else {
 				// If no error, let's update the user meta too!
 				if ( $usermeta ) {
+					$pmpro_can_normalize = function_exists( 'pmproiucsv_normalize_user_field_meta_value' );
 					foreach ( $usermeta as $metakey => $metavalue ) {
 						// If the value of the meta key is empty, lets not do anything but skip it.
 						if ( empty( $metavalue ) && $metavalue !== '0' ) {
@@ -819,6 +820,12 @@ class PMPro_Import_Users_From_CSV {
 						}
 
 						$metavalue = maybe_unserialize( $metavalue );
+
+						// Try to run through the PMPro normalize function for User Fields.
+						if ( $pmpro_can_normalize ) {
+							$metavalue = pmproiucsv_normalize_user_field_meta_value( $metavalue, $metakey );
+						}
+
 						update_user_meta( $user_id, $metakey, $metavalue );
 					}
 				}

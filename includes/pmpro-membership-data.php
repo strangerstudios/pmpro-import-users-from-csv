@@ -388,3 +388,71 @@ function pmproiucsv_required_pmpro_import_headers( $required_headers ) {
 	return $required_headers;
 }
 add_filter( 'pmproiucsv_required_import_headers', 'pmproiucsv_required_pmpro_import_headers', 10, 1 );
+
+/**
+ * Normalize multi-value User Field CSV cells to arrays.
+ *
+ * @since TBD
+ *
+ * @param mixed  $metavalue Value from the CSV cell (after maybe_unserialize).
+ * @param string $metakey   User meta key / field name.
+ * @return mixed Normalized value.
+ */
+function pmproiucsv_normalize_user_field_meta_value( $metavalue, $metakey ) {
+	if ( ! is_string( $metavalue ) || '' === $metavalue ) {
+		return $metavalue;
+	}
+
+	// Make sure PMPro Field Group class is available before using it.
+	if ( ! class_exists( 'PMPro_Field_Group' ) ) {
+		return $metavalue;
+	}
+
+	$field = PMPro_Field_Group::get_field( $metakey );
+	if ( empty( $field ) ) {
+		return $metavalue;
+	}
+
+	// Prefer core helper when present; keep a local type check for older PMPro.
+	$is_multi = false;
+	if ( method_exists( $field, 'stores_array_values' ) ) {
+		$is_multi = $field->stores_array_values();
+	} else {
+		$is_multi = in_array( $field->type, array( 'checkbox_grouped', 'multiselect', 'select2' ), true )
+			|| ( 'select' === $field->type && ! empty( $field->multiple ) );
+	}
+
+	if ( ! $is_multi ) {
+		return $metavalue;
+	}
+
+	if ( method_exists( $field, 'get_values_as_array' ) ) {
+		$values = $field->get_values_as_array( $metavalue );
+	} else {
+		// Fallback matches Members List export (comma-joined option keys; keys must not contain commas).
+		$values = array_map( 'trim', explode( ',', $metavalue ) );
+		$values = array_values( array_filter( $values, 'strlen' ) );
+	}
+
+	// Nothing to map against, so store the split values as-is.
+	if ( empty( $field->options ) || ! is_array( $field->options ) ) {
+		return $values;
+	}
+
+	// Options entered in the User Fields UI without a "key:label" pair get numeric keys, so a
+	// hand-written CSV using the visible labels would store values that match no option. Map any
+	// value that isn't already an option key back to its key so both forms import correctly.
+	// Values matching neither are left alone so they stay visible and correctable.
+	foreach ( $values as $index => $value ) {
+		if ( array_key_exists( $value, $field->options ) ) {
+			continue;
+		}
+
+		$key = array_search( $value, $field->options, true );
+		if ( false !== $key ) {
+			$values[ $index ] = (string) $key;
+		}
+	}
+
+	return $values;
+}
