@@ -2,14 +2,14 @@
 # This file is distributed under the same license as the Paid Memberships Pro - Import Members From CSV Add On plugin.
 msgid ""
 msgstr ""
-"Project-Id-Version: Paid Memberships Pro - Import Members From CSV Add On 1.2.2\n"
+"Project-Id-Version: Paid Memberships Pro - Import Members From CSV Add On 1.3\n"
 "Report-Msgid-Bugs-To: info@paidmembershipspro.com\n"
 "Last-Translator: Paid Memberships Pro <info@paidmembershipspro.com>\n"
 "Language-Team: Paid Memberships Pro <info@paidmembershipspro.com>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-05-15T17:21:28+00:00\n"
+"POT-Creation-Date: 2026-07-31T07:19:37+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: pmpro-import-users-from-csv\n"
@@ -198,230 +198,230 @@ msgstr ""
 msgid "Invalid email address: %s"
 msgstr ""
 
-#: pmpro-import-users-from-csv.php:885
+#: pmpro-import-users-from-csv.php:892
 msgid "WordPress User Fields"
 msgstr ""
 
-#: pmpro-import-users-from-csv.php:887
+#: pmpro-import-users-from-csv.php:894
 msgid "Email Address"
 msgstr ""
 
-#: pmpro-import-users-from-csv.php:888
+#: pmpro-import-users-from-csv.php:895
 msgid "Username"
 msgstr ""
 
-#: pmpro-import-users-from-csv.php:889
+#: pmpro-import-users-from-csv.php:896
 msgid "Password"
 msgstr ""
 
-#: pmpro-import-users-from-csv.php:890
+#: pmpro-import-users-from-csv.php:897
 msgid "First Name"
 msgstr ""
 
-#: pmpro-import-users-from-csv.php:891
+#: pmpro-import-users-from-csv.php:898
 msgid "Last Name"
 msgstr ""
 
-#: pmpro-import-users-from-csv.php:892
+#: pmpro-import-users-from-csv.php:899
 msgid "Display Name"
 msgstr ""
 
-#: pmpro-import-users-from-csv.php:893
+#: pmpro-import-users-from-csv.php:900
 msgid "Nicename / Slug"
 msgstr ""
 
-#: pmpro-import-users-from-csv.php:894
+#: pmpro-import-users-from-csv.php:901
 msgid "Website URL"
 msgstr ""
 
-#: pmpro-import-users-from-csv.php:895
+#: pmpro-import-users-from-csv.php:902
 msgid "Registration Date"
 msgstr ""
 
-#: pmpro-import-users-from-csv.php:896
+#: pmpro-import-users-from-csv.php:903
 msgid "Bio / Description"
 msgstr ""
 
-#: pmpro-import-users-from-csv.php:897
+#: pmpro-import-users-from-csv.php:904
 msgid "Nickname"
 msgstr ""
 
-#: pmpro-import-users-from-csv.php:898
+#: pmpro-import-users-from-csv.php:905
 msgid "User Role"
 msgstr ""
 
-#: pmpro-import-users-from-csv.php:899
+#: pmpro-import-users-from-csv.php:906
 msgid "User ID"
 msgstr ""
 
-#: pmpro-import-users-from-csv.php:906
+#: pmpro-import-users-from-csv.php:913
 msgid "PMPro Membership Fields"
 msgstr ""
 
-#: pmpro-import-users-from-csv.php:908
+#: pmpro-import-users-from-csv.php:915
 msgid "Membership Level ID"
 msgstr ""
 
-#: pmpro-import-users-from-csv.php:909
+#: pmpro-import-users-from-csv.php:916
 msgid "Membership Status"
 msgstr ""
 
-#: pmpro-import-users-from-csv.php:910
+#: pmpro-import-users-from-csv.php:917
 msgid "Start Date"
 msgstr ""
 
-#: pmpro-import-users-from-csv.php:911
+#: pmpro-import-users-from-csv.php:918
 msgid "End Date"
 msgstr ""
 
-#: pmpro-import-users-from-csv.php:912
+#: pmpro-import-users-from-csv.php:919
 msgid "Billing Amount"
 msgstr ""
 
-#: pmpro-import-users-from-csv.php:913
+#: pmpro-import-users-from-csv.php:920
 msgid "Billing Cycle Number"
 msgstr ""
 
-#: pmpro-import-users-from-csv.php:914
+#: pmpro-import-users-from-csv.php:921
 msgid "Billing Cycle Period"
 msgstr ""
 
-#: pmpro-import-users-from-csv.php:915
+#: pmpro-import-users-from-csv.php:922
 msgid "Initial Payment"
 msgstr ""
 
-#: pmpro-import-users-from-csv.php:916
+#: pmpro-import-users-from-csv.php:923
 msgid "Billing Limit"
 msgstr ""
 
-#: pmpro-import-users-from-csv.php:917
+#: pmpro-import-users-from-csv.php:924
 msgid "Trial Amount"
 msgstr ""
 
-#: pmpro-import-users-from-csv.php:918
+#: pmpro-import-users-from-csv.php:925
 msgid "Trial Limit"
 msgstr ""
 
-#: pmpro-import-users-from-csv.php:919
+#: pmpro-import-users-from-csv.php:926
 msgid "Discount Code"
 msgstr ""
 
-#: pmpro-import-users-from-csv.php:920
+#: pmpro-import-users-from-csv.php:927
 msgid "Discount Code ID"
 msgstr ""
 
-#: pmpro-import-users-from-csv.php:921
+#: pmpro-import-users-from-csv.php:928
 msgid "Payment Gateway"
 msgstr ""
 
-#: pmpro-import-users-from-csv.php:922
+#: pmpro-import-users-from-csv.php:929
 msgid "Subscription Transaction ID"
 msgstr ""
 
-#: pmpro-import-users-from-csv.php:923
+#: pmpro-import-users-from-csv.php:930
 msgid "Payment Transaction ID"
 msgstr ""
 
-#: pmpro-import-users-from-csv.php:924
+#: pmpro-import-users-from-csv.php:931
 msgid "Order Status"
 msgstr ""
 
-#: pmpro-import-users-from-csv.php:925
+#: pmpro-import-users-from-csv.php:932
 msgid "Affiliate ID"
 msgstr ""
 
-#: pmpro-import-users-from-csv.php:926
+#: pmpro-import-users-from-csv.php:933
 msgid "Order Timestamp"
 msgstr ""
 
-#: pmpro-import-users-from-csv.php:1072
+#: pmpro-import-users-from-csv.php:1079
 msgid "Could not read CSV file headers. Please try uploading your file again."
 msgstr ""
 
-#: pmpro-import-users-from-csv.php:1096
+#: pmpro-import-users-from-csv.php:1103
 msgid "Warning:"
 msgstr ""
 
-#: pmpro-import-users-from-csv.php:1096
+#: pmpro-import-users-from-csv.php:1103
 msgid "It looks like your CSV may be missing a header row. The first row appears to contain user data rather than column names, which will cause the import to fail. Please add a header row to your CSV file and re-upload."
 msgstr ""
 
-#: pmpro-import-users-from-csv.php:1103
+#: pmpro-import-users-from-csv.php:1110
 msgid "Map CSV Fields"
 msgstr ""
 
-#: pmpro-import-users-from-csv.php:1104
+#: pmpro-import-users-from-csv.php:1111
 msgid "Match each column from your CSV file to the corresponding WordPress or membership field. Columns set to \"Skip\" will not be imported."
 msgstr ""
 
-#: pmpro-import-users-from-csv.php:1115
+#: pmpro-import-users-from-csv.php:1122
 msgid "CSV Column"
 msgstr ""
 
-#: pmpro-import-users-from-csv.php:1116
+#: pmpro-import-users-from-csv.php:1123
 msgid "Sample Value"
 msgstr ""
 
-#: pmpro-import-users-from-csv.php:1117
+#: pmpro-import-users-from-csv.php:1124
 msgid "Maps To"
 msgstr ""
 
-#: pmpro-import-users-from-csv.php:1123
+#: pmpro-import-users-from-csv.php:1130
 #, php-format
 msgid "Column %d"
 msgstr ""
 
-#: pmpro-import-users-from-csv.php:1138
+#: pmpro-import-users-from-csv.php:1145
 msgid "— Skip Column —"
 msgstr ""
 
-#: pmpro-import-users-from-csv.php:1148
+#: pmpro-import-users-from-csv.php:1155
 msgid "Custom User Meta"
 msgstr ""
 
-#: pmpro-import-users-from-csv.php:1151
+#: pmpro-import-users-from-csv.php:1158
 #, php-format
 msgid "Will be saved as meta key: %s"
 msgstr ""
 
-#: pmpro-import-users-from-csv.php:1172
+#: pmpro-import-users-from-csv.php:1179
 msgid "Confirm Mapping and Import"
 msgstr ""
 
-#: pmpro-import-users-from-csv.php:1175
+#: pmpro-import-users-from-csv.php:1182
 msgid "Cancel"
 msgstr ""
 
-#: pmpro-import-users-from-csv.php:1204
+#: pmpro-import-users-from-csv.php:1211
 msgid "Import Users From CSV is no longer required to import users and members with Paid Memberships Pro. The plugin has been deactivated."
 msgstr ""
 
-#: pmpro-import-users-from-csv.php:1220
+#: pmpro-import-users-from-csv.php:1227
 #, php-format
 msgid "BEGIN %s"
 msgstr ""
 
-#: pmpro-import-users-from-csv.php:1225
+#: pmpro-import-users-from-csv.php:1232
 #, php-format
 msgid "[Line %1$s] %2$s"
 msgstr ""
 
-#: pmpro-import-users-from-csv.php:1238
+#: pmpro-import-users-from-csv.php:1245
 msgid "Run Import"
 msgstr ""
 
-#: pmpro-import-users-from-csv.php:1280
+#: pmpro-import-users-from-csv.php:1287
 msgid "View Documentation"
 msgstr ""
 
-#: pmpro-import-users-from-csv.php:1280
+#: pmpro-import-users-from-csv.php:1287
 msgid "Docs"
 msgstr ""
 
-#: pmpro-import-users-from-csv.php:1281
+#: pmpro-import-users-from-csv.php:1288
 msgid "Visit Customer Support Forum"
 msgstr ""
 
-#: pmpro-import-users-from-csv.php:1281
+#: pmpro-import-users-from-csv.php:1288
 msgid "Support"
 msgstr ""
