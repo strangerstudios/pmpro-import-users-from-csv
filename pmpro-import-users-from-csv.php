@@ -255,7 +255,7 @@ class PMPro_Import_Users_From_CSV {
 		}
 
 		// Ensure all required fields are mapped before proceeding.
-		$required_fields = apply_filters( 'pmproiucsv_required_import_headers', array( 'user_email' ) );
+		$required_fields = apply_filters( 'pmproiucsv_required_import_headers', array() );
 		$mapped_values   = array_values( $field_map );
 		foreach ( $required_fields as $required_field ) {
 			if ( ! in_array( $required_field, $mapped_values, true ) ) {
@@ -267,6 +267,18 @@ class PMPro_Import_Users_From_CSV {
 					)
 				);
 			}
+		}
+
+		// At least one identifying field must be mapped so users can be created and/or matched.
+		$identifier_fields = apply_filters( 'pmproiucsv_identifier_import_headers', array( 'user_email', 'user_login', 'ID' ) );
+		if ( ! array_intersect( $identifier_fields, $mapped_values ) ) {
+			wp_die(
+				sprintf(
+					/* translators: %s: comma-separated list of identifier field names */
+					esc_html__( 'Import cancelled: at least one identifying field must be mapped to a column before importing (%s).', 'pmpro-import-users-from-csv' ),
+					esc_html( implode( ', ', $identifier_fields ) )
+				)
+			);
 		}
 
 		// Verify the file exists before storing the mapping transient.
