@@ -957,17 +957,18 @@ class PMPro_Import_Users_From_CSV {
 	public static function auto_detect_field( $header ) {
 		$header_lower = strtolower( trim( $header ) );
 
-		// Build flat list of all known field keys.
+		// Map of lowercased field key => canonical field key (e.g. 'id' => 'ID').
 		$all_field_keys = array();
 		foreach ( self::get_mapping_fields() as $group ) {
 			foreach ( $group['fields'] as $key => $label ) {
-				$all_field_keys[] = strtolower( $key );
+				$all_field_keys[ strtolower( $key ) ] = $key;
 			}
 		}
 
 		// Direct match (CSV column already uses the field key, e.g. "user_email").
-		if ( in_array( $header_lower, $all_field_keys, true ) ) {
-			return $header_lower;
+		// Return the canonical key so mixed-case keys like 'ID' map correctly.
+		if ( isset( $all_field_keys[ $header_lower ] ) ) {
+			return $all_field_keys[ $header_lower ];
 		}
 
 		/**
@@ -979,6 +980,8 @@ class PMPro_Import_Users_From_CSV {
 		 * @param array $aliases An array of column header aliases and the field type.
 		 */
 		$aliases = apply_filters( 'pmproiucsv_field_aliases', array(
+			'user_id'          => 'ID',
+			'user id'          => 'ID',
 			'email'            => 'user_email',
 			'e-mail'           => 'user_email',
 			'mail'             => 'user_email',
