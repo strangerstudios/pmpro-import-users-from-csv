@@ -957,17 +957,18 @@ class PMPro_Import_Users_From_CSV {
 	public static function auto_detect_field( $header ) {
 		$header_lower = strtolower( trim( $header ) );
 
-		// Build flat list of all known field keys.
+		// Build a map of lowercased field key => original-case field key.
 		$all_field_keys = array();
 		foreach ( self::get_mapping_fields() as $group ) {
 			foreach ( $group['fields'] as $key => $label ) {
-				$all_field_keys[] = strtolower( $key );
+				$all_field_keys[ strtolower( $key ) ] = $key;
 			}
 		}
 
 		// Direct match (CSV column already uses the field key, e.g. "user_email").
-		if ( in_array( $header_lower, $all_field_keys, true ) ) {
-			return $header_lower;
+		// Return the original-case key (e.g. "ID") so it matches the mapping dropdown's option value.
+		if ( isset( $all_field_keys[ $header_lower ] ) ) {
+			return $all_field_keys[ $header_lower ];
 		}
 
 		/**
