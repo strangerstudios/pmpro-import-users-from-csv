@@ -447,6 +447,7 @@ class PMPro_Import_Users_From_CSV {
 							var ai_filename = <?php echo json_encode( $filename ); ?>;
 							var ai_users_update = <?php echo json_encode( $users_update ); ?>;
 							var ai_new_user_notification = <?php echo json_encode( $new_user_notification ); ?>;
+							var ai_nonce = <?php echo json_encode( wp_create_nonce( 'pmproiucsv_import' ) ); ?>;
 							var ai_error_log_url = <?php echo json_encode( self::$log_dir_url ); ?>;
 						</script>
 					</div> <!-- end pmpro_section_inside -->
@@ -522,6 +523,14 @@ class PMPro_Import_Users_From_CSV {
 	 * @since ?
 	 */
 	public static function wp_ajax_pmpro_import_users_from_csv() {
+		// Check the nonce.
+		check_ajax_referer( 'pmproiucsv_import' );
+
+		// Check for capability.
+		if ( ! current_user_can( 'create_users' ) ) {
+			die( 'You do not have permission to import users.' );
+		}
+
 		// check for filename
 		if ( empty( $_REQUEST['filename'] ) ) {
 			die( 'No file name given.' );
