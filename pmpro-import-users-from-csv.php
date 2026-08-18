@@ -528,7 +528,7 @@ class PMPro_Import_Users_From_CSV {
 
 		// Check for capability.
 		if ( ! current_user_can( 'create_users' ) ) {
-			die( 'You do not have permission to import users.' );
+			die( 'noperm' );
 		}
 
 		// check for filename

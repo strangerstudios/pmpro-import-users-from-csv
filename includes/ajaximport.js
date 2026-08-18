@@ -48,6 +48,11 @@ jQuery(document).ready(function () {
                         document.title = $title;
                         jQuery('#pmproiucsv_return_home').show();
                     }
+                    else if (responseHTML == 'noperm') {
+                        $status.html($status.html() + '\nYou do not have permission to run this import. The import has stopped.\n');
+                        document.title = $title;
+                        jQuery('#pmproiucsv_return_home').show();
+                    }
                     else if (responseHTML == 'nofile') {
                         $status.html($status.html() + '\nCould not find the file ' + ai_filename + '. Maybe it has already been imported.');
                         document.title = $title;
