@@ -293,14 +293,23 @@ function pmproiucsv_is_iu_post_user_import($user_id)
 		$order->subtotal = $membership_initial_payment;
 		$order->total = $membership_initial_payment;
 
-		$order->saveOrder();
+		if(!empty($membership_timestamp))
+		{
+			$timestamp = strtotime($membership_timestamp, current_time('timestamp'));
+			$order->timestamp = $timestamp;
+		}
 
+		$order->saveOrder();
+		/*
+		// The updateTimestamp method should not be used any more, per class.mmberorder.php and, in fact, it doesn't work.
 		// Maybe update timestamp of order if the import includes the membership_timestamp.
+		// Move the code up.
 		if(!empty($membership_timestamp))
 		{
 			$timestamp = strtotime($membership_timestamp, current_time('timestamp'));
 			$order->updateTimeStamp(date("Y", $timestamp), date("m", $timestamp), date("d", $timestamp), date("H:i:s", $timestamp));
 		}
+		*/
 	} else {
 		$order = null; // No order created, so set to null for the action below.
 	}
