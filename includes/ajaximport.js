@@ -37,7 +37,7 @@ jQuery(document).ready(function () {
             jQuery.ajax({
                 url: ajaxurl, type: 'GET', timeout: 30000,
                 dataType: 'html',
-                data: 'action=pmpro_import_users_from_csv&filename=' + ai_filename + '&users_update=' + ai_users_update + '&new_user_notification=' + ai_new_user_notification + '&_ajax_nonce=' + ai_nonce,
+                data: 'action=pmpro_import_users_from_csv&filename=' + ai_filename + '&users_update=' + ai_users_update + '&new_user_notification=' + ai_new_user_notification + '&skip_existing_members_same_level=' + ai_skip_existing_members_same_level + '&_ajax_nonce=' + ai_nonce,
                 error: function (xml) {
                     alert('Error with import. Try refreshing.');
                     jQuery('#pmproiucsv_return_home').show();
