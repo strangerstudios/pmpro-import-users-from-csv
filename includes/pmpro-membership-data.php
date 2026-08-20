@@ -111,7 +111,7 @@ function pmproiucsv_is_iu_post_user_import($user_id)
 
 	// Fix date formats.
 	if ( ! empty( $membership_startdate ) ) {
-		$membership_startdate = date( 'Y-m-d', strtotime( $membership_startdate, current_time( 'timestamp' ) ) );
+		$membership_startdate = date( 'Y-m-d H:i:s', strtotime( $membership_startdate, current_time( 'timestamp' ) ) );
 	} else {
 		$membership_startdate = current_time( 'mysql' );
 	}
@@ -129,7 +129,10 @@ function pmproiucsv_is_iu_post_user_import($user_id)
 	}
 
 	if ( ! empty( $membership_timestamp ) ) {
-		$membership_timestamp = date( 'Y-m-d', strtotime($membership_timestamp, current_time( 'timestamp' ) ) );
+		// Order timestamps are stored in GMT, so convert the local CSV value before saving.
+		$membership_timestamp = (int) get_gmt_from_date( date( 'Y-m-d H:i:s', strtotime( $membership_timestamp, current_time( 'timestamp' ) ) ), 'U' );
+	} else {
+		$membership_timestamp = '';
 	}
 
 	if ( ! empty( $membership_discount_code ) && empty( $membership_code_id ) ) {
@@ -292,15 +295,11 @@ function pmproiucsv_is_iu_post_user_import($user_id)
 		$order->status = $order_status;
 		$order->subtotal = $membership_initial_payment;
 		$order->total = $membership_initial_payment;
+		if ( ! empty( $membership_timestamp ) ) {
+			$order->timestamp = $membership_timestamp;
+		} // If empty, saveOrder() defaults to time of import.
 
 		$order->saveOrder();
-
-		// Maybe update timestamp of order if the import includes the membership_timestamp.
-		if(!empty($membership_timestamp))
-		{
-			$timestamp = strtotime($membership_timestamp, current_time('timestamp'));
-			$order->updateTimeStamp(date("Y", $timestamp), date("m", $timestamp), date("d", $timestamp), date("H:i:s", $timestamp));
-		}
 	} else {
 		$order = null; // No order created, so set to null for the action below.
 	}

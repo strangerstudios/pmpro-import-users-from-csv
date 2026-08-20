@@ -3,7 +3,7 @@
 Plugin Name: Paid Memberships Pro - Import Members From CSV Add On
 Plugin URI:  https://www.paidmembershipspro.com/add-ons/pmpro-import-users-csv/
 Description: Import your users or members list to WordPress and automatically assign membership levels in PMPro.
-Version: 1.3
+Version: 1.4
 Author: Paid Memberships Pro
 Author URI: https://www.paidmembershipspro.com
 Text Domain: pmpro-import-users-from-csv
@@ -12,6 +12,10 @@ Domain Path: /languages
 
 if ( ! defined( 'PMPROIUCSV_CSV_DELIMITER' ) ) {
 	define( 'PMPROIUCSV_CSV_DELIMITER', ',' );
+}
+
+if ( ! defined( 'PMPROIUCSV_VERSION' ) ) {
+	define( 'PMPROIUCSV_VERSION', '1.4' );
 }
 
 /**
@@ -104,7 +108,7 @@ class PMPro_Import_Users_From_CSV {
 			return;
 		}
 
-		wp_enqueue_script( 'pmpro-import-users-from-csv', plugin_dir_url( __FILE__ ) . 'includes/ajaximport.js' );
+		wp_enqueue_script( 'pmpro-import-users-from-csv', plugin_dir_url( __FILE__ ) . 'includes/ajaximport.js', array(), PMPROIUCSV_VERSION );
 
 		// localize the script
 		wp_localize_script(
@@ -140,6 +144,7 @@ class PMPro_Import_Users_From_CSV {
 
 		$users_update          = isset( $_REQUEST['users_update'] ) ? $_REQUEST['users_update'] : false;
 		$new_user_notification = isset( $_REQUEST['new_user_notification'] ) ? $_REQUEST['new_user_notification'] : false;
+		$skip_existing_members_same_level = isset( $_REQUEST['skip_existing_members_same_level'] ) ? $_REQUEST['skip_existing_members_same_level'] : false;
 
 		// Always save the uploaded file so we can read headers on the mapping screen.
 		$import_dir = self::$import_dir_path;
@@ -215,6 +220,7 @@ class PMPro_Import_Users_From_CSV {
 				'filename'              => $filename,
 				'users_update'          => $users_update,
 				'new_user_notification' => $new_user_notification,
+				'skip_existing_members_same_level' => $skip_existing_members_same_level,
 			),
 			admin_url( 'users.php' )
 		);
@@ -243,6 +249,7 @@ class PMPro_Import_Users_From_CSV {
 		$filename              = sanitize_file_name( wp_unslash( $_REQUEST['filename'] ) );
 		$users_update          = isset( $_REQUEST['users_update'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['users_update'] ) ) : false;
 		$new_user_notification = isset( $_REQUEST['new_user_notification'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['new_user_notification'] ) ) : false;
+		$skip_existing_members_same_level = isset( $_REQUEST['skip_existing_members_same_level'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['skip_existing_members_same_level'] ) ) : false;
 
 		$field_map = array();
 
@@ -288,6 +295,7 @@ class PMPro_Import_Users_From_CSV {
 				'filename'              => $filename,
 				'users_update'          => $users_update,
 				'new_user_notification' => $new_user_notification,
+				'skip_existing_members_same_level' => $skip_existing_members_same_level,
 			),
 			admin_url( 'users.php' )
 		);
@@ -409,6 +417,7 @@ class PMPro_Import_Users_From_CSV {
 				$filename              = sanitize_file_name( $_REQUEST['filename'] );
 				$users_update          = isset( $_REQUEST['users_update'] ) ? $_REQUEST['users_update'] : false;
 				$new_user_notification = isset( $_REQUEST['new_user_notification'] ) ? $_REQUEST['new_user_notification'] : false;
+				$skip_existing_members_same_level = isset( $_REQUEST['skip_existing_members_same_level'] ) ? $_REQUEST['skip_existing_members_same_level'] : '';
 
 				// resetting position transients?
 				if ( ! empty( $_REQUEST['reset'] ) ) {
@@ -447,6 +456,8 @@ class PMPro_Import_Users_From_CSV {
 							var ai_filename = <?php echo json_encode( $filename ); ?>;
 							var ai_users_update = <?php echo json_encode( $users_update ); ?>;
 							var ai_new_user_notification = <?php echo json_encode( $new_user_notification ); ?>;
+							var ai_skip_existing_members_same_level = <?php echo json_encode( $skip_existing_members_same_level ); ?>;
+							var ai_nonce = <?php echo json_encode( wp_create_nonce( 'pmproiucsv_import' ) ); ?>;
 							var ai_error_log_url = <?php echo json_encode( self::$log_dir_url ); ?>;
 						</script>
 					</div> <!-- end pmpro_section_inside -->
@@ -522,6 +533,14 @@ class PMPro_Import_Users_From_CSV {
 	 * @since ?
 	 */
 	public static function wp_ajax_pmpro_import_users_from_csv() {
+		// Check the nonce.
+		check_ajax_referer( 'pmproiucsv_import' );
+
+		// Check for capability.
+		if ( ! current_user_can( 'create_users' ) ) {
+			die( 'noperm' );
+		}
+
 		// check for filename
 		if ( empty( $_REQUEST['filename'] ) ) {
 			die( 'No file name given.' );
@@ -957,17 +976,18 @@ class PMPro_Import_Users_From_CSV {
 	public static function auto_detect_field( $header ) {
 		$header_lower = strtolower( trim( $header ) );
 
-		// Build flat list of all known field keys.
+		// Build a map of lowercased field key => original-case field key.
 		$all_field_keys = array();
 		foreach ( self::get_mapping_fields() as $group ) {
 			foreach ( $group['fields'] as $key => $label ) {
-				$all_field_keys[] = strtolower( $key );
+				$all_field_keys[ strtolower( $key ) ] = $key;
 			}
 		}
 
 		// Direct match (CSV column already uses the field key, e.g. "user_email").
-		if ( in_array( $header_lower, $all_field_keys, true ) ) {
-			return $header_lower;
+		// Return the original-case key (e.g. "ID") so it matches the mapping dropdown's option value.
+		if ( isset( $all_field_keys[ $header_lower ] ) ) {
+			return $all_field_keys[ $header_lower ];
 		}
 
 		/**
@@ -1070,6 +1090,7 @@ class PMPro_Import_Users_From_CSV {
 		$filename              = sanitize_file_name( wp_unslash( $_REQUEST['filename'] ) );
 		$users_update          = isset( $_REQUEST['users_update'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['users_update'] ) ) : '';
 		$new_user_notification = isset( $_REQUEST['new_user_notification'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['new_user_notification'] ) ) : '';
+		$skip_existing_members_same_level = isset( $_REQUEST['skip_existing_members_same_level'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['skip_existing_members_same_level'] ) ) : '';
 
 		$csv_data = self::get_csv_sample_data( $filename );
 		$headers  = $csv_data['headers'];
@@ -1115,6 +1136,7 @@ class PMPro_Import_Users_From_CSV {
 					<input type="hidden" name="filename"              value="<?php echo esc_attr( $filename ); ?>">
 					<input type="hidden" name="users_update"          value="<?php echo esc_attr( $users_update ); ?>">
 					<input type="hidden" name="new_user_notification" value="<?php echo esc_attr( $new_user_notification ); ?>">
+					<input type="hidden" name="skip_existing_members_same_level" value="<?php echo esc_attr( $skip_existing_members_same_level ); ?>">
 
 					<table class="widefat striped" id="pmproiucsv-mapping-table">
 						<thead>
