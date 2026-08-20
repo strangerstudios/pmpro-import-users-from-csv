@@ -129,9 +129,10 @@ function pmproiucsv_is_iu_post_user_import($user_id)
 	}
 
 	if ( ! empty( $membership_timestamp ) ) {
-		$membership_timestamp = date( 'Y-m-d H:i:s', strtotime($membership_timestamp, current_time( 'timestamp' ) ) );
+		// Order timestamps are stored in GMT, so convert the local CSV value before saving.
+		$membership_timestamp = (int) get_gmt_from_date( date( 'Y-m-d H:i:s', strtotime( $membership_timestamp, current_time( 'timestamp' ) ) ), 'U' );
 	} else {
-		$membership_timestamp = current_time( 'mysql' );
+		$membership_timestamp = '';
 	}
 
 	if ( ! empty( $membership_discount_code ) && empty( $membership_code_id ) ) {
@@ -294,7 +295,9 @@ function pmproiucsv_is_iu_post_user_import($user_id)
 		$order->status = $order_status;
 		$order->subtotal = $membership_initial_payment;
 		$order->total = $membership_initial_payment;
-		$order->timestamp = $membership_timestamp; // If empty defaults to time of import.
+		if ( ! empty( $membership_timestamp ) ) {
+			$order->timestamp = $membership_timestamp;
+		} // If empty, saveOrder() defaults to time of import.
 
 		$order->saveOrder();
 	} else {
