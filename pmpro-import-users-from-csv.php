@@ -3,7 +3,7 @@
 Plugin Name: Paid Memberships Pro - Import Members From CSV Add On
 Plugin URI:  https://www.paidmembershipspro.com/add-ons/pmpro-import-users-csv/
 Description: Import your users or members list to WordPress and automatically assign membership levels in PMPro.
-Version: 1.3
+Version: 1.4
 Author: Paid Memberships Pro
 Author URI: https://www.paidmembershipspro.com
 Text Domain: pmpro-import-users-from-csv
@@ -12,6 +12,10 @@ Domain Path: /languages
 
 if ( ! defined( 'PMPROIUCSV_CSV_DELIMITER' ) ) {
 	define( 'PMPROIUCSV_CSV_DELIMITER', ',' );
+}
+
+if ( ! defined( 'PMPROIUCSV_VERSION' ) ) {
+	define( 'PMPROIUCSV_VERSION', '1.4' );
 }
 
 /**
@@ -104,7 +108,7 @@ class PMPro_Import_Users_From_CSV {
 			return;
 		}
 
-		wp_enqueue_script( 'pmpro-import-users-from-csv', plugin_dir_url( __FILE__ ) . 'includes/ajaximport.js' );
+		wp_enqueue_script( 'pmpro-import-users-from-csv', plugin_dir_url( __FILE__ ) . 'includes/ajaximport.js', array(), PMPROIUCSV_VERSION );
 
 		// localize the script
 		wp_localize_script(
