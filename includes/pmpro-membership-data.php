@@ -413,6 +413,15 @@ function pmproiucsv_normalize_user_field_meta_value( $metavalue, $metakey ) {
 		return $metavalue;
 	}
 
+	if ( 'date' === $field->type ) {
+		if ( preg_match( '/^\d{4}-\d{2}-\d{2}$/', $metavalue ) ) {
+			return $metavalue;
+		}
+
+		$timestamp = strtotime( $metavalue );
+		return false !== $timestamp ? date( 'Y-m-d', $timestamp ) : $metavalue;
+	}
+
 	// Prefer core helper when present; keep a local type check for older PMPro.
 	$is_multi = false;
 	if ( method_exists( $field, 'stores_array_values' ) ) {
