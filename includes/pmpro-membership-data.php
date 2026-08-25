@@ -389,7 +389,7 @@ function pmproiucsv_required_pmpro_import_headers( $required_headers ) {
 add_filter( 'pmproiucsv_required_import_headers', 'pmproiucsv_required_pmpro_import_headers', 10, 1 );
 
 /**
- * Normalize multi-value User Field CSV cells to arrays.
+ * Normalize multi-value User Field CSV cells to arrays and date field values to Y-m-d.
  *
  * @since TBD
  *
@@ -409,6 +409,24 @@ function pmproiucsv_normalize_user_field_meta_value( $metavalue, $metakey ) {
 
 	$field = PMPro_Field_Group::get_field( $metakey );
 	if ( empty( $field ) ) {
+		return $metavalue;
+	}
+
+	if ( 'date' === $field->type ) {
+		if ( preg_match( '/^\d{4}-\d{2}-\d{2}$/', $metavalue ) ) {
+			return $metavalue;
+		}
+
+		// date_parse() flags calendar-invalid dates (e.g. 2/30/2022) that strtotime() would silently roll forward.
+		$parsed = date_parse( $metavalue );
+		if (
+			empty( $parsed['error_count'] ) && empty( $parsed['warning_count'] )
+			&& false !== $parsed['year'] && false !== $parsed['month'] && false !== $parsed['day']
+			&& checkdate( $parsed['month'], $parsed['day'], $parsed['year'] )
+		) {
+			return sprintf( '%04d-%02d-%02d', $parsed['year'], $parsed['month'], $parsed['day'] );
+		}
+
 		return $metavalue;
 	}
 
