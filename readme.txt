@@ -28,6 +28,9 @@ Please post it in the GitHub issue tracker here: https://github.com/strangerstud
 Please visit our premium support site at http://www.paidmembershipspro.com for more documentation and our support forums.
 
 == Changelog ==
+= TBD =
+* ENHANCEMENT: The membership_id column is no longer required. CSV files without a membership level can now be imported to create or update users without changing their membership. #85 (@andrewlimaza)
+
 = 1.4.1 - 2026--08-25 =
 * ENHANCEMENT: Normalize date-type User Fields to Y-m-d format when importing. #82 (@flintfromthebasement)
 
