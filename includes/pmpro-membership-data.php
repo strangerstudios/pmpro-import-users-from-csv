@@ -147,9 +147,10 @@ function pmproiucsv_is_iu_post_user_import($user_id)
 	}
 
 	// Check whether the member may already have been imported.
-	if( pmpro_hasMembershipLevel( $membership_id, $user_id ) && ! empty( $_REQUEST['skip_existing_members_same_level'] ) ){
+	// Only applies when a level is being imported; without one, pmpro_hasMembershipLevel() would match any active level.
+	if ( ! empty( $membership_id ) && ! empty( $_REQUEST['skip_existing_members_same_level'] ) && pmpro_hasMembershipLevel( $membership_id, $user_id ) ) {
 		return;
-  }
+	}
 
 	// Look up discount code.
 	if ( ! empty( $membership_discount_code ) && empty( $membership_code_id ) ) {
@@ -378,20 +379,9 @@ function pmproiucsv_add_import_options() { ?>
 add_action( 'pmproiucsv_import_page_inside_table_bottom', 'pmproiucsv_add_import_options' );
 
 /**
- * Required headers when importing members that shows a notice if it's missing.
- *
- * @since 1.0
- */
-function pmproiucsv_required_pmpro_import_headers( $required_headers ) {
-	$required_headers[] = 'membership_id';
-	return $required_headers;
-}
-add_filter( 'pmproiucsv_required_import_headers', 'pmproiucsv_required_pmpro_import_headers', 10, 1 );
-
-/**
  * Normalize multi-value User Field CSV cells to arrays and date field values to Y-m-d.
  *
- * @since TBD
+ * @since 1.3
  *
  * @param mixed  $metavalue Value from the CSV cell (after maybe_unserialize).
  * @param string $metakey   User meta key / field name.

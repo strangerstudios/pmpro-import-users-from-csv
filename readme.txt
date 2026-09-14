@@ -3,7 +3,7 @@ Contributors: strangerstudios
 Tags: paid memberships pro, import users from csv, import, csv, members
 Requires at least: 6.0
 Tested up to: 7.1
-Stable tag: 1.4.1
+Stable tag: 1.5
 
 Import your users or members list to WordPress and automatically assign membership levels in PMPro.
  
@@ -28,7 +28,11 @@ Please post it in the GitHub issue tracker here: https://github.com/strangerstud
 Please visit our premium support site at http://www.paidmembershipspro.com for more documentation and our support forums.
 
 == Changelog ==
-= 1.4.1 - 2026--08-25 =
+= 1.5 - 2026-09-14 =
+* ENHANCEMENT: The membership_id column is no longer required. CSV files without a membership level can now be imported to create or update users without changing their membership. #85 (@andrewlimaza)
+* ENHANCEMENT: Add PMPro User Fields to mapping screen dropdowns and automatically detect if header matches the User Field key. #86 (@flintfromthebasement)
+
+= 1.4.1 - 2026-08-25 =
 * ENHANCEMENT: Normalize date-type User Fields to Y-m-d format when importing. #82 (@flintfromthebasement)
 
 = 1.4 - 2026-08-20 =
