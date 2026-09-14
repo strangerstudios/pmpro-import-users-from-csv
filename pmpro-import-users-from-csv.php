@@ -953,13 +953,33 @@ class PMPro_Import_Users_From_CSV {
 				),
 			);
 		}
-		
+
+		if ( class_exists( 'PMPro_Field_Group' ) ) {
+			$pmpro_user_fields = array();
+			foreach ( PMPro_Field_Group::get_all() as $group ) {
+				foreach ( $group->get_fields() as $field ) {
+					if ( empty( $field->name ) || isset( $fields['wp_user']['fields'][ $field->name ] ) ) {
+						continue;
+					}
+					$label = ! empty( $field->label ) ? $field->label : $field->name;
+					$pmpro_user_fields[ $field->name ] = sprintf( '%s (%s)', $label, $field->name );
+				}
+			}
+
+			if ( ! empty( $pmpro_user_fields ) ) {
+				$fields['pmpro_user_fields'] = array(
+					'label'  => __( 'PMPro User Fields', 'pmpro-import-users-from-csv' ),
+					'fields' => $pmpro_user_fields,
+				);
+			}
+		}
+
 		/**
-		 * Filter the dropdown fields options. 
+		 * Filter the dropdown fields options.
 		 * This is useful for existing plugins to hook into our process and add their own fields to the mapping screen.
-		 * 
+		 *
 		 * @since 1.2
-		 * 
+		 *
 		 * @param array $fields The available fields for mapping, organized by group.
 		 */
 		return apply_filters( 'pmproiucsv_mapping_fields', $fields );
