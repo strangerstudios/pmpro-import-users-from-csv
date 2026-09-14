@@ -381,7 +381,7 @@ add_action( 'pmproiucsv_import_page_inside_table_bottom', 'pmproiucsv_add_import
 /**
  * Normalize multi-value User Field CSV cells to arrays and date field values to Y-m-d.
  *
- * @since TBD
+ * @since 1.3
  *
  * @param mixed  $metavalue Value from the CSV cell (after maybe_unserialize).
  * @param string $metakey   User meta key / field name.
