@@ -955,21 +955,36 @@ class PMPro_Import_Users_From_CSV {
 		}
 
 		if ( class_exists( 'PMPro_Field_Group' ) ) {
-			$pmpro_user_fields = array();
+			// Add one group per PMPro user field group so the mapping screen shows which
+			// group each field belongs to (e.g. a "Mailing Address" group registered by an
+			// Add On) instead of one combined list.
 			foreach ( PMPro_Field_Group::get_all() as $group ) {
+				$group_fields = array();
 				foreach ( $group->get_fields() as $field ) {
 					if ( empty( $field->name ) || isset( $fields['wp_user']['fields'][ $field->name ] ) ) {
 						continue;
 					}
 					$label = ! empty( $field->label ) ? $field->label : $field->name;
-					$pmpro_user_fields[ $field->name ] = sprintf( '%s (%s)', $label, $field->name );
+					$group_fields[ $field->name ] = sprintf( '%s (%s)', $label, $field->name );
 				}
-			}
 
-			if ( ! empty( $pmpro_user_fields ) ) {
-				$fields['pmpro_user_fields'] = array(
-					'label'  => __( 'PMPro User Fields', 'pmpro-import-users-from-csv' ),
-					'fields' => $pmpro_user_fields,
+				if ( empty( $group_fields ) ) {
+					continue;
+				}
+
+				$group_label = ! empty( $group->label ) ? $group->label : $group->name;
+				$group_key   = 'pmpro_user_fields_' . sanitize_key( $group->name );
+
+				// Two group names could sanitize to the same key. Merge instead of overwriting.
+				if ( isset( $fields[ $group_key ] ) ) {
+					$fields[ $group_key ]['fields'] = array_merge( $fields[ $group_key ]['fields'], $group_fields );
+					continue;
+				}
+
+				$fields[ $group_key ] = array(
+					/* translators: %s: The label of the PMPro user field group. */
+					'label'  => sprintf( __( '%s (User Fields)', 'pmpro-import-users-from-csv' ), $group_label ),
+					'fields' => $group_fields,
 				);
 			}
 		}
