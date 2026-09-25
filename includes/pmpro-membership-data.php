@@ -199,18 +199,32 @@ function pmproiucsv_is_iu_post_user_import($user_id)
 			  add_filter( 'pmproiucsv_errors_filter', 'pmproiucsv_report_non_existent_level', 10, 2 );
       }
 
-			// If membership was in the past make it inactive.
-			if($membership_status === "inactive" || (!empty($membership_enddate) && $membership_enddate !== "NULL" && strtotime($membership_enddate, current_time('timestamp')) < current_time('timestamp')))
-			{
-				$sqlQuery = "UPDATE $wpdb->pmpro_memberships_users SET status = 'inactive' WHERE user_id = '" . $user_id . "' AND membership_id = '" . $membership_id . "'";
-				$wpdb->query($sqlQuery);
-				$membership_in_the_past = true;
-			}
+			// If the imported status is inactive, or the end date is in the past, deactivate the level.
+			// pmpro_changeMembershipLevel() always inserts an active row, so route the deactivation through
+			// pmpro_cancelMembershipLevel() so the standard membership change actions fire and integrations
+			// (LearnDash, BuddyPress, etc.) revoke whatever they granted a moment ago.
+			$enddate_in_past = ! empty( $membership_enddate ) && $membership_enddate !== 'NULL' && strtotime( $membership_enddate, current_time( 'timestamp' ) ) < current_time( 'timestamp' );
+			if ( $membership_status === 'inactive' || $enddate_in_past ) {
+				// Don't touch payment gateways for imported data. Subscriptions for this import are created further down.
+				// PMPro 2.x ignores pmpro_cancel_previous_subscriptions when cancelling a single level, so also clear the orders to cancel.
+				add_filter( 'pmpro_cancel_previous_subscriptions', '__return_false', 999 );
+				add_filter( 'pmpro_other_order_ids_to_cancel', '__return_empty_array', 999 );
+				$cancelled = pmpro_cancelMembershipLevel( $membership_id, $user_id, 'inactive' );
+				remove_filter( 'pmpro_cancel_previous_subscriptions', '__return_false', 999 );
+				remove_filter( 'pmpro_other_order_ids_to_cancel', '__return_empty_array', 999 );
 
-			if($membership_status === "active" && (empty($membership_enddate) || $membership_enddate === "NULL" || strtotime($membership_enddate, current_time('timestamp')) >= current_time('timestamp')))
-			{
-				$sqlQuery = $wpdb->prepare("UPDATE {$wpdb->pmpro_memberships_users} SET status = 'active' WHERE user_id = %d AND membership_id = %d ORDER BY id DESC LIMIT 1", $user_id, $membership_id);
-				$wpdb->query($sqlQuery);
+				// pmpro_cancelMembershipLevel() sets enddate to now. Restore the imported end date on the row we just cancelled.
+				if ( $cancelled && ! empty( $membership_enddate ) && $membership_enddate !== 'NULL' ) {
+					$wpdb->query(
+						$wpdb->prepare(
+							"UPDATE {$wpdb->pmpro_memberships_users} SET enddate = %s WHERE user_id = %d AND membership_id = %d AND status = 'inactive' ORDER BY id DESC LIMIT 1",
+							$membership_enddate,
+							$user_id,
+							$membership_id
+						)
+					);
+				}
+				$membership_in_the_past = true;
 			}
 		}
 	}
