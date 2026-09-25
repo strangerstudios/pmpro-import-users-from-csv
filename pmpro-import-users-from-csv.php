@@ -10,6 +10,10 @@ Text Domain: pmpro-import-users-from-csv
 Domain Path: /languages
 */
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 if ( ! defined( 'PMPROIUCSV_CSV_DELIMITER' ) ) {
 	define( 'PMPROIUCSV_CSV_DELIMITER', ',' );
 }
@@ -126,7 +130,7 @@ class PMPro_Import_Users_From_CSV {
 	 * @since 1.2
 	 **/
 	public static function admin_enqueue_scripts( $hook ) {
-		if ( empty( $_REQUEST['page'] ) || $_REQUEST['page'] != 'pmpro-import-users-from-csv' ) {
+		if ( empty( $_REQUEST['page'] ) || $_REQUEST['page'] != 'pmpro-import-users-from-csv' ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only check to decide whether to enqueue scripts.
 			return;
 		}
 
@@ -156,17 +160,17 @@ class PMPro_Import_Users_From_CSV {
 		check_admin_referer( 'pmproiucsv_page_import', '_wpnonce_pmproiucsv_process_csv' );
 
 		if ( ! current_user_can( self::get_import_capability() ) ) {
-			wp_die( __( 'You do not have sufficient permissions to process this import.', 'pmpro-import-users-from-csv' ) );
+			wp_die( esc_html__( 'You do not have sufficient permissions to process this import.', 'pmpro-import-users-from-csv' ) );
 		}
 
 		if ( empty( $_FILES['users_csv']['tmp_name'] ) ) {
-			wp_redirect( add_query_arg( 'import', 'file', wp_get_referer() ) );
+			wp_safe_redirect( add_query_arg( 'import', 'file', wp_get_referer() ) );
 			exit;
 		}
 
-		$users_update          = isset( $_REQUEST['users_update'] ) ? $_REQUEST['users_update'] : false;
-		$new_user_notification = isset( $_REQUEST['new_user_notification'] ) ? $_REQUEST['new_user_notification'] : false;
-		$skip_existing_members_same_level = isset( $_REQUEST['skip_existing_members_same_level'] ) ? $_REQUEST['skip_existing_members_same_level'] : false;
+		$users_update          = isset( $_REQUEST['users_update'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['users_update'] ) ) : false;
+		$new_user_notification = isset( $_REQUEST['new_user_notification'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['new_user_notification'] ) ) : false;
+		$skip_existing_members_same_level = isset( $_REQUEST['skip_existing_members_same_level'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['skip_existing_members_same_level'] ) ) : false;
 
 		// Always save the uploaded file so we can read headers on the mapping screen.
 		$import_dir = self::$import_dir_path;
@@ -189,20 +193,20 @@ class PMPro_Import_Users_From_CSV {
 			}
 		}
 
-		$original_name = $_FILES['users_csv']['name'];
+		$original_name = $_FILES['users_csv']['name']; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotValidated, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Upload presence is checked above; the name is only used for the extension check and is reduced to [a-zA-Z0-9.-] below.
 
 		// Use extension-only validation: CSV MIME types are inconsistently reported across
 		// browsers, OSes, and tools (e.g. Google Sheets exports as text/plain), making
 		// wp_check_filetype_and_ext() unreliable and prone to false rejections.
 		$filetype = wp_check_filetype( $original_name );
 		if ( $filetype['ext'] !== 'csv' ) {
-			wp_die( __( 'Invalid file type. Please upload a CSV file.', 'pmpro-import-users-from-csv' ) );
+			wp_die( esc_html__( 'Invalid file type. Please upload a CSV file.', 'pmpro-import-users-from-csv' ) );
 		}
 
 		// Guard against binary files disguised with a .csv extension by checking for null bytes.
-		$file_sample = file_get_contents( $_FILES['users_csv']['tmp_name'], false, null, 0, 1024 );
+		$file_sample = file_get_contents( $_FILES['users_csv']['tmp_name'], false, null, 0, 1024 ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- tmp_name is the PHP-generated upload path.
 		if ( $file_sample !== false && strpos( $file_sample, "\x00" ) !== false ) {
-			wp_die( __( 'Invalid file type. Please upload a CSV file.', 'pmpro-import-users-from-csv' ) );
+			wp_die( esc_html__( 'Invalid file type. Please upload a CSV file.', 'pmpro-import-users-from-csv' ) );
 		}
 		$filename      = preg_replace( '/[^a-zA-Z0-9\.\-]/', '_', $original_name );
 		$count         = 0;
@@ -220,18 +224,18 @@ class PMPro_Import_Users_From_CSV {
 		}
 
 		// Enforce WordPress's configured upload size limit, since we bypass wp_handle_upload().
-		if ( $_FILES['users_csv']['size'] > wp_max_upload_size() ) {
+		if ( $_FILES['users_csv']['size'] > wp_max_upload_size() ) { // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotValidated -- PHP always sets size for an upload; presence is checked above.
 			wp_die(
 				sprintf(
 					/* translators: %s: max upload size */
 					esc_html__( 'The uploaded file exceeds the maximum upload size of %s.', 'pmpro-import-users-from-csv' ),
-					size_format( wp_max_upload_size() )
+					esc_html( size_format( wp_max_upload_size() ) )
 				)
 			);
 		}
 
-		if ( ! move_uploaded_file( $_FILES['users_csv']['tmp_name'], $import_dir . $filename ) ) {
-			wp_die( __( 'Failed to save the uploaded file. Please try again.', 'pmpro-import-users-from-csv' ) );
+		if ( ! move_uploaded_file( $_FILES['users_csv']['tmp_name'], $import_dir . $filename ) ) { // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- tmp_name is the PHP-generated upload path.
+			wp_die( esc_html__( 'Failed to save the uploaded file. Please try again.', 'pmpro-import-users-from-csv' ) );
 		}
 
 		// Redirect to the field mapping screen.
@@ -247,7 +251,7 @@ class PMPro_Import_Users_From_CSV {
 			admin_url( 'users.php' )
 		);
 
-		wp_redirect( $url );
+		wp_safe_redirect( $url );
 		exit;
 	}
 
@@ -265,10 +269,10 @@ class PMPro_Import_Users_From_CSV {
 		check_admin_referer( 'pmproiucsv_mapping', '_wpnonce_pmproiucsv_mapping' );
 
 		if ( ! current_user_can( self::get_import_capability() ) ) {
-			wp_die( __( 'You do not have sufficient permissions to process this import.', 'pmpro-import-users-from-csv' ) );
+			wp_die( esc_html__( 'You do not have sufficient permissions to process this import.', 'pmpro-import-users-from-csv' ) );
 		}
 
-		$filename              = sanitize_file_name( wp_unslash( $_REQUEST['filename'] ) );
+		$filename              = sanitize_file_name( wp_unslash( $_REQUEST['filename'] ?? '' ) );
 		$users_update          = isset( $_REQUEST['users_update'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['users_update'] ) ) : false;
 		$new_user_notification = isset( $_REQUEST['new_user_notification'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['new_user_notification'] ) ) : false;
 		$skip_existing_members_same_level = isset( $_REQUEST['skip_existing_members_same_level'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['skip_existing_members_same_level'] ) ) : false;
@@ -276,7 +280,7 @@ class PMPro_Import_Users_From_CSV {
 		$field_map = array();
 
 		if ( ! empty( $_REQUEST['field_map'] ) && is_array( $_REQUEST['field_map'] ) ) {
-			foreach ( $_REQUEST['field_map'] as $csv_col => $mapped_to ) {
+			foreach ( $_REQUEST['field_map'] as $csv_col => $mapped_to ) { // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Each key and value is unslashed and sanitized inside the loop.
 				$csv_col   = sanitize_text_field( wp_unslash( $csv_col ) );
 				$mapped_to = sanitize_text_field( wp_unslash( $mapped_to ) );
 				$field_map[ $csv_col ] = $mapped_to;
@@ -301,7 +305,7 @@ class PMPro_Import_Users_From_CSV {
 		// Verify the file exists before storing the mapping transient.
 		$import_dir = self::$import_dir_path;
 		if ( ! file_exists( $import_dir . $filename ) ) {
-			wp_die( __( 'The uploaded CSV file could not be found. Please try uploading it again.', 'pmpro-import-users-from-csv' ) );
+			wp_die( esc_html__( 'The uploaded CSV file could not be found. Please try uploading it again.', 'pmpro-import-users-from-csv' ) );
 		}
 
 		// Store the mapping for retrieval during AJAX import.
@@ -322,7 +326,7 @@ class PMPro_Import_Users_From_CSV {
 			admin_url( 'users.php' )
 		);
 
-		wp_redirect( $url );
+		wp_safe_redirect( $url );
 		exit;
 	}
 
@@ -342,7 +346,7 @@ class PMPro_Import_Users_From_CSV {
 		check_admin_referer( 'pmproiucsv_cancel', '_wpnonce_pmproiucsv_cancel' );
 
 		if ( ! current_user_can( self::get_import_capability() ) ) {
-			wp_die( __( 'You do not have sufficient permissions to cancel this import.', 'pmpro-import-users-from-csv' ) );
+			wp_die( esc_html__( 'You do not have sufficient permissions to cancel this import.', 'pmpro-import-users-from-csv' ) );
 		}
 
 		$filename = sanitize_file_name( wp_unslash( $_REQUEST['filename'] ?? '' ) );
@@ -358,7 +362,7 @@ class PMPro_Import_Users_From_CSV {
 			delete_transient( 'pmproiucsv_map_' . $filename );
 		}
 
-		wp_redirect( add_query_arg( array( 'page' => 'pmpro-import-users-from-csv', 'import' => 'cancelled' ), admin_url( 'users.php' ) ) );
+		wp_safe_redirect( add_query_arg( array( 'page' => 'pmpro-import-users-from-csv', 'import' => 'cancelled' ), admin_url( 'users.php' ) ) );
 		exit;
 	}
 
@@ -370,7 +374,7 @@ class PMPro_Import_Users_From_CSV {
 	 **/
 	public static function users_page() {
 		if ( ! current_user_can( self::get_import_capability() ) ) {
-			wp_die( __( 'You do not have sufficient permissions to access this page.', 'pmpro-import-users-from-csv' ) );
+			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'pmpro-import-users-from-csv' ) );
 		}
 
 		// Show PMPro Header if PMPro is installed.
@@ -389,41 +393,41 @@ class PMPro_Import_Users_From_CSV {
 
 		if ( ! file_exists( $error_log_file ) ) {
 			if ( ! @fopen( $error_log_file, 'x' ) ) {
-				echo '<div class="updated"><p>' . sprintf( __( 'Notice: please make the directory %s writable so that you can see the error log.', 'pmpro-import-users-from-csv' ), '<code>' . self::$log_dir_path . '</code>' ) . '</p></div>';
+				echo '<div class="updated"><p>' . sprintf( esc_html__( 'Notice: please make the directory %s writable so that you can see the error log.', 'pmpro-import-users-from-csv' ), '<code>' . esc_html( self::$log_dir_path ) . '</code>' ) . '</p></div>';
 			}
 		}
 
 		// Show error log link if there are errors.
-		if ( isset( $_REQUEST['import'] ) ) {
+		if ( isset( $_REQUEST['import'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only; selects which notice/screen to display.
 			$error_log_msg = '';
 			if ( file_exists( $error_log_file ) ) {
-				$error_log_msg = sprintf( __( ', please <a href="%s">check the error log</a>', 'pmpro-import-users-from-csv' ), $error_log_url );
+				$error_log_msg = sprintf( __( ', please <a href="%s">check the error log</a>', 'pmpro-import-users-from-csv' ), esc_url( $error_log_url ) );
 			}
 
-			switch ( $_REQUEST['import'] ) {
+			switch ( $_REQUEST['import'] ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- Read-only; only compared against fixed strings.
 				case 'file':
-					echo '<div class="error"><p>' . __( 'Error during file upload.', 'pmpro-import-users-from-csv' ) . '</p></div>';
+					echo '<div class="error"><p>' . esc_html__( 'Error during file upload.', 'pmpro-import-users-from-csv' ) . '</p></div>';
 					break;
 				case 'data':
-					echo '<div class="error"><p>' . __( 'Cannot extract data from uploaded file or no file was uploaded.', 'pmpro-import-users-from-csv' ) . '</p></div>';
+					echo '<div class="error"><p>' . esc_html__( 'Cannot extract data from uploaded file or no file was uploaded.', 'pmpro-import-users-from-csv' ) . '</p></div>';
 					break;
 				case 'fail':
-					echo '<div class="error"><p>' . sprintf( __( 'No user was successfully imported%s.', 'pmpro-import-users-from-csv' ), $error_log_msg ) . '</p></div>';
+					echo '<div class="error"><p>' . wp_kses_post( sprintf( __( 'No user was successfully imported%s.', 'pmpro-import-users-from-csv' ), $error_log_msg ) ) . '</p></div>';
 					break;
 				case 'errors':
-					echo '<div class="error"><p>' . sprintf( __( 'Some users were successfully imported but some were not%s.', 'pmpro-import-users-from-csv' ), $error_log_msg ) . '</p></div>';
+					echo '<div class="error"><p>' . wp_kses_post( sprintf( __( 'Some users were successfully imported but some were not%s.', 'pmpro-import-users-from-csv' ), $error_log_msg ) ) . '</p></div>';
 					break;
 				case 'success':
-					echo '<div class="updated"><p>' . __( 'Users import was successful.', 'pmpro-import-users-from-csv' ) . '</p></div>';
+					echo '<div class="updated"><p>' . esc_html__( 'Users import was successful.', 'pmpro-import-users-from-csv' ) . '</p></div>';
 					break;
 				case 'cancelled':
-					echo '<div class="notice notice-warning"><p>' . __( 'Import cancelled. No information was imported.', 'pmpro-import-users-from-csv' ) . '</p></div>';
+					echo '<div class="notice notice-warning"><p>' . esc_html__( 'Import cancelled. No information was imported.', 'pmpro-import-users-from-csv' ) . '</p></div>';
 					break;
 				default:
 					break;
 			}
 
-			if ( $_REQUEST['import'] == 'map' && ! empty( $_REQUEST['filename'] ) ) {
+			if ( $_REQUEST['import'] == 'map' && ! empty( $_REQUEST['filename'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only; the mapping form submission is nonce-checked in handle_mapping_submission().
 				self::render_mapping_screen();
 
 				// Show PMPro Footer if PMPro is installed.
@@ -435,11 +439,13 @@ class PMPro_Import_Users_From_CSV {
 				return;
 			}
 
+			// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Read-only resume screen; the import itself runs through the nonce-checked AJAX handler.
 			if ( $_REQUEST['import'] == 'resume' && ! empty( $_REQUEST['filename'] ) ) {
-				$filename              = sanitize_file_name( $_REQUEST['filename'] );
-				$users_update          = isset( $_REQUEST['users_update'] ) ? $_REQUEST['users_update'] : false;
-				$new_user_notification = isset( $_REQUEST['new_user_notification'] ) ? $_REQUEST['new_user_notification'] : false;
-				$skip_existing_members_same_level = isset( $_REQUEST['skip_existing_members_same_level'] ) ? $_REQUEST['skip_existing_members_same_level'] : '';
+				$filename              = sanitize_file_name( wp_unslash( $_REQUEST['filename'] ) );
+				$users_update          = isset( $_REQUEST['users_update'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['users_update'] ) ) : false;
+				$new_user_notification = isset( $_REQUEST['new_user_notification'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['new_user_notification'] ) ) : false;
+				$skip_existing_members_same_level = isset( $_REQUEST['skip_existing_members_same_level'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['skip_existing_members_same_level'] ) ) : '';
+				// phpcs:enable WordPress.Security.NonceVerification.Recommended
 
 				// resetting position transients?
 				if ( ! empty( $_REQUEST['reset'] ) ) {
@@ -461,7 +467,7 @@ class PMPro_Import_Users_From_CSV {
 								$return_url = esc_url( add_query_arg( 'page', 'pmpro-import-users-from-csv', admin_url( 'users.php' ) ) );
 
 								// Get the current query args and sanitize them.
-								$url_query_args = array_map( 'sanitize_text_field', $_REQUEST );
+								$url_query_args = array_map( 'sanitize_text_field', $_REQUEST ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only; rebuilds the resume URL for display.
 
 								// Show the return URL.
 								echo '<code>' . esc_url( add_query_arg( $url_query_args, $return_url ) ) . '</code>';
@@ -488,7 +494,7 @@ class PMPro_Import_Users_From_CSV {
 			}
 		}
 
-		if ( empty( $_REQUEST['filename'] ) ) {
+		if ( empty( $_REQUEST['filename'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only; decides whether to show the upload form.
 			?>
 		<div class="pmpro_section">
 			<div class="pmpro_section_inside">
@@ -502,7 +508,7 @@ class PMPro_Import_Users_From_CSV {
 								</th>
 								<td>
 									<input type="file" id="users_csv" name="users_csv" value="" class="all-options" accept=".csv" required /><br />
-									<p class="description"><?php printf( __( 'Download the <a href="%s">example CSV file</a> for help formatting your data for import.', 'pmpro-import-users-from-csv' ), esc_url( plugin_dir_url( __FILE__ ) . 'examples/import.csv' ) ); ?></p>
+									<p class="description"><?php echo wp_kses_post( sprintf( __( 'Download the <a href="%s">example CSV file</a> for help formatting your data for import.', 'pmpro-import-users-from-csv' ), esc_url( plugin_dir_url( __FILE__ ) . 'examples/import.csv' ) ) ); ?></p>
 								</td>
 							</tr>
 							<tr>
@@ -567,7 +573,7 @@ class PMPro_Import_Users_From_CSV {
 		if ( empty( $_REQUEST['filename'] ) ) {
 			die( 'No file name given.' );
 		} else {
-			$filename = sanitize_file_name( $_REQUEST['filename'] );
+			$filename = sanitize_file_name( wp_unslash( $_REQUEST['filename'] ) );
 		}
 
 		// figure out upload dir
@@ -579,8 +585,8 @@ class PMPro_Import_Users_From_CSV {
 		}
 
 		// get settings
-		$users_update          = isset( $_REQUEST['users_update'] ) ? $_REQUEST['users_update'] : false;
-		$new_user_notification = isset( $_REQUEST['new_user_notification'] ) ? $_REQUEST['new_user_notification'] : false;
+		$users_update          = isset( $_REQUEST['users_update'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['users_update'] ) ) : false;
+		$new_user_notification = isset( $_REQUEST['new_user_notification'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['new_user_notification'] ) ) : false;
 
 		// Load the field mapping saved during the mapping screen step.
 		$field_map = get_transient( 'pmproiucsv_map_' . $filename );
@@ -624,7 +630,7 @@ class PMPro_Import_Users_From_CSV {
 			echo 'X ';
 
 		} else {
-			echo 'Importing ' . str_pad( '', count( $results['user_ids'] ), '.' ) . "\n";
+			echo 'Importing ' . esc_html( str_pad( '', count( $results['user_ids'] ), '.' ) ) . "\n";
 		}
 
 		exit;
@@ -1144,10 +1150,12 @@ class PMPro_Import_Users_From_CSV {
 	 * @since 1.2
 	 */
 	public static function render_mapping_screen() {
-		$filename              = sanitize_file_name( wp_unslash( $_REQUEST['filename'] ) );
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Read-only mapping screen; the submission is nonce-checked in handle_mapping_submission().
+		$filename              = sanitize_file_name( wp_unslash( $_REQUEST['filename'] ) ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotValidated -- Caller users_page() only renders this screen when filename is not empty.
 		$users_update          = isset( $_REQUEST['users_update'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['users_update'] ) ) : '';
 		$new_user_notification = isset( $_REQUEST['new_user_notification'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['new_user_notification'] ) ) : '';
 		$skip_existing_members_same_level = isset( $_REQUEST['skip_existing_members_same_level'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['skip_existing_members_same_level'] ) ) : '';
+		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 
 		$csv_data = self::get_csv_sample_data( $filename );
 		$headers  = $csv_data['headers'];
