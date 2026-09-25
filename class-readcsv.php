@@ -65,7 +65,9 @@ class ReadCSV {
 	}
 
 	public function get_position() {
-		return ftell($this->file);
+		// The next character has already been read into $this->nc, so step back one byte to
+		// return the start of the next record. At EOF, fgetc() did not advance the file pointer.
+		return $this->eof ? ftell($this->file) : ftell($this->file) - 1;
 	}
 
 	/**
