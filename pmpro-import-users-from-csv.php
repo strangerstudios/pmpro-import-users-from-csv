@@ -839,10 +839,7 @@ class PMPro_Import_Users_From_CSV {
 				}
 			}
 
-			if ( $update && ! $users_update ) {
-				// A user matched by ID should only be updated when updating existing users is enabled.
-				$user_id = new WP_Error( 'user_exists', sprintf( __( 'User ID %d already exists. Enable "Update Existing Users" to update this user.', 'pmpro-import-users-from-csv' ), $user->ID ) );
-			} elseif ( $update ) {
+			if ( $update ) {
 				// If we're updating the user, don't send any password emails.
 				add_filter( 'send_password_change_email', '__return_false' );  
 				$user_id = wp_update_user( $userdata );
