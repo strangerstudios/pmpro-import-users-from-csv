@@ -90,12 +90,34 @@ class PMPro_Import_Users_From_CSV {
 	}
 
 	/**
+	 * Get the capability required to import users.
+	 *
+	 * @since TBD
+	 *
+	 * @return string The capability required to import users.
+	 */
+	public static function get_import_capability() {
+		/**
+		 * Filter the capability required to import users.
+		 *
+		 * Importing can set the role, password, and user meta of any user, so users with this
+		 * capability can grant themselves administrator access. Only lower this capability for
+		 * users who are trusted with full control of the site.
+		 *
+		 * @since TBD
+		 *
+		 * @param string $capability The capability required to import users.
+		 */
+		return apply_filters( 'pmproiucsv_import_capability', is_multisite() ? 'manage_network_users' : 'manage_options' );
+	}
+
+	/**
 	 * Add admin menus and load the location based on PMPro installed status or not.
 	 *
 	 * @since 0.1
 	 **/
 	public static function add_admin_pages() {
-		add_submenu_page( 'users.php', 'Import Members', 'Import Members', 'create_users', 'pmpro-import-users-from-csv', array( get_called_class(), 'users_page' ) );
+		add_submenu_page( 'users.php', 'Import Members', 'Import Members', self::get_import_capability(), 'pmpro-import-users-from-csv', array( get_called_class(), 'users_page' ) );
 	}
 
 	/**
@@ -133,7 +155,7 @@ class PMPro_Import_Users_From_CSV {
 
 		check_admin_referer( 'pmproiucsv_page_import', '_wpnonce_pmproiucsv_process_csv' );
 
-		if ( ! current_user_can( 'create_users' ) ) {
+		if ( ! current_user_can( self::get_import_capability() ) ) {
 			wp_die( __( 'You do not have sufficient permissions to process this import.', 'pmpro-import-users-from-csv' ) );
 		}
 
@@ -242,7 +264,7 @@ class PMPro_Import_Users_From_CSV {
 
 		check_admin_referer( 'pmproiucsv_mapping', '_wpnonce_pmproiucsv_mapping' );
 
-		if ( ! current_user_can( 'create_users' ) ) {
+		if ( ! current_user_can( self::get_import_capability() ) ) {
 			wp_die( __( 'You do not have sufficient permissions to process this import.', 'pmpro-import-users-from-csv' ) );
 		}
 
@@ -319,7 +341,7 @@ class PMPro_Import_Users_From_CSV {
 
 		check_admin_referer( 'pmproiucsv_cancel', '_wpnonce_pmproiucsv_cancel' );
 
-		if ( ! current_user_can( 'create_users' ) ) {
+		if ( ! current_user_can( self::get_import_capability() ) ) {
 			wp_die( __( 'You do not have sufficient permissions to cancel this import.', 'pmpro-import-users-from-csv' ) );
 		}
 
@@ -347,7 +369,7 @@ class PMPro_Import_Users_From_CSV {
 	 * @since 0.1
 	 **/
 	public static function users_page() {
-		if ( ! current_user_can( 'create_users' ) ) {
+		if ( ! current_user_can( self::get_import_capability() ) ) {
 			wp_die( __( 'You do not have sufficient permissions to access this page.', 'pmpro-import-users-from-csv' ) );
 		}
 
@@ -537,7 +559,7 @@ class PMPro_Import_Users_From_CSV {
 		check_ajax_referer( 'pmproiucsv_import' );
 
 		// Check for capability.
-		if ( ! current_user_can( 'create_users' ) ) {
+		if ( ! current_user_can( self::get_import_capability() ) ) {
 			die( 'noperm' );
 		}
 
@@ -817,7 +839,7 @@ class PMPro_Import_Users_From_CSV {
 				}
 			}
 
-			if ( $update && $users_update ) {
+			if ( $update ) {
 				// If we're updating the user, don't send any password emails.
 				add_filter( 'send_password_change_email', '__return_false' );  
 				$user_id = wp_update_user( $userdata );
@@ -1308,7 +1330,7 @@ class PMPro_Import_Users_From_CSV {
 	}
 
 	/**
-	 * Allow access of the restricted file if the current user can create users.
+	 * Allow access of the restricted file if the current user can import users.
 	 * 
 	 * @since 1.2
 	 *
@@ -1318,9 +1340,9 @@ class PMPro_Import_Users_From_CSV {
 	 */
 	public static function pmpro_can_access_restricted_file( $can_access, $file_dir ) {
 		if ( 'pmpro-import-users-from-csv' === $file_dir ) {
-			// Only users who can create users should be able to access the restricted file
+			// Only users who can import users should be able to access the restricted file
 			// and trigger any related cleanup.
-			$can_access = current_user_can( 'create_users' );
+			$can_access = current_user_can( self::get_import_capability() );
 
 			// While we are at it, let's see if the uploads directory has pmproiucsv_error.log file.
 			// Delete it as a one-time cleanup now that we moved to the pmpro restricted file system.
