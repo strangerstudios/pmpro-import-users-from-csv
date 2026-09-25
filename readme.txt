@@ -28,9 +28,6 @@ Please post it in the GitHub issue tracker here: https://github.com/strangerstud
 Please visit our premium support site at http://www.paidmembershipspro.com for more documentation and our support forums.
 
 == Changelog ==
-= TBD =
-* BUG FIX: Imported memberships with an inactive status or a past end date are now deactivated via pmpro_cancelMembershipLevel() so membership change actions fire, instead of a direct database update that left integrations (e.g. LearnDash) with access still granted. #87 (@andrewlimaza)
-
 = 1.5 - 2026-09-14 =
 * ENHANCEMENT: The membership_id column is no longer required. CSV files without a membership level can now be imported to create or update users without changing their membership. #85 (@andrewlimaza)
 * ENHANCEMENT: Add PMPro User Fields to mapping screen dropdowns and automatically detect if header matches the User Field key. #86 (@flintfromthebasement)

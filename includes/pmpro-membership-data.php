@@ -206,12 +206,15 @@ function pmproiucsv_is_iu_post_user_import($user_id)
 			$enddate_in_past = ! empty( $membership_enddate ) && $membership_enddate !== 'NULL' && strtotime( $membership_enddate, current_time( 'timestamp' ) ) < current_time( 'timestamp' );
 			if ( $membership_status === 'inactive' || $enddate_in_past ) {
 				// Don't touch payment gateways for imported data. Subscriptions for this import are created further down.
+				// PMPro 2.x ignores pmpro_cancel_previous_subscriptions when cancelling a single level, so also clear the orders to cancel.
 				add_filter( 'pmpro_cancel_previous_subscriptions', '__return_false', 999 );
-				pmpro_cancelMembershipLevel( $membership_id, $user_id, 'inactive' );
+				add_filter( 'pmpro_other_order_ids_to_cancel', '__return_empty_array', 999 );
+				$cancelled = pmpro_cancelMembershipLevel( $membership_id, $user_id, 'inactive' );
 				remove_filter( 'pmpro_cancel_previous_subscriptions', '__return_false', 999 );
+				remove_filter( 'pmpro_other_order_ids_to_cancel', '__return_empty_array', 999 );
 
 				// pmpro_cancelMembershipLevel() sets enddate to now. Restore the imported end date on the row we just cancelled.
-				if ( ! empty( $membership_enddate ) && $membership_enddate !== 'NULL' ) {
+				if ( $cancelled && ! empty( $membership_enddate ) && $membership_enddate !== 'NULL' ) {
 					$wpdb->query(
 						$wpdb->prepare(
 							"UPDATE {$wpdb->pmpro_memberships_users} SET enddate = %s WHERE user_id = %d AND membership_id = %d AND status = 'inactive' ORDER BY id DESC LIMIT 1",
