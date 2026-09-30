@@ -442,7 +442,7 @@ class PMPro_Import_Users_From_CSV {
 				$skip_existing_members_same_level = isset( $_REQUEST['skip_existing_members_same_level'] ) ? $_REQUEST['skip_existing_members_same_level'] : '';
 
 				// resetting position transients?
-				if ( ! empty( $_REQUEST['reset'] ) ) {
+				if ( isset( $_REQUEST['_wpnonce_pmproiucsv_reset'] ) && wp_verify_nonce( sanitize_key( $_REQUEST['_wpnonce_pmproiucsv_reset'] ), 'pmproiucsv_reset_' . $filename ) && ! empty( $_REQUEST['reset'] ) ) {
 					delete_transient( 'pmproiucsv_' . $filename );
 					delete_transient( 'pmproiucsv_rowoffset_' . $filename );
 				}
@@ -462,6 +462,9 @@ class PMPro_Import_Users_From_CSV {
 
 								// Get the current query args and sanitize them.
 								$url_query_args = array_map( 'sanitize_text_field', $_REQUEST );
+
+								// Don't carry a reset into the resume URL.
+								unset( $url_query_args['reset'], $url_query_args['_wpnonce_pmproiucsv_reset'] );
 
 								// Show the return URL.
 								echo '<code>' . esc_url( add_query_arg( $url_query_args, $return_url ) ) . '</code>';
