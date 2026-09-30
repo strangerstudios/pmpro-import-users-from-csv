@@ -1,4 +1,8 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * Get list of PMPro-related fields.
  */
@@ -136,7 +140,7 @@ function pmproiucsv_is_iu_post_user_import($user_id)
 	}
 
 	if ( ! empty( $membership_discount_code ) && empty( $membership_code_id ) ) {
-		$membership_code_id = $wpdb->get_var(
+		$membership_code_id = $wpdb->get_var( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- PMPro custom table; prepared.
 			$wpdb->prepare( "
 				SELECT id
 				FROM $wpdb->pmpro_discount_codes
@@ -148,13 +152,13 @@ function pmproiucsv_is_iu_post_user_import($user_id)
 
 	// Check whether the member may already have been imported.
 	// Only applies when a level is being imported; without one, pmpro_hasMembershipLevel() would match any active level.
-	if ( ! empty( $membership_id ) && ! empty( $_REQUEST['skip_existing_members_same_level'] ) && pmpro_hasMembershipLevel( $membership_id, $user_id ) ) {
+	if ( ! empty( $membership_id ) && ! empty( $_REQUEST['skip_existing_members_same_level'] ) && pmpro_hasMembershipLevel( $membership_id, $user_id ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Runs during the import, which is nonce- and capability-checked in wp_ajax_pmpro_import_users_from_csv().
 		return;
 	}
 
 	// Look up discount code.
 	if ( ! empty( $membership_discount_code ) && empty( $membership_code_id ) ) {
-		$membership_code_id = $wpdb->get_var( "SELECT id FROM $wpdb->pmpro_discount_codes WHERE `code` = '" . esc_sql( $membership_discount_code ) . "' LIMIT 1" );
+		$membership_code_id = $wpdb->get_var( "SELECT id FROM $wpdb->pmpro_discount_codes WHERE `code` = '" . esc_sql( $membership_discount_code ) . "' LIMIT 1" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- PMPro custom table; value is escaped with esc_sql() and quoted.
 	}
 
 	// Look for a subscription transaction id and gateway.
@@ -215,7 +219,7 @@ function pmproiucsv_is_iu_post_user_import($user_id)
 
 				// pmpro_cancelMembershipLevel() sets enddate to now. Restore the imported end date on the row we just cancelled.
 				if ( $cancelled && ! empty( $membership_enddate ) && $membership_enddate !== 'NULL' ) {
-					$wpdb->query(
+					$wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- PMPro custom table; prepared.
 						$wpdb->prepare(
 							"UPDATE {$wpdb->pmpro_memberships_users} SET enddate = %s WHERE user_id = %d AND membership_id = %d AND status = 'inactive' ORDER BY id DESC LIMIT 1",
 							$membership_enddate,
@@ -268,9 +272,9 @@ function pmproiucsv_is_iu_post_user_import($user_id)
 				INSERT IGNORE INTO {$wpdb->pmpro_subscriptions} ( user_id, membership_level_id, gateway,  gateway_environment, subscription_transaction_id, status )
 				VALUES ( %d, %d, %s, %s, %s, %s )
 			";
-			$wpdb->query(
+			$wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- PMPro custom table; prepared.
 				$wpdb->prepare(
-					$sqlQuery,
+					$sqlQuery, // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- $sqlQuery is a static string with placeholders defined just above.
 					$user_id,
 					$membership_id,
 					$membership_gateway,
@@ -321,7 +325,7 @@ function pmproiucsv_is_iu_post_user_import($user_id)
 
 	// Add code use if we have the membership_code_id and there is an order to attach to.
 	if ( ! empty( $membership_code_id ) && ! empty( $order ) && ! empty( $order->id ) ) {
-		$wpdb->query("INSERT INTO $wpdb->pmpro_discount_codes_uses (code_id, user_id, order_id, timestamp) VALUES('" . esc_sql($membership_code_id) . "', '" . esc_sql($user_id) . "', '" . intval($order->id) . "', now())");
+		$wpdb->query("INSERT INTO $wpdb->pmpro_discount_codes_uses (code_id, user_id, order_id, timestamp) VALUES('" . esc_sql($membership_code_id) . "', '" . esc_sql($user_id) . "', '" . intval($order->id) . "', now())"); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared -- PMPro custom table; every value is quoted and escaped with esc_sql()/intval().
 	}
 
 	/**

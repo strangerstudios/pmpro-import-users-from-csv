@@ -1,5 +1,9 @@
 <?php
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 WP_CLI::add_command( 'iucsv', function ( $args, $params ) {
 	$subcommand = $args[0] ?? '';
 
@@ -22,7 +26,7 @@ WP_CLI::add_command( 'iucsv', function ( $args, $params ) {
 
 			if ( ! empty( $result['errors'] ) ) {
 				echo ' '. esc_html( 'with errors:', 'pmpro-import-users-from-csv' );
-				echo implode( PHP_EOL, $result['errors'] );
+				echo implode( PHP_EOL, $result['errors'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- WP-CLI terminal output, not HTML.
 			}
 
 			echo PHP_EOL;
