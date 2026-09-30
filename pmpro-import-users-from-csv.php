@@ -441,11 +441,6 @@ class PMPro_Import_Users_From_CSV {
 				$new_user_notification = isset( $_REQUEST['new_user_notification'] ) ? $_REQUEST['new_user_notification'] : false;
 				$skip_existing_members_same_level = isset( $_REQUEST['skip_existing_members_same_level'] ) ? $_REQUEST['skip_existing_members_same_level'] : '';
 
-				// resetting position transients?
-				if ( ! empty( $_REQUEST['reset'] ) ) {
-					delete_transient( 'pmproiucsv_' . $filename );
-					delete_transient( 'pmproiucsv_rowoffset_' . $filename );
-				}
 				?>
 				<div id="pmproiucsv_result" style="display:none;"></div>
 				<div class="pmpro_section">
