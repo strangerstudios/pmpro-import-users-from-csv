@@ -841,8 +841,10 @@ class PMPro_Import_Users_From_CSV {
 			}
 
 			// Skip blank values so they don't clear or reset the user's existing data (e.g. a blank role removes all roles).
+			// '0' is only kept for fields where it's meaningful: it clears the text fields and turns off the boolean settings.
+			$zero_fields = array( 'first_name', 'last_name', 'description', 'user_url', 'use_ssl', 'comment_shortcuts' );
 			foreach ( $userdata as $field => $value ) {
-				if ( empty( $value ) && $value !== '0' ) {
+				if ( empty( $value ) && ! ( $value === '0' && in_array( $field, $zero_fields, true ) ) ) {
 					unset( $userdata[ $field ] );
 				}
 			}
