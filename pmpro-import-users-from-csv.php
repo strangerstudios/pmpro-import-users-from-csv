@@ -816,9 +816,12 @@ class PMPro_Import_Users_From_CSV {
 			if ( $user ) {
 				$userdata['ID'] = $user->ID;
 				$update         = true;
-			}
-			
 
+				// Only update the existing user's email if a valid one was provided, otherwise a blank column would remove it.
+				if ( isset( $userdata['user_email'] ) && ( empty( $userdata['user_email'] ) || ! is_email( $userdata['user_email'] ) ) ) {
+					unset( $userdata['user_email'] );
+				}
+			}
 
 			// If creating a new user and no password was set, let auto-generate one!
 			if ( ! $update && empty( $userdata['user_pass'] ) ) {
