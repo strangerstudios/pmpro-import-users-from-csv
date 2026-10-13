@@ -840,6 +840,13 @@ class PMPro_Import_Users_From_CSV {
 				}
 			}
 
+			// Skip blank values so they don't clear or reset the user's existing data (e.g. a blank role removes all roles).
+			foreach ( $userdata as $field => $value ) {
+				if ( empty( $value ) && $value !== '0' ) {
+					unset( $userdata[ $field ] );
+				}
+			}
+
 			if ( $update ) {
 				// If we're updating the user, don't send any password emails.
 				add_filter( 'send_password_change_email', '__return_false' );  
