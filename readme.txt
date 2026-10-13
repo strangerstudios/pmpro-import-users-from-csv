@@ -29,7 +29,7 @@ Please visit our premium support site at http://www.paidmembershipspro.com for m
 
 == Changelog ==
 = 1.5.3 - 2026-10-13 =
-* BUG FIX: Fixed an issue where blank CSV values overwrote existing user data when updating users. For example, a blank email address removed the user's email, a blank role removed all of the user's roles, and a blank registration date reset it to the time of the import. Blank values are now skipped. A value of `0` can still be used to clear the first name, last name, website, and biographical info fields. #95 (@andrewlimaza)
+* BUG FIX: Fixed an issue where blank CSV values overwrote existing user data when updating users using their user ID and having skipped values in other columns. Blank values are now skipped. A value of `0` can still be used to clear the first name, last name, website, and biographical info fields. #95 (@andrewlimaza)
 * BUG FIX: New users imported with a blank role are now given the site's default role instead of no role. #95 (@andrewlimaza)
 
 = 1.5.2 - 2026-09-30 =
