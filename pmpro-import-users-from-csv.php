@@ -742,7 +742,13 @@ class PMPro_Import_Users_From_CSV {
 			$userdata = $usermeta = array();
 			foreach ( $line as $ckey => $column ) {
 				$csv_column = isset( $headers[ $ckey ] ) ? $headers[ $ckey ] : '';
-				$column     = sanitize_text_field( trim( $column ) );
+
+				// Strip the leading apostrophe that CSV exports add to non-numeric values starting with =, +, -, @, tab, or CR to prevent formula injection.
+				// This must run on the raw value, before trim() and sanitize_text_field() remove a leading tab or CR.
+				if ( preg_match( '/^\'[=+\-@\t\r]/', $column ) && ! is_numeric( substr( $column, 1 ) ) ) {
+					$column = substr( $column, 1 );
+				}
+				$column = sanitize_text_field( trim( $column ) );
 
 				if ( ! empty( $field_map ) ) {
 					// If this CSV column was not included in the mapping, skip it.
