@@ -604,8 +604,8 @@ class PMPro_Import_Users_From_CSV {
 			set_transient( 'pmproiucsv_errors_' . $filename, true, DAY_IN_SECONDS * 2 );
 		}
 
-		// No users imported? Import is complete.
-		if ( ! $results['user_ids'] ) {
+		// No more rows to import? Import is complete.
+		if ( ! empty( $results['eof'] ) ) {
 			$has_errors = get_transient( 'pmproiucsv_errors_' . $filename );
 
 			echo $has_errors ? 'done_with_errors' : 'done';
@@ -696,6 +696,7 @@ class PMPro_Import_Users_From_CSV {
 		$first       = true;
 		$rkey        = 0;
 		$batch_count = 0;
+		$eof         = true; // Set to false if a partial import stops before the end of the file.
 
 		// For partial/batched imports, resume the absolute row counter from previous batches
 		// so that error log line numbers reflect the true position in the file. $batch_count
@@ -916,6 +917,7 @@ class PMPro_Import_Users_From_CSV {
 				set_transient( 'pmproiucsv_rowoffset_' . basename( $filename ), $rkey, DAY_IN_SECONDS * 2 );
 
 				if ( $batch_count > $per_partial - 1 ) {
+					$eof = false;
 					break;
 				}
 			}
@@ -933,6 +935,7 @@ class PMPro_Import_Users_From_CSV {
 		return array(
 			'user_ids' => $user_ids,
 			'errors'   => $errors,
+			'eof'      => $eof,
 		);
 	}
 
