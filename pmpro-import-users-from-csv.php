@@ -802,6 +802,17 @@ class PMPro_Import_Users_From_CSV {
 
 			if ( ! empty( $userdata['ID'] ) ) {
 				$user = get_user_by( 'ID', $userdata['ID'] );
+
+				// Usernames can't be changed, so if the row's username is not the one on this user ID, the ID belongs to a different user
+				// (e.g. the CSV was exported from another site or the column is not a user ID). Skip the row instead of overwriting that user.
+				if ( $user && ! empty( $userdata['user_login'] ) && strcasecmp( $userdata['user_login'], $user->user_login ) !== 0 ) {
+					/* translators: 1: user ID, 2: username of the existing user with that ID, 3: username in the CSV row */
+					$error_message   = sprintf( __( 'User ID %1$d belongs to the username "%2$s" on this site, not "%3$s", so this row was skipped. If the IDs in your CSV are not user IDs from this site, set that column to "Skip Column" and import again.', 'pmpro-import-users-from-csv' ), $user->ID, $user->user_login, $userdata['user_login'] );
+					$errors[ $rkey ] = new WP_Error( 'user_id_mismatch', $error_message );
+					$rkey++;
+					$batch_count++;
+					continue;
+				}
 			}
 
 			// Something to be done before importing one user?
@@ -1252,6 +1263,7 @@ class PMPro_Import_Users_From_CSV {
 										<option value="custom:<?php echo esc_attr( sanitize_key( $header ) ); ?>"><?php esc_html_e( 'Custom User Meta', 'pmpro-import-users-from-csv' ); ?></option>
 										
 									</select>
+									<p class="pmproiucsv-id-hint" style="<?php echo 'ID' === $auto_map ? '' : 'display:none; '; ?>margin:4px 0 0; color:#646970; font-style:italic;"><?php esc_html_e( 'Rows will update the user with this ID on this site, even if "Update Existing Users" is not checked. If these are not user IDs from this site, choose "Skip Column".', 'pmpro-import-users-from-csv' ); ?></p>
 									<p class="pmproiucsv-custom-hint" style="display:none; margin:4px 0 0; color:#646970; font-style:italic;"><?php printf( esc_html__( 'Will be saved as meta key: %s', 'pmpro-import-users-from-csv' ), '<code>' . esc_html( sanitize_key( $header ) ) . '</code>' ); ?></p>
 								</td>
 							</tr>
@@ -1263,6 +1275,7 @@ class PMPro_Import_Users_From_CSV {
 					jQuery( document ).ready( function( $ ) {
 						$( '.pmproiucsv-field-select' ).on( 'change', function() {
 							var $hint = $( this ).closest( 'td' ).find( '.pmproiucsv-custom-hint' );
+							$( this ).closest( 'td' ).find( '.pmproiucsv-id-hint' ).toggle( $( this ).val() === 'ID' );
 							if ( $( this ).val().indexOf( 'custom:' ) === 0 ) {
 								$hint.show();
 							} else {
