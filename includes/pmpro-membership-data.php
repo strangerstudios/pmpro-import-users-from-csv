@@ -351,6 +351,7 @@ add_action("pmproiucsv_post_user_import", "pmproiucsv_is_iu_post_user_import");
  */
 function pmproiucsv_report_sub_error ( $errors, $user_ids ){
 
+	/* translators: %1$s: URL of the recurring billing and expiration dates documentation */
 	$error_message = sprintf( __( 'User imported with both an active subscription and a membership enddate. This configuration is not recommended with PMPro (%1$s). The enddate was still imported, so this membership will expire on that date.', 'pmpro-import-users-from-csv' ), 'https://www.paidmembershipspro.com/important-notes-on-recurring-billing-and-expiration-dates-for-membership-levels/' );
 
 	$errors[] = new WP_Error( 'subscriptions_expiration', $error_message );
