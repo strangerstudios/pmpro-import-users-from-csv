@@ -620,7 +620,7 @@ class PMPro_Import_Users_From_CSV {
 			delete_transient( 'pmproiucsv_rowoffset_' . $filename );
 		}
 
-		// Some users imported?
+		// Batch had errors, but more rows remain.
 		elseif ( $results['errors'] ) {
 			echo 'X ';
 
