@@ -169,7 +169,8 @@ function pmproiucsv_is_iu_post_user_import($user_id)
 	$membership_affiliate_id = $user->import_membership_affiliate_id;
 	$membership_gateway = $user->import_membership_gateway;
 
-	if( !empty( $membership_subscription_transaction_id ) && ( $membership_status == 'active' || empty( $membership_status ) ) && !empty( $membership_enddate ) ){
+	// Only warn when a level is imported, since that is when the enddate is saved. empty() also covers membership_id '0', which cancels all levels.
+	if( ! empty( $membership_id ) && !empty( $membership_subscription_transaction_id ) && ( $membership_status == 'active' || empty( $membership_status ) ) && !empty( $membership_enddate ) ){
 		/**
 		 * If there is a membership_subscription_transaction_id column with a value AND membership_status column with value active (or assume active if missing) AND the membership_enddate column is not empty, then (1) throw an warning but continue to import
 		 */
@@ -352,7 +353,8 @@ add_action("pmproiucsv_post_user_import", "pmproiucsv_is_iu_post_user_import");
  */
 function pmproiucsv_report_sub_error ( $errors, $user_ids ){
 
-	$error_message = sprintf( __( 'User imported with both an active subscription and a membership enddate. This configuration is not recommended with PMPro ($1$s). This user has been imported with no enddate.', 'pmpro-import-users-from-csv' ), 'https://www.paidmembershipspro.com/important-notes-on-recurring-billing-and-expiration-dates-for-membership-levels/' );
+	/* translators: %1$s: URL of the recurring billing and expiration dates documentation */
+	$error_message = sprintf( __( 'User imported with both an active subscription and a membership enddate. This configuration is not recommended with PMPro (%1$s). The enddate was still imported and will be used as the expiration date for this membership.', 'pmpro-import-users-from-csv' ), 'https://www.paidmembershipspro.com/important-notes-on-recurring-billing-and-expiration-dates-for-membership-levels/' );
 
 	$errors[] = new WP_Error( 'subscriptions_expiration', $error_message );
 
