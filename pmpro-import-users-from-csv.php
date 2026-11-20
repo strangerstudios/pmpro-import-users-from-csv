@@ -872,6 +872,11 @@ class PMPro_Import_Users_From_CSV {
 				// If we're updating the user, don't send any password emails.
 				add_filter( 'send_password_change_email', '__return_false' );  
 				$user_id = wp_update_user( $userdata );
+			} elseif ( ! empty( $userdata['ID'] ) ) {
+				// The row has a user ID, but no user on this site matched it. wp_insert_user() can't create a user with a given ID and
+				// would only return "Invalid user ID.", so skip the row with an error that explains how to import these users instead.
+				/* translators: %s: user ID from the CSV row */
+				$user_id = new WP_Error( 'invalid_user_id', sprintf( __( 'No user with ID %s exists on this site, so this row was skipped. If the IDs in your CSV are not user IDs from this site, set the column mapped to "User ID" to "Skip Column" and import again.', 'pmpro-import-users-from-csv' ), $userdata['ID'] ) );
 			} else {
 				$user_id = wp_insert_user( $userdata );
 			}
