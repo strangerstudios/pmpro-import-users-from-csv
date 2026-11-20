@@ -805,7 +805,8 @@ class PMPro_Import_Users_From_CSV {
 
 				// Usernames can't be changed, so if the row's username is not the one on this user ID, the ID belongs to a different user
 				// (e.g. the CSV was exported from another site or the column is not a user ID). Skip the row instead of overwriting that user.
-				if ( $user && ! empty( $userdata['user_login'] ) && strcasecmp( $userdata['user_login'], $user->user_login ) !== 0 ) {
+				// Also compare the username as WordPress saves it (sanitize_user() in strict mode), so "José" or "john+test" still match "Jose" or "johntest".
+				if ( $user && ! empty( $userdata['user_login'] ) && strcasecmp( $userdata['user_login'], $user->user_login ) !== 0 && strcasecmp( sanitize_user( $userdata['user_login'], true ), $user->user_login ) !== 0 ) {
 					/* translators: 1: user ID, 2: username of the existing user with that ID, 3: username in the CSV row */
 					$error_message   = sprintf( __( 'User ID %1$d belongs to the username "%2$s" on this site, not "%3$s", so this row was skipped. If the IDs in your CSV are not user IDs from this site, set that column to "Skip Column" and import again.', 'pmpro-import-users-from-csv' ), $user->ID, $user->user_login, $userdata['user_login'] );
 					$errors[ $rkey ] = new WP_Error( 'user_id_mismatch', $error_message );
