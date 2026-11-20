@@ -38,7 +38,8 @@ function pmproiucsv_getFields() {
 function pmproiucsv_is_iu_pre_user_import( $userdata, $usermeta, $user ) {
 	/**
 	 * Filter to allow cancellation of subscriptions during import.
-	 * 
+	 * The legacy filter name pmproiufcsv_cancel_prev_sub_on_import is still supported. Returning true from either filter allows cancellations.
+	 *
 	 * @since 0.4
 	 * @param boolean $allow_sub_cancellations Set this option to true if you want to let subscriptions cancel on the gateway level during import.
 	 */
