@@ -11,7 +11,7 @@ WP_CLI::add_command( 'iucsv', function ( $args, $params ) {
 		case 'import':
 			$filepath = $args[1] ?? false;
 			if ( $filepath === false || ! file_exists( $filepath ) ) {
-				echo esc_html( 'provided filename does not exists', 'pmpro-import-users-from-csv' ) . PHP_EOL;
+				echo esc_html__( 'provided filename does not exists', 'pmpro-import-users-from-csv' ) . PHP_EOL;
 				exit;
 			}
 
@@ -23,14 +23,17 @@ WP_CLI::add_command( 'iucsv', function ( $args, $params ) {
 
 			$result = PMPro_Import_Users_From_CSV::import_csv( $filepath, $args );
 
-			echo sprintf( esc_html( 'Imported %d users', 'pmpro-import-users-from-csv' ), count( $result['user_ids'] ) );
+			/* translators: %d: number of users imported or updated */
+			echo sprintf( esc_html__( 'Imported %d users', 'pmpro-import-users-from-csv' ), count( $result['user_ids'] ) );
 
 			if ( ! empty( $result['errors'] ) ) {
-				echo ' '. esc_html( 'with errors:', 'pmpro-import-users-from-csv' );
-				// Errors are WP_Error objects, which can't be imploded directly.
-				$error_messages = array_map( function ( $error ) {
-					return is_wp_error( $error ) ? $error->get_error_message() : $error;
-				}, $result['errors'] );
+				echo ' '. esc_html__( 'with errors:', 'pmpro-import-users-from-csv' );
+				// Errors are WP_Error objects keyed by row, which can't be imploded directly. Match the line numbers in the error log.
+				$error_messages = array();
+				foreach ( $result['errors'] as $key => $error ) {
+					/* translators: 1: line number, 2: error message */
+					$error_messages[] = sprintf( __( '[Line %1$s] %2$s', 'pmpro-import-users-from-csv' ), $key + 1, is_wp_error( $error ) ? $error->get_error_message() : $error );
+				}
 				echo PHP_EOL . implode( PHP_EOL, $error_messages ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- WP-CLI terminal output, not HTML.
 			}
 
@@ -38,7 +41,7 @@ WP_CLI::add_command( 'iucsv', function ( $args, $params ) {
 			break;
 
 		default:
-			echo esc_html( 'usage: wp iucsv import /path/to/file.csv', 'pmpro-import-users-from-csv' ) . PHP_EOL;
+			echo esc_html__( 'usage: wp iucsv import /path/to/file.csv [--users_update=false] [--new_user_notification]', 'pmpro-import-users-from-csv' ) . PHP_EOL;
 			exit;
 	}
 } );
