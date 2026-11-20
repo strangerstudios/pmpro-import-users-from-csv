@@ -3,7 +3,7 @@ Contributors: strangerstudios
 Tags: paid memberships pro, import users from csv, import, csv, members
 Requires at least: 6.0
 Tested up to: 7.1
-Stable tag: 1.5.4
+Stable tag: 1.5.5
 
 Import your users or members list to WordPress and automatically assign membership levels in PMPro.
  
@@ -28,6 +28,14 @@ Please post it in the GitHub issue tracker here: https://github.com/strangerstud
 Please visit our premium support site at http://www.paidmembershipspro.com for more documentation and our support forums.
 
 == Changelog ==
+= 1.5.5 - 2026-11-20 =
+* ENHANCEMENT: Rows whose User ID doesn't exist on this site now show an error explaining how to fix the import, instead of "Invalid user ID.". #103 (@dparker1005)
+* BUG FIX: Returning true from either `pmproiucsv_cancel_prev_sub_on_import` or the legacy `pmproiufcsv_cancel_prev_sub_on_import` filter now cancels previous subscriptions at the gateway during import. Before, both filters had to return true. Sites that set only one of them will now see those cancellations. #98 (@dparker1005)
+* BUG FIX: Fixed the warning shown when importing a member with both an active subscription and an end date. It now says the end date was kept and shows the documentation link. #99 (@dparker1005)
+* BUG FIX: Fixed the `wp iucsv import` command ignoring its `--users_update` and `--new_user_notification` options and fataling when a row had an error. Errors now show their line numbers. #100 (@dparker1005)
+* BUG FIX: Rows whose User ID belongs to a user with a different username are now skipped instead of updating that user. The mapping screen also explains what the User ID column does. #101 (@dparker1005)
+* BUG FIX: Fixed batched imports ending early when every row in a batch failed to import. #102 (@dparker1005)
+
 = 1.5.4 - 2026-11-18 =
 * ENHANCEMENT: Imported values now have the leading apostrophe removed that PMPro adds to exported values starting with =, +, -, or @ to prevent formula injection, so member exports can be imported again without changes. #97 (@dparker1005)
 
